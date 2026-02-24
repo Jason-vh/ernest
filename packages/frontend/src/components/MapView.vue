@@ -36,12 +36,8 @@ const {
   markFundaClicked,
 } = useZoneState();
 
-const {
-  activeRoutes,
-  routesLoading,
-  showRoutesForListing,
-  clearRoutes,
-} = useCyclingRoutes();
+const { activeRoutes, routesLoading, showRoutesForListing, clearRoutes } =
+  useCyclingRoutes();
 
 const TRANSIT_LAYERS: Record<TransitKey, string[]> = {
   train: [
@@ -50,11 +46,7 @@ const TRANSIT_LAYERS: Record<TransitKey, string[]> = {
     "train-circles-outer",
     "train-circles-inner",
   ],
-  metro: [
-    "metro-lines-casing",
-    "metro-lines-fill",
-    "metro-circles",
-  ],
+  metro: ["metro-lines-casing", "metro-lines-fill", "metro-circles"],
   tram: ["tram-lines-fill", "tram-stops"],
 };
 
@@ -99,8 +91,6 @@ function stationsToGeoJSON(
   };
 }
 
-
-
 function createOfficeDot(): HTMLDivElement {
   const el = document.createElement("div");
   el.style.pointerEvents = "none";
@@ -108,7 +98,11 @@ function createOfficeDot(): HTMLDivElement {
   return el;
 }
 
-function createLabel(name: string, color: string, opacity: number): HTMLDivElement {
+function createLabel(
+  name: string,
+  color: string,
+  opacity: number,
+): HTMLDivElement {
   const el = document.createElement("div");
   el.style.pointerEvents = "none";
   el.style.opacity = String(opacity);
@@ -165,7 +159,8 @@ onMounted(async () => {
 
     // Water layers have been reordered above building-top in the style.
     // Insert zones before the first water layer so order is: buildings → zones → water
-    const waterLayerId = map.getStyle().layers.find((l) => l.id === "water")?.id ?? undefined;
+    const waterLayerId =
+      map.getStyle().layers.find((l) => l.id === "water")?.id ?? undefined;
 
     // 30-min zone (red, outermost)
     map.addLayer(
@@ -361,10 +356,15 @@ onMounted(async () => {
     });
     // Metro station labels (HTML markers for Caveat font)
     const transitMarkers: Record<TransitKey, maplibregl.Marker[]> = {
-      train: [], metro: [], tram: [],
+      train: [],
+      metro: [],
+      tram: [],
     };
     for (const feature of metroGeoJSON.features) {
-      const coords = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+      const coords = (feature.geometry as GeoJSON.Point).coordinates as [
+        number,
+        number,
+      ];
       const name = feature.properties?.name;
       if (!name) continue;
       const marker = new maplibregl.Marker({
@@ -393,7 +393,10 @@ onMounted(async () => {
     });
     // Train station labels (HTML markers for Caveat font)
     for (const feature of trainGeoJSON.features) {
-      const coords = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+      const coords = (feature.geometry as GeoJSON.Point).coordinates as [
+        number,
+        number,
+      ];
       const name = feature.properties?.name;
       if (!name) continue;
       const marker = new maplibregl.Marker({
@@ -407,7 +410,9 @@ onMounted(async () => {
 
     // --- Funda listings (above everything) ---
     // Stamp clicked state onto features from localStorage
-    function stampClickedState(fc: GeoJSON.FeatureCollection): GeoJSON.FeatureCollection {
+    function stampClickedState(
+      fc: GeoJSON.FeatureCollection,
+    ): GeoJSON.FeatureCollection {
       const clicked = clickedFundaUrls.value;
       return {
         ...fc,
@@ -426,10 +431,19 @@ onMounted(async () => {
     map.addSource("funda", { type: "geojson", data: fundaStamped });
 
     // --- Cycling route layers (above transit, below funda) ---
-    const emptyFC: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+    const emptyFC: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features: [],
+    };
 
-    map.addSource("cycling-route-fareharbor", { type: "geojson", data: emptyFC });
-    map.addSource("cycling-route-airwallex", { type: "geojson", data: emptyFC });
+    map.addSource("cycling-route-fareharbor", {
+      type: "geojson",
+      data: emptyFC,
+    });
+    map.addSource("cycling-route-airwallex", {
+      type: "geojson",
+      data: emptyFC,
+    });
 
     // FareHarbor route (teal, dashed)
     map.addLayer({
@@ -438,8 +452,8 @@ onMounted(async () => {
       source: "cycling-route-fareharbor",
       paint: {
         "line-color": COLORS.routeFareharborCasing,
-        "line-width": 5,
-        "line-opacity": 0.5,
+        "line-width": 2,
+        "line-opacity": 0.2,
       },
       layout: { "line-cap": "round", "line-join": "round" },
     });
@@ -449,9 +463,9 @@ onMounted(async () => {
       source: "cycling-route-fareharbor",
       paint: {
         "line-color": COLORS.routeFareharbor,
-        "line-width": 3,
-        "line-opacity": 0.8,
-        "line-dasharray": [2, 2],
+        "line-width": 2,
+        "line-opacity": 1,
+        "line-dasharray": [2, 4],
       },
       layout: { "line-cap": "round", "line-join": "round" },
     });
@@ -463,8 +477,8 @@ onMounted(async () => {
       source: "cycling-route-airwallex",
       paint: {
         "line-color": COLORS.routeAirwallexCasing,
-        "line-width": 5,
-        "line-opacity": 0.5,
+        "line-width": 2,
+        "line-opacity": 0.2,
       },
       layout: { "line-cap": "round", "line-join": "round" },
     });
@@ -474,9 +488,9 @@ onMounted(async () => {
       source: "cycling-route-airwallex",
       paint: {
         "line-color": COLORS.routeAirwallex,
-        "line-width": 3,
-        "line-opacity": 0.8,
-        "line-dasharray": [2, 2],
+        "line-width": 2,
+        "line-opacity": 1,
+        "line-dasharray": [2, 4],
       },
       layout: { "line-cap": "round", "line-join": "round" },
     });
@@ -494,12 +508,7 @@ onMounted(async () => {
           "#aaa",
           "#E8950F",
         ],
-        "fill-opacity": [
-          "case",
-          ["==", ["get", "clicked"], true],
-          0.25,
-          0.4,
-        ],
+        "fill-opacity": ["case", ["==", ["get", "clicked"], true], 0.25, 0.4],
       },
     });
     map.addLayer({
@@ -513,12 +522,7 @@ onMounted(async () => {
           "#aaa",
           "#E8950F",
         ],
-        "line-opacity": [
-          "case",
-          ["==", ["get", "clicked"], true],
-          0.4,
-          0.7,
-        ],
+        "line-opacity": ["case", ["==", ["get", "clicked"], true], 0.4, 0.7],
         "line-width": 1.5,
       },
     });
@@ -594,13 +598,19 @@ onMounted(async () => {
 
     // --- Transit visibility + hover highlight ---
     const DEFAULT_LINE_OPACITY: Record<TransitKey, number> = {
-      train: 0.1, metro: 0.1, tram: 0.1,
+      train: 0.1,
+      metro: 0.1,
+      tram: 0.1,
     };
     const DEFAULT_CIRCLE_OPACITY: Record<TransitKey, number> = {
-      train: 0.6, metro: 0.6, tram: 0.5,
+      train: 0.6,
+      metro: 0.6,
+      tram: 0.5,
     };
     const DEFAULT_LABEL_OPACITY: Record<TransitKey, number> = {
-      train: 0.7, metro: 0.7, tram: 1,
+      train: 0.7,
+      metro: 0.7,
+      tram: 1,
     };
 
     function updateTransitLayers() {
@@ -613,12 +623,22 @@ onMounted(async () => {
 
         for (const layerId of TRANSIT_LAYERS[key]) {
           if (!map.getLayer(layerId)) continue;
-          map.setLayoutProperty(layerId, "visibility", visible ? "visible" : "none");
+          map.setLayoutProperty(
+            layerId,
+            "visibility",
+            visible ? "visible" : "none",
+          );
 
           if (visible) {
             const isLine = layerId.includes("line");
-            const defaultOp = isLine ? DEFAULT_LINE_OPACITY[key] : DEFAULT_CIRCLE_OPACITY[key];
-            const op = someHovered ? (isHovered ? 1 : defaultOp * 0.3) : defaultOp;
+            const defaultOp = isLine
+              ? DEFAULT_LINE_OPACITY[key]
+              : DEFAULT_CIRCLE_OPACITY[key];
+            const op = someHovered
+              ? isHovered
+                ? 1
+                : defaultOp * 0.3
+              : defaultOp;
 
             if (isLine) {
               map.setPaintProperty(layerId, "line-opacity", op);
@@ -636,17 +656,25 @@ onMounted(async () => {
           } else {
             el.style.display = "";
             const defaultOp = DEFAULT_LABEL_OPACITY[key];
-            el.style.opacity = String(someHovered ? (isHovered ? 1 : defaultOp * 0.3) : defaultOp);
+            el.style.opacity = String(
+              someHovered ? (isHovered ? 1 : defaultOp * 0.3) : defaultOp,
+            );
           }
         }
       }
     }
 
     updateTransitLayers();
-    watch([transitVisibility, hoveredTransit], updateTransitLayers, { deep: true });
+    watch([transitVisibility, hoveredTransit], updateTransitLayers, {
+      deep: true,
+    });
 
     // --- Funda visibility (new + viewed as independent toggles) ---
-    const FUNDA_LAYERS = ["funda-circles", "funda-building-fill", "funda-building-outline"];
+    const FUNDA_LAYERS = [
+      "funda-circles",
+      "funda-building-fill",
+      "funda-building-outline",
+    ];
 
     function updateFundaLayer() {
       if (!map.getLayer("funda-circles")) return;
@@ -681,7 +709,10 @@ onMounted(async () => {
     let buildingDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
     function updateBuildingHighlights() {
-      const emptyData: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+      const emptyData: GeoJSON.FeatureCollection = {
+        type: "FeatureCollection",
+        features: [],
+      };
       const src = map.getSource("funda-buildings") as maplibregl.GeoJSONSource;
       if (!src) return;
 
@@ -725,12 +756,20 @@ onMounted(async () => {
         }
       }
 
-      const { buildings } = matchBuildingsToFunda(map, unique, clickedFundaUrls.value);
+      const { buildings } = matchBuildingsToFunda(
+        map,
+        unique,
+        clickedFundaUrls.value,
+      );
       src.setData(buildings);
       // Hide dots when building highlights are active (same frame, no flash)
       const hideDots = buildings.features.length > 0;
       map.setPaintProperty("funda-circles", "circle-radius", hideDots ? 0 : 5);
-      map.setPaintProperty("funda-circles", "circle-stroke-width", hideDots ? 0 : 1);
+      map.setPaintProperty(
+        "funda-circles",
+        "circle-stroke-width",
+        hideDots ? 0 : 1,
+      );
     }
 
     let lastBuildingUpdateTime = 0;
@@ -764,7 +803,9 @@ onMounted(async () => {
     });
 
     // --- Cycling route watcher ---
-    function routeToFeature(geometry: GeoJSON.LineString): GeoJSON.FeatureCollection {
+    function routeToFeature(
+      geometry: GeoJSON.LineString,
+    ): GeoJSON.FeatureCollection {
       return {
         type: "FeatureCollection",
         features: [{ type: "Feature", geometry, properties: {} }],
@@ -772,8 +813,12 @@ onMounted(async () => {
     }
 
     watch(activeRoutes, (routes) => {
-      const fhSrc = map.getSource("cycling-route-fareharbor") as maplibregl.GeoJSONSource;
-      const awSrc = map.getSource("cycling-route-airwallex") as maplibregl.GeoJSONSource;
+      const fhSrc = map.getSource(
+        "cycling-route-fareharbor",
+      ) as maplibregl.GeoJSONSource;
+      const awSrc = map.getSource(
+        "cycling-route-airwallex",
+      ) as maplibregl.GeoJSONSource;
       if (!fhSrc || !awSrc) return;
 
       if (routes?.fareharbor) {
@@ -799,10 +844,14 @@ onMounted(async () => {
 
       const parts: string[] = [];
       if (routes?.fareharbor) {
-        parts.push(`<span class="funda-cycling-row"><span class="funda-cycling-dot" style="background:${COLORS.routeFareharbor}"></span><span style="color:${COLORS.routeFareharbor}">${routes.fareharbor.duration} min</span> to ${OFFICES.fareharbor.name}</span>`);
+        parts.push(
+          `<span class="funda-cycling-row"><span class="funda-cycling-dot" style="background:${COLORS.routeFareharbor}"></span><span style="color:${COLORS.routeFareharbor}">${routes.fareharbor.duration} min</span> to ${OFFICES.fareharbor.name}</span>`,
+        );
       }
       if (routes?.airwallex) {
-        parts.push(`<span class="funda-cycling-row"><span class="funda-cycling-dot" style="background:${COLORS.routeAirwallex}"></span><span style="color:${COLORS.routeAirwallex}">${routes.airwallex.duration} min</span> to ${OFFICES.airwallex.name}</span>`);
+        parts.push(
+          `<span class="funda-cycling-row"><span class="funda-cycling-dot" style="background:${COLORS.routeAirwallex}"></span><span style="color:${COLORS.routeAirwallex}">${routes.airwallex.duration} min</span> to ${OFFICES.airwallex.name}</span>`,
+        );
       }
       timesEl.innerHTML = parts.join("");
     });
@@ -822,8 +871,12 @@ onMounted(async () => {
       feature: maplibregl.MapGeoJSONFeature | GeoJSON.Feature,
       lngLatOverride?: [number, number],
     ) {
-      const coords = lngLatOverride ??
-        ((feature.geometry as GeoJSON.Point).coordinates.slice() as [number, number]);
+      const coords =
+        lngLatOverride ??
+        ((feature.geometry as GeoJSON.Point).coordinates.slice() as [
+          number,
+          number,
+        ]);
       const p = feature.properties as Record<string, any>;
 
       const listPrice = Number(p.price);
@@ -850,18 +903,19 @@ onMounted(async () => {
       if (photos.length >= 3) {
         gridHtml =
           `<div class="funda-grid funda-grid--3">` +
-          cell(photos[0]) + cell(photos[1]) + cell(photos[2]) +
+          cell(photos[0]) +
+          cell(photos[1]) +
+          cell(photos[2]) +
           `</div>`;
       } else if (photos.length === 2) {
         gridHtml =
           `<div class="funda-grid funda-grid--2">` +
-          cell(photos[0]) + cell(photos[1]) +
+          cell(photos[0]) +
+          cell(photos[1]) +
           `</div>`;
       } else if (photos.length === 1) {
         gridHtml =
-          `<div class="funda-grid funda-grid--1">` +
-          cell(photos[0]) +
-          `</div>`;
+          `<div class="funda-grid funda-grid--1">` + cell(photos[0]) + `</div>`;
       }
 
       if (fundaPopup) fundaPopup.remove();
@@ -888,7 +942,9 @@ onMounted(async () => {
         .addTo(map);
 
       // Track click to mark listing as visited
-      const linkEl = fundaPopup.getElement()?.querySelector(".funda-popup-link");
+      const linkEl = fundaPopup
+        .getElement()
+        ?.querySelector(".funda-popup-link");
       if (linkEl) {
         linkEl.addEventListener("click", () => {
           markFundaClicked(p.url);
@@ -930,7 +986,9 @@ onMounted(async () => {
       }
     }
 
-    function triggerRoutesForFeature(feature: maplibregl.MapGeoJSONFeature | GeoJSON.Feature) {
+    function triggerRoutesForFeature(
+      feature: maplibregl.MapGeoJSONFeature | GeoJSON.Feature,
+    ) {
       const p = feature.properties as Record<string, any>;
       const coords = (feature.geometry as GeoJSON.Point).coordinates;
       if (p?.url && coords) {
@@ -1055,7 +1113,11 @@ onMounted(async () => {
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.85) 100%);
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.85) 100%
+  );
   padding: 32px 10px 8px;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
   display: flex;
@@ -1133,7 +1195,12 @@ onMounted(async () => {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 </style>
