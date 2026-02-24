@@ -4,7 +4,12 @@
     "suspicious": "error",
     "perf": "error"
   },
-  "rules": {
-    "unicorn/consistent-function-scoping": "off"
-  }
+  "overrides": [
+    {
+      "files": ["**/*.vue"],
+      "rules": {
+        "unicorn/consistent-function-scoping": "off"
+      }
+    }
+  ]
 }
