@@ -21,8 +21,8 @@ bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 - **Monorepo**: Bun workspaces (`packages/*`, `scripts`)
 - **Frontend** (`packages/frontend`): Vue 3 + Vite + TypeScript. Single-page app with MapLibre GL JS map.
 - **Backend** (`packages/backend`): Bun + Hono. Serves precomputed data as JSON endpoints and the built frontend via `serveStatic`. All file paths resolved via `import.meta.dir` (never relative to CWD).
-- **Scripts** (`scripts/`): `fetch-data.ts` runs with Bun to precompute geodata (uses Turf.js for spatial operations). `fetch_funda.py` fetches Funda listings via pyfunda (Python 3.13, called by `fetch-data.ts` via `Bun.spawn`).
-- **Cron** (`services/funda-cron/`): Python service that fetches Funda listings hourly and POSTs them to the backend's `POST /api/internal/refresh-funda` endpoint. Runs as a separate Railway cron service, communicates via Railway internal networking.
+- **Scripts** (`scripts/`): `fetch-data.ts` runs with Bun to precompute geodata (uses Turf.js for spatial operations). `fetch_funda.py` is a thin wrapper that imports shared Funda logic from `services/funda-cron/funda_core.py` and outputs GeoJSON to stdout (called by `fetch-data.ts` via `Bun.spawn`).
+- **Cron** (`services/funda-cron/`): Python service that fetches Funda listings hourly and POSTs them to the backend's `POST /api/internal/refresh-funda` endpoint. Runs as a separate Railway cron service, communicates via Railway internal networking. Core fetch/filter/enrich logic lives in `funda_core.py`, shared with the local script.
 - **Data** (`packages/backend/data/`): Static JSON/GeoJSON files. Funda data is also persisted to a Railway volume (`/data/funda.geojson`) and loaded from there on startup if available, falling back to bundled data.
 
 ## Key files
@@ -31,9 +31,10 @@ bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 - `packages/frontend/src/geo/greyscale-style.ts` — Transforms OpenFreeMap bright style to greyscale (preserves parks/water). Controls which base map layers are hidden via `HIDDEN_LAYERS`.
 - `packages/frontend/src/geo/constants.ts` — Office coordinates, map center, default zoom
 - `packages/backend/src/routes/geodata.ts` — API endpoints for isochrone, stations, lines, buurten, funda + POST /internal/refresh-funda
-- `services/funda-cron/fetch_and_push.py` — Cron job: fetches Funda listings and POSTs to backend
+- `services/funda-cron/funda_core.py` — Shared Funda logic: fetch, filter, enrich with coordinates, convert to GeoJSON. Searches Amsterdam, Diemen, Duivendrecht, Amstelveen, Ouderkerk aan de Amstel. Filters: €450k–€600k, ≥2 bed, ≥65 m², energy label ≥ D or unknown, status "Beschikbaar" only. Per-area error handling so one failure doesn't stop the rest.
+- `services/funda-cron/fetch_and_push.py` — Cron job: calls `funda_core.fetch_and_build_geojson()` and POSTs result to backend
 - `scripts/fetch-data.ts` — Data precomputation pipeline (Valhalla + Overpass + Amsterdam BBGA + Funda + Turf)
-- `scripts/fetch_funda.py` — Python script fetching Funda listings via pyfunda. Searches Amsterdam, Diemen, Duivendrecht, Amstelveen, Ouderkerk aan de Amstel. Filters: €450k–€600k, ≥2 bed, ≥65 m², energy label ≥ D or unknown, status "Beschikbaar" only. Per-area error handling so one failure doesn't stop the rest.
+- `scripts/fetch_funda.py` — Thin wrapper: imports from `funda_core`, outputs GeoJSON to stdout for `fetch-data.ts`
 
 ## Conventions
 

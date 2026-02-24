@@ -56,10 +56,11 @@ ernest/
         funda.geojson       # Available Funda listings with coordinates + photos
   scripts/
     fetch-data.ts           # Fetches and precomputes all static data
-    fetch_funda.py          # Fetches Funda listings via pyfunda (Python 3.13)
+    fetch_funda.py          # Thin wrapper: imports funda_core, outputs GeoJSON to stdout
   services/
     funda-cron/             # Railway cron service (hourly Funda refresh)
-      fetch_and_push.py     # Fetches listings, POSTs to backend
+      funda_core.py         # Shared Funda fetch/filter/enrich/GeoJSON logic
+      fetch_and_push.py     # Calls funda_core, POSTs result to backend
       Dockerfile
       requirements.txt
 ```
@@ -105,7 +106,7 @@ Hosted on [Railway](https://railway.com) at **https://ernest.vanhattum.xyz**. Tw
 
 **Web service** (`ernest-web`): Config in `railway.toml`. Railway auto-detects Bun, builds the frontend, and runs the server. A 1 GB volume at `/data` persists Funda data across deploys.
 
-**Cron service** (`ernest-cron`): Dockerfile-based Python service in `services/funda-cron/`. Runs hourly (`0 * * * *`), fetches fresh Funda listings, and POSTs them to the web service via Railway's internal network. The web service updates in-memory data and persists to the volume.
+**Cron service** (`ernest-cron`): Dockerfile-based Python service in `services/funda-cron/`. Runs hourly (`0 * * * *`), fetches fresh Funda listings using shared logic in `funda_core.py`, and POSTs them to the web service via Railway's internal network. The web service updates in-memory data and persists to the volume. The local script (`scripts/fetch_funda.py`) imports the same `funda_core` module to ensure identical fetch behavior.
 
 Environment variables:
 - **Web service**: `NODE_ENV=production`, `REFRESH_SECRET`, `VOLUME_PATH=/data`, `PORT` (auto-set)
