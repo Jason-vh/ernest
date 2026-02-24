@@ -2,7 +2,7 @@
 
 ## Project overview
 
-Ernest is an Amsterdam house-hunting map. Bun monorepo with Vue 3 frontend and Hono backend. Static geodata is precomputed and served from disk.
+Ernest is an Amsterdam house-hunting map. Bun monorepo with Vue 3 frontend and Hono backend. Static geodata is precomputed and served from disk. Funda listings refresh hourly via a Railway cron service.
 
 ## Commands
 
@@ -22,14 +22,16 @@ bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 - **Frontend** (`packages/frontend`): Vue 3 + Vite + TypeScript. Single-page app with MapLibre GL JS map.
 - **Backend** (`packages/backend`): Bun + Hono. Serves precomputed data as JSON endpoints and the built frontend via `serveStatic`. All file paths resolved via `import.meta.dir` (never relative to CWD).
 - **Scripts** (`scripts/`): `fetch-data.ts` runs with Bun to precompute geodata (uses Turf.js for spatial operations). `fetch_funda.py` fetches Funda listings via pyfunda (Python 3.13, called by `fetch-data.ts` via `Bun.spawn`).
-- **Data** (`packages/backend/data/`): Static JSON/GeoJSON files loaded once at server startup.
+- **Cron** (`services/funda-cron/`): Python service that fetches Funda listings hourly and POSTs them to the backend's `POST /api/internal/refresh-funda` endpoint. Runs as a separate Railway cron service, communicates via Railway internal networking.
+- **Data** (`packages/backend/data/`): Static JSON/GeoJSON files. Funda data is also persisted to a Railway volume (`/data/funda.geojson`) and loaded from there on startup if available, falling back to bundled data.
 
 ## Key files
 
 - `packages/frontend/src/components/MapView.vue` — All map layers, sources, and interactions
 - `packages/frontend/src/geo/greyscale-style.ts` — Transforms OpenFreeMap bright style to greyscale (preserves parks/water). Controls which base map layers are hidden via `HIDDEN_LAYERS`.
 - `packages/frontend/src/geo/constants.ts` — Office coordinates, map center, default zoom
-- `packages/backend/src/routes/geodata.ts` — API endpoints for isochrone, stations, lines, buurten, funda
+- `packages/backend/src/routes/geodata.ts` — API endpoints for isochrone, stations, lines, buurten, funda + POST /internal/refresh-funda
+- `services/funda-cron/fetch_and_push.py` — Cron job: fetches Funda listings and POSTs to backend
 - `scripts/fetch-data.ts` — Data precomputation pipeline (Valhalla + Overpass + Amsterdam BBGA + Funda + Turf)
 - `scripts/fetch_funda.py` — Python script fetching Funda listings via pyfunda. Filters: €450k–€600k, ≥2 bed, ≥65 m², energy label ≥ D, status "Beschikbaar" only
 
@@ -45,11 +47,13 @@ bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 
 ## Deployment
 
-- **Hosting**: Railway (single service). Config in `railway.toml`.
+- **Hosting**: Railway (two services). Config in `railway.toml` (web service only).
 - **URL**: https://ernest.vanhattum.xyz
-- **How it works**: Railway's Railpack detects `bun.lock`, installs Bun, runs `bun install && bun run build`, then `bun run start`. Health check hits `/api/health`.
-- **Env vars** (set in Railway dashboard): `NODE_ENV=production`. `PORT` is auto-set by Railway.
-- **Auto-deploy**: Connect GitHub repo in Railway dashboard for deploy-on-push to `main`.
+- **Web service** (`ernest-web`): Railpack detects `bun.lock`, installs Bun, runs `bun install && bun run build`, then `bun run start`. Health check hits `/api/health`. Has a 1 GB volume mounted at `/data` for persisted Funda data.
+- **Cron service** (`ernest-cron`): Dockerfile-based Python service. Root directory `services/funda-cron`. Runs on schedule `0 * * * *` (hourly). Communicates with web service via Railway internal networking (`http://ernest.railway.internal:8080`).
+- **Env vars on web service**: `NODE_ENV=production`, `REFRESH_SECRET`, `VOLUME_PATH=/data`. `PORT` is auto-set by Railway.
+- **Env vars on cron service**: `REFRESH_SECRET` (same value), `REFRESH_URL=http://ernest.railway.internal:8080/api/internal/refresh-funda`.
+- **Auto-deploy**: GitHub repo connected for deploy-on-push to `main`.
 
 ## External APIs (used by fetch-data script only)
 

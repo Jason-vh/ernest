@@ -7,7 +7,7 @@ Amsterdam house-hunting map. Shows cycling distance zones from two offices overl
 - Computes 10/20/30-minute cycling isochrones from two offices (FareHarbor and Airwallex), intersects them to show areas reachable from **both** within each time budget
 - Overlays transit stations (train, metro, tram) and line geometries
 - Shows Amsterdam neighbourhood (buurt) boundaries with labels
-- Displays available Funda listings (€450k–€600k, ≥2 bed, ≥65 m², energy label ≥ D) as map markers with photo popups and estimated overbid pricing
+- Displays available Funda listings (€450k–€600k, ≥2 bed, ≥65 m², energy label ≥ D) as map markers with photo popups and estimated overbid pricing — refreshed hourly
 - Greyscale base map with parks and water preserved in color
 
 ## Tech stack
@@ -46,9 +46,9 @@ ernest/
       src/
         index.ts            # Hono app, static serving, SPA fallback
         routes/
-          geodata.ts        # GET /api/isochrone, /api/stations, /api/lines, /api/buurten
+          geodata.ts        # GET /api/* + POST /api/internal/refresh-funda
           health.ts         # GET /api/health
-      data/                 # Precomputed static data
+      data/                 # Precomputed static data (bundled fallback)
         isochrone.geojson   # Zone intersection polygons (10/20/30 min)
         stations.json       # Filtered transit stops
         lines.geojson       # Transit line geometries
@@ -57,6 +57,11 @@ ernest/
   scripts/
     fetch-data.ts           # Fetches and precomputes all static data
     fetch_funda.py          # Fetches Funda listings via pyfunda (Python 3.13)
+  services/
+    funda-cron/             # Railway cron service (hourly Funda refresh)
+      fetch_and_push.py     # Fetches listings, POSTs to backend
+      Dockerfile
+      requirements.txt
 ```
 
 ## Getting started
@@ -96,13 +101,15 @@ The backend serves the built frontend via `serveStatic` with SPA fallback. Set `
 
 ### Deployment
 
-Hosted on [Railway](https://railway.com) at **https://ernest.vanhattum.xyz**.
+Hosted on [Railway](https://railway.com) at **https://ernest.vanhattum.xyz**. Two services:
 
-Config lives in `railway.toml`. Railway auto-detects Bun, builds the frontend, and runs the server. To enable auto-deploy, connect the GitHub repo in the Railway dashboard.
+**Web service** (`ernest-web`): Config in `railway.toml`. Railway auto-detects Bun, builds the frontend, and runs the server. A 1 GB volume at `/data` persists Funda data across deploys.
 
-Environment variables set in Railway:
-- `NODE_ENV=production`
-- `PORT` — auto-set by Railway
+**Cron service** (`ernest-cron`): Dockerfile-based Python service in `services/funda-cron/`. Runs hourly (`0 * * * *`), fetches fresh Funda listings, and POSTs them to the web service via Railway's internal network. The web service filters listings to the 30-min cycling zone, updates in-memory data, and persists to the volume.
+
+Environment variables:
+- **Web service**: `NODE_ENV=production`, `REFRESH_SECRET`, `VOLUME_PATH=/data`, `PORT` (auto-set)
+- **Cron service**: `REFRESH_SECRET` (same value), `REFRESH_URL=http://ernest.railway.internal:8080/api/internal/refresh-funda`
 
 ## API endpoints
 
@@ -114,6 +121,7 @@ Environment variables set in Railway:
 | `GET /api/lines` | Transit line geometries GeoJSON |
 | `GET /api/buurten` | Neighbourhood boundaries + stats GeoJSON |
 | `GET /api/funda` | Available Funda listings GeoJSON |
+| `POST /api/internal/refresh-funda` | Refresh Funda data (Bearer auth, used by cron service) |
 
 ## Data pipeline
 
