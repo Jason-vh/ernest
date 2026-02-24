@@ -19,7 +19,7 @@ import {
   generateAuthOptions,
   verifyAuthResponse,
 } from "../auth/webauthn";
-import { requireAuth, csrfCheck } from "../auth/middleware";
+import { csrfCheck } from "../auth/middleware";
 
 const auth = new Hono<AppEnv>();
 
@@ -60,8 +60,7 @@ auth.use("/*", csrfCheck);
 
 // POST /auth/register/options
 auth.post("/register/options", async (c) => {
-  const ip =
-    c.req.header("X-Forwarded-For")?.split(",")[0]?.trim() || "unknown";
+  const ip = c.req.header("X-Forwarded-For")?.split(",")[0]?.trim() || "unknown";
   if (!checkRateLimit(ip)) {
     return c.json({ error: "Too many requests" }, 429);
   }
@@ -76,10 +75,7 @@ auth.post("/register/options", async (c) => {
     return c.json({ error: "username must be ≤64 chars" }, 400);
   }
   if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-    return c.json(
-      { error: "username must be alphanumeric (with _ or -)" },
-      400
-    );
+    return c.json({ error: "username must be alphanumeric (with _ or -)" }, 400);
   }
 
   // Check username availability
@@ -130,8 +126,8 @@ auth.post("/register/verify", async (c) => {
       and(
         eq(challenges.id, challengeId),
         eq(challenges.type, "registration"),
-        lt(sql`now()`, challenges.expiresAt)
-      )
+        lt(sql`now()`, challenges.expiresAt),
+      ),
     )
     .returning({
       challenge: challenges.challenge,
@@ -145,8 +141,7 @@ auth.post("/register/verify", async (c) => {
 
   // Drizzle auto-deserializes JSONB — validate at runtime
   const meta = challenge.metadata;
-  const metaUsername =
-    typeof meta?.username === "string" ? meta.username : undefined;
+  const metaUsername = typeof meta?.username === "string" ? meta.username : undefined;
   const metaWebauthnUserId =
     typeof meta?.webauthnUserId === "string" ? meta.webauthnUserId : undefined;
   if (!metaUsername || !metaWebauthnUserId) {
@@ -161,18 +156,14 @@ auth.post("/register/verify", async (c) => {
       expectedChallenge: challenge.challenge,
     });
   } catch (e) {
-    return c.json(
-      { error: "Verification failed", detail: String(e) },
-      400
-    );
+    return c.json({ error: "Verification failed", detail: String(e) }, 400);
   }
 
   if (!verification.verified || !verification.registrationInfo) {
     return c.json({ error: "Verification failed" }, 400);
   }
 
-  const { credential, credentialDeviceType, credentialBackedUp } =
-    verification.registrationInfo;
+  const { credential, credentialDeviceType, credentialBackedUp } = verification.registrationInfo;
 
   // Re-check username (race condition guard)
   const existing = await db
@@ -222,8 +213,7 @@ auth.post("/register/verify", async (c) => {
 
 // POST /auth/login/options
 auth.post("/login/options", async (c) => {
-  const ip =
-    c.req.header("X-Forwarded-For")?.split(",")[0]?.trim() || "unknown";
+  const ip = c.req.header("X-Forwarded-For")?.split(",")[0]?.trim() || "unknown";
   if (!checkRateLimit(ip)) {
     return c.json({ error: "Too many requests" }, 429);
   }
@@ -256,8 +246,8 @@ auth.post("/login/verify", async (c) => {
       and(
         eq(challenges.id, challengeId),
         eq(challenges.type, "authentication"),
-        lt(sql`now()`, challenges.expiresAt)
-      )
+        lt(sql`now()`, challenges.expiresAt),
+      ),
     )
     .returning({ challenge: challenges.challenge });
   if (!challenge) {
@@ -302,10 +292,7 @@ auth.post("/login/verify", async (c) => {
       },
     });
   } catch (e) {
-    return c.json(
-      { error: "Verification failed", detail: String(e) },
-      400
-    );
+    return c.json({ error: "Verification failed", detail: String(e) }, 400);
   }
 
   if (!verification.verified) {

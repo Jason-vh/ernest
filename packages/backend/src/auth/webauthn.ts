@@ -14,10 +14,7 @@ import { RP_ID, ORIGIN } from "../config";
 
 const RP_NAME = "Ernest";
 
-export async function generateRegOptions(opts: {
-  userName: string;
-  userID: Uint8Array;
-}) {
+export async function generateRegOptions(opts: { userName: string; userID: Uint8Array }) {
   return generateRegistrationOptions({
     rpName: RP_NAME,
     rpID: RP_ID,

@@ -1,7 +1,4 @@
-import {
-  startRegistration,
-  startAuthentication,
-} from "@simplewebauthn/browser";
+import { startRegistration, startAuthentication } from "@simplewebauthn/browser";
 
 export class PasskeyCancelledError extends Error {
   constructor() {
@@ -44,9 +41,7 @@ export async function register(username: string): Promise<User> {
   const options = await optionsRes.json();
 
   // 2. Create passkey via browser (throws PasskeyCancelledError if user cancels)
-  const attestation = await startRegistration({ optionsJSON: options }).catch(
-    rethrowIfCancelled
-  );
+  const attestation = await startRegistration({ optionsJSON: options }).catch(rethrowIfCancelled);
 
   // 3. Send attestation to server
   const verifyRes = await post("/api/auth/register/verify", attestation);
@@ -68,9 +63,7 @@ export async function login(): Promise<User> {
   const options = await optionsRes.json();
 
   // 2. Authenticate via browser (throws PasskeyCancelledError if user cancels)
-  const assertion = await startAuthentication({ optionsJSON: options }).catch(
-    rethrowIfCancelled
-  );
+  const assertion = await startAuthentication({ optionsJSON: options }).catch(rethrowIfCancelled);
 
   // 3. Send assertion to server
   const verifyRes = await post("/api/auth/login/verify", assertion);

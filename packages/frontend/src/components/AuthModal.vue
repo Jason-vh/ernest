@@ -23,12 +23,22 @@
 
           <!-- Login mode -->
           <div v-if="mode === 'login'" class="auth-body">
-            <p class="auth-hint">
-              Use your passkey to sign in.
-            </p>
+            <p class="auth-hint">Use your passkey to sign in.</p>
             <button class="auth-action" @click="handleLogin" :disabled="busy">
-              <svg class="auth-action-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+              <svg
+                class="auth-action-icon"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
+                />
               </svg>
               {{ busy ? "Waiting for passkey..." : "Sign in with passkey" }}
             </button>
@@ -55,8 +65,20 @@
               @click="handleRegister"
               :disabled="busy || !username.trim()"
             >
-              <svg class="auth-action-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+              <svg
+                class="auth-action-icon"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
+                />
               </svg>
               {{ busy ? "Waiting for passkey..." : "Create account" }}
             </button>
@@ -102,7 +124,7 @@ watch(
       errorMsg.value = null;
       busy.value = false;
     }
-  }
+  },
 );
 
 // Sync auth composable errors
@@ -118,8 +140,7 @@ async function handleLogin() {
     emit("close");
   } catch (e) {
     if (e instanceof PasskeyCancelledError) return;
-    errorMsg.value =
-      e instanceof Error ? e.message : "Login failed";
+    errorMsg.value = e instanceof Error ? e.message : "Login failed";
   } finally {
     busy.value = false;
   }
@@ -134,8 +155,7 @@ async function handleRegister() {
     emit("close");
   } catch (e) {
     if (e instanceof PasskeyCancelledError) return;
-    errorMsg.value =
-      e instanceof Error ? e.message : "Registration failed";
+    errorMsg.value = e instanceof Error ? e.message : "Registration failed";
   } finally {
     busy.value = false;
   }
@@ -162,8 +182,13 @@ async function handleRegister() {
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border-radius: 14px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
-  font-family: system-ui, -apple-system, sans-serif;
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.12),
+    0 1px 3px rgba(0, 0, 0, 0.06);
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   overflow: hidden;
 }
 
@@ -244,7 +269,9 @@ async function handleRegister() {
   font-size: 14px;
   color: #333;
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .auth-input::placeholder {
@@ -270,7 +297,9 @@ async function handleRegister() {
   font-weight: 600;
   color: #555;
   cursor: pointer;
-  transition: background-color 0.15s, color 0.15s;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
 }
 
 .auth-action:hover:not(:disabled) {
@@ -303,7 +332,9 @@ async function handleRegister() {
 
 .modal-enter-active .auth-modal,
 .modal-leave-active .auth-modal {
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
 }
 
 .modal-enter-from,
@@ -320,7 +351,9 @@ async function handleRegister() {
 /* Error transition */
 .error-enter-active,
 .error-leave-active {
-  transition: opacity 0.15s, transform 0.15s;
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
 }
 
 .error-enter-from,

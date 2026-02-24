@@ -21,10 +21,7 @@ function isErnestPayload(p: JWTPayload): p is ErnestJwtPayload {
   return typeof p.sub === "string" && typeof p.username === "string";
 }
 
-export async function signToken(user: {
-  id: string;
-  username: string;
-}): Promise<string> {
+export async function signToken(user: { id: string; username: string }): Promise<string> {
   const payload: ErnestJwtPayload = {
     sub: user.id,
     username: user.username,
@@ -33,9 +30,7 @@ export async function signToken(user: {
   return sign(payload, JWT_SECRET);
 }
 
-export async function verifyToken(
-  token: string
-): Promise<ErnestJwtPayload | null> {
+export async function verifyToken(token: string): Promise<ErnestJwtPayload | null> {
   try {
     const payload = await verify(token, JWT_SECRET, "HS256");
     if (!isErnestPayload(payload)) return null;

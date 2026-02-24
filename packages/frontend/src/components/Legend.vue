@@ -39,7 +39,7 @@
         :class="{ 'legend-item--disabled': !fundaNewVisible }"
         @click="toggleFundaNew()"
       >
-        <span class="legend-dot" style="background-color: #E8950F"></span>
+        <span class="legend-dot" style="background-color: #e8950f"></span>
         <span class="legend-label">unseen listings</span>
       </div>
       <div
@@ -94,7 +94,10 @@ const transit: { key: TransitKey; label: string; color: string }[] = [
   border-radius: 10px;
   padding: 12px 16px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 13px;
   z-index: 1;
   display: flex;

@@ -1,12 +1,4 @@
-import {
-  pgTable,
-  text,
-  integer,
-  boolean,
-  timestamp,
-  jsonb,
-  customType,
-} from "drizzle-orm/pg-core";
+import { pgTable, text, integer, boolean, timestamp, jsonb, customType } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 import type { AuthenticatorTransportFuture } from "@simplewebauthn/server";
 
@@ -29,9 +21,7 @@ export const users = pgTable("users", {
   id: text("id").primaryKey(),
   username: text("username").notNull().unique(),
   webauthnUserId: text("webauthn_user_id").notNull().unique(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const credentials = pgTable("credentials", {
@@ -44,9 +34,7 @@ export const credentials = pgTable("credentials", {
   deviceType: text("device_type").notNull(),
   backedUp: boolean("backed_up").notNull().default(false),
   transports: jsonb("transports").$type<AuthenticatorTransportFuture[]>(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const challenges = pgTable("challenges", {
@@ -56,9 +44,7 @@ export const challenges = pgTable("challenges", {
   userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
   metadata: jsonb("metadata").$type<Record<string, unknown>>(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export type User = InferSelectModel<typeof users>;

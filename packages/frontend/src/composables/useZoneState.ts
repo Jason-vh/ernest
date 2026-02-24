@@ -50,9 +50,7 @@ function writeToURL(
   }
 
   const search = params.toString();
-  const url = search
-    ? `${window.location.pathname}?${search}`
-    : window.location.pathname;
+  const url = search ? `${window.location.pathname}?${search}` : window.location.pathname;
   history.replaceState(null, "", url);
 }
 
@@ -63,7 +61,9 @@ function loadClickedFunda(): Set<string> {
   try {
     const raw = localStorage.getItem(CLICKED_FUNDA_KEY);
     if (raw) return new Set(JSON.parse(raw));
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return new Set();
 }
 
@@ -74,9 +74,7 @@ function saveClickedFunda(ids: Set<string>) {
 // Shared singleton state
 const zoneVisibility = ref(readVisibility("zones", ZONE_KEYS));
 const transitVisibility = ref(readVisibility("transit", TRANSIT_KEYS));
-const fundaNewVisible = ref(
-  new URLSearchParams(window.location.search).get("funda") !== "0",
-);
+const fundaNewVisible = ref(new URLSearchParams(window.location.search).get("funda") !== "0");
 const fundaViewedVisible = ref(
   new URLSearchParams(window.location.search).get("funda-viewed") !== "0",
 );
@@ -87,7 +85,13 @@ const fundaCount = ref(0);
 
 watch(
   [zoneVisibility, transitVisibility, fundaNewVisible, fundaViewedVisible],
-  () => writeToURL(zoneVisibility.value, transitVisibility.value, fundaNewVisible.value, fundaViewedVisible.value),
+  () =>
+    writeToURL(
+      zoneVisibility.value,
+      transitVisibility.value,
+      fundaNewVisible.value,
+      fundaViewedVisible.value,
+    ),
   { deep: true },
 );
 

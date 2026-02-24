@@ -17,7 +17,7 @@ if (process.env.NODE_ENV !== "production") {
     cors({
       origin: "http://localhost:5173",
       credentials: true,
-    })
+    }),
   );
 }
 
@@ -38,7 +38,7 @@ app.use(
   serveStatic({
     root: distDir,
     rewriteRequestPath: (p) => p,
-  })
+  }),
 );
 
 // SPA fallback: serve index.html for non-file routes
@@ -47,7 +47,7 @@ app.use(
   serveStatic({
     root: distDir,
     rewriteRequestPath: () => "/index.html",
-  })
+  }),
 );
 
 const port = parseInt(process.env.PORT || "3000", 10);

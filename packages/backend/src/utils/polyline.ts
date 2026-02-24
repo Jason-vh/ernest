@@ -2,10 +2,7 @@
  * Decode a Valhalla encoded polyline string into [lon, lat] coordinate pairs.
  * Valhalla uses precision 6 (not Google's 5).
  */
-export function decodePolyline(
-  encoded: string,
-  precision = 6,
-): [number, number][] {
+export function decodePolyline(encoded: string, precision = 6): [number, number][] {
   const factor = Math.pow(10, precision);
   const coords: [number, number][] = [];
   let lat = 0;

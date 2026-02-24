@@ -1,6 +1,6 @@
 export const OFFICES = {
   fareharbor: { lat: 52.3599, lon: 4.8912, name: "FareHarbor" },
-  airwallex: { lat: 52.3700, lon: 4.8878, name: "Airwallex" },
+  airwallex: { lat: 52.37, lon: 4.8878, name: "Airwallex" },
 } as const;
 
 // Midpoint between the two offices

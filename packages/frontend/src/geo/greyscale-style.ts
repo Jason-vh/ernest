@@ -17,10 +17,7 @@ const GREEN_PATTERNS = [
 const WATER_PATTERNS = ["water"];
 
 function isColorString(s: string): boolean {
-  if (
-    s.startsWith("#") &&
-    (s.length === 4 || s.length === 7 || s.length === 9)
-  ) {
+  if (s.startsWith("#") && (s.length === 4 || s.length === 7 || s.length === 9)) {
     return /^#[0-9a-fA-F]+$/.test(s);
   }
   if (s.startsWith("rgb") || s.startsWith("hsl")) return true;
@@ -30,17 +27,9 @@ function isColorString(s: string): boolean {
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.slice(1);
   if (h.length === 3) {
-    return [
-      parseInt(h[0] + h[0], 16),
-      parseInt(h[1] + h[1], 16),
-      parseInt(h[2] + h[2], 16),
-    ];
+    return [parseInt(h[0] + h[0], 16), parseInt(h[1] + h[1], 16), parseInt(h[2] + h[2], 16)];
   }
-  return [
-    parseInt(h.slice(0, 2), 16),
-    parseInt(h.slice(2, 4), 16),
-    parseInt(h.slice(4, 6), 16),
-  ];
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
 }
 
 function toGreyscale(color: string): string {
@@ -67,16 +56,10 @@ function toGreyscale(color: string): string {
     }
   }
   if (color.startsWith("hsla")) {
-    return color.replace(
-      /hsla\(([^,]+),\s*[^,]+,/,
-      "hsla($1, 0%,"
-    );
+    return color.replace(/hsla\(([^,]+),\s*[^,]+,/, "hsla($1, 0%,");
   }
   if (color.startsWith("hsl")) {
-    return color.replace(
-      /hsl\(([^,]+),\s*[^,]+,/,
-      "hsl($1, 0%,"
-    );
+    return color.replace(/hsl\(([^,]+),\s*[^,]+,/, "hsl($1, 0%,");
   }
   return color;
 }
@@ -104,7 +87,7 @@ function matchesPatterns(id: string, patterns: string[]): boolean {
 }
 
 // Layers to hide entirely
-const HIDDEN_LAYERS = [
+const HIDDEN_LAYERS = new Set([
   // POIs
   "poi_transit",
   "poi_r20",
@@ -161,11 +144,9 @@ const HIDDEN_LAYERS = [
   "landuse_school",
   "landuse_pitch",
   "landuse_track",
-];
+]);
 
-export async function loadGreyscaleStyle(
-  styleUrl: string
-): Promise<StyleSpecification> {
+export async function loadGreyscaleStyle(styleUrl: string): Promise<StyleSpecification> {
   const res = await fetch(styleUrl);
   const style: StyleSpecification = await res.json();
 
@@ -180,7 +161,7 @@ export async function loadGreyscaleStyle(
     const id = layer.id;
 
     // Hide map-level transit POIs (bus stops, station icons, etc.)
-    if (HIDDEN_LAYERS.includes(id)) {
+    if (HIDDEN_LAYERS.has(id)) {
       if ("layout" in layer) {
         layer.layout = { ...layer.layout, visibility: "none" };
       } else {
@@ -199,12 +180,9 @@ export async function loadGreyscaleStyle(
     if ("paint" in layer && layer.paint) {
       layer.paint = processValue(layer.paint, toGreyscale) as typeof layer.paint;
     }
-    
+
     if ("layout" in layer && layer.layout) {
-      layer.layout = processValue(
-        layer.layout,
-        toGreyscale
-      ) as typeof layer.layout;
+      layer.layout = processValue(layer.layout, toGreyscale) as typeof layer.layout;
     }
   }
 

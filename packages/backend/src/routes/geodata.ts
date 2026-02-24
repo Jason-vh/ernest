@@ -43,7 +43,9 @@ async function loadData() {
     const volFile = Bun.file(volumeFundaPath);
     if (await volFile.exists()) {
       fundaData = await volFile.json();
-      console.log(`Loaded funda data from volume: ${(fundaData as any)?.features?.length ?? 0} listings`);
+      console.log(
+        `Loaded funda data from volume: ${(fundaData as any)?.features?.length ?? 0} listings`,
+      );
       return;
     }
   } catch (e) {

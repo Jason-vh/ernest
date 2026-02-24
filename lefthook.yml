@@ -1,0 +1,17 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: format
+      glob: "packages/{backend,frontend}/src/**/*.{ts,vue}"
+      run: bunx oxfmt --check {staged_files}
+    - name: lint
+      glob: "packages/{backend,frontend}/src/**/*.{ts,vue}"
+      run: bunx oxlint {staged_files}
+    - name: typecheck-backend
+      glob: "packages/backend/src/**/*.ts"
+      root: packages/backend
+      run: bunx tsc --noEmit
+    - name: typecheck-frontend
+      glob: "packages/frontend/src/**/*.{ts,vue}"
+      root: packages/frontend
+      run: bunx vue-tsc --noEmit

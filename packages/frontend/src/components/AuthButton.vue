@@ -59,7 +59,10 @@ onUnmounted(() => document.removeEventListener("click", onClickOutside));
   top: 12px;
   right: 12px;
   z-index: 2;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 
 .auth-btn {
@@ -181,7 +184,9 @@ onUnmounted(() => document.removeEventListener("click", onClickOutside));
 /* Menu transition */
 .menu-enter-active,
 .menu-leave-active {
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
 }
 
 .menu-enter-from,

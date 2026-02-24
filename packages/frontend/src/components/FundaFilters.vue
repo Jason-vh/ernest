@@ -3,15 +3,17 @@
     <div class="funda-filters-header">
       <span class="funda-filters-dot"></span>
       <span class="funda-filters-title">
-        {{ fundaCount > 0 ? `${fundaCount} properties` : 'funda search' }}
+        {{ fundaCount > 0 ? `${fundaCount} properties` : "funda search" }}
       </span>
-      <svg
-        class="funda-filters-chevron"
-        width="10"
-        height="10"
-        viewBox="0 0 10 10"
-      >
-        <path d="M3 4l2 2 2-2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <svg class="funda-filters-chevron" width="10" height="10" viewBox="0 0 10 10">
+        <path
+          d="M3 4l2 2 2-2"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
       </svg>
     </div>
     <div class="funda-filters-body">
@@ -46,7 +48,10 @@ const { fundaCount } = useZoneState();
   border-radius: 10px;
   padding: 12px 16px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   z-index: 1;
   cursor: pointer;
   user-select: none;
@@ -67,7 +72,7 @@ const { fundaCount } = useZoneState();
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #E8950F;
+  background: #e8950f;
   flex-shrink: 0;
 }
 
@@ -124,7 +129,6 @@ const { fundaCount } = useZoneState();
   line-height: 1.4;
   width: fit-content;
 }
-
 
 @media (max-width: 640px) {
   .funda-filters {

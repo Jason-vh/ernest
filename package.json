@@ -10,7 +10,16 @@
     "db:generate": "bun run --cwd packages/backend bunx drizzle-kit generate",
     "db:push": "bun run --cwd packages/backend bunx drizzle-kit push",
     "db:studio": "bun run --cwd packages/backend bunx drizzle-kit studio",
+    "fmt": "oxfmt --write packages/backend/src packages/frontend/src",
+    "fmt:check": "oxfmt --check packages/backend/src packages/frontend/src",
+    "lint": "oxlint packages/backend/src packages/frontend/src",
+    "typecheck": "bunx --cwd packages/backend tsc --noEmit && bunx --cwd packages/frontend vue-tsc --noEmit",
     "fetch-data": "bun scripts/fetch-data.ts",
     "fetch-funda": "python3.13 scripts/fetch_funda.py"
+  },
+  "devDependencies": {
+    "lefthook": "^2.1.1",
+    "oxfmt": "^0.35.0",
+    "oxlint": "^1.50.0"
   }
 }

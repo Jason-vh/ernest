@@ -12,6 +12,10 @@ bun run dev:backend      # Start Hono server on :3000
 bun run dev:frontend     # Start Vite dev server on :5173 (proxies /api -> :3000)
 bun run build            # Build Vue frontend to packages/frontend/dist/
 bun run start            # Production: Hono serves API + frontend on :3000
+bun run fmt              # Format all source files with oxfmt
+bun run fmt:check        # Check formatting without writing
+bun run lint             # Lint with oxlint
+bun run typecheck        # Type-check both frontend and backend
 bun run db:generate      # Generate Drizzle migration from schema changes
 bun run db:push          # Push schema directly to DB (dev shortcut)
 bun run db:studio        # Open Drizzle Studio (DB browser)
@@ -46,6 +50,9 @@ bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 
 - TypeScript throughout with `strict: true` (both frontend and backend have tsconfigs)
 - **No type assertions** (`as`, `!`) — use runtime narrowing (type guards, `typeof` checks) instead
+- **Formatting**: oxfmt (runs on pre-commit via lefthook)
+- **Linting**: oxlint with `correctness`, `suspicious`, and `perf` categories enabled. Config in `.oxlintrc.json`.
+- **Pre-commit hooks**: lefthook runs format check, lint, and type-check for both packages in parallel
 - No test framework set up yet
 - Shared types in `packages/frontend/src/types/transit.ts` (StopType enum, TransitStop interface) and `packages/frontend/src/types/buurt.ts` (BuurtProperties interface)
 - Office locations defined in both `scripts/fetch-data.ts` and `packages/frontend/src/geo/constants.ts` — keep in sync if changed
