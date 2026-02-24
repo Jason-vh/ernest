@@ -35,16 +35,20 @@ export interface CyclingRoute {
   geometry: GeoJSON.LineString;
 }
 
-export async function fetchCyclingRoute(
+export interface CyclingRoutes {
+  fareharbor: CyclingRoute | null;
+  airwallex: CyclingRoute | null;
+}
+
+export async function fetchCyclingRoutes(
   from: { lat: number; lon: number },
-  to: { lat: number; lon: number },
   signal?: AbortSignal,
-): Promise<CyclingRoute | null> {
+): Promise<CyclingRoutes | null> {
   try {
-    const res = await fetch("/api/route", {
+    const res = await fetch("/api/routes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to }),
+      body: JSON.stringify({ from }),
       signal,
     });
     if (!res.ok) return null;

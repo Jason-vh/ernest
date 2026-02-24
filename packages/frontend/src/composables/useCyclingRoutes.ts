@@ -1,17 +1,11 @@
 import { ref } from "vue";
-import { OFFICES } from "../geo/constants";
-import { fetchCyclingRoute, type CyclingRoute } from "../api/client";
+import { fetchCyclingRoutes, type CyclingRoutes } from "../api/client";
 
-export interface ActiveRoutes {
-  fareharbor: CyclingRoute | null;
-  airwallex: CyclingRoute | null;
-}
-
-const activeRoutes = ref<ActiveRoutes | null>(null);
+const activeRoutes = ref<CyclingRoutes | null>(null);
 const routesLoading = ref(false);
 
 // Client-side cache keyed by listing URL
-const routeCache = new Map<string, ActiveRoutes>();
+const routeCache = new Map<string, CyclingRoutes>();
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 let abortController: AbortController | null = null;
@@ -39,17 +33,12 @@ function showRoutesForListing(lat: number, lon: number, listingUrl: string) {
     abortController = new AbortController();
     const signal = abortController.signal;
 
-    const from = { lat, lon };
-
-    const [fareharbor, airwallex] = await Promise.all([
-      fetchCyclingRoute(from, OFFICES.fareharbor, signal),
-      fetchCyclingRoute(from, OFFICES.airwallex, signal),
-    ]);
+    const result = await fetchCyclingRoutes({ lat, lon }, signal);
 
     // Ignore if aborted (user moved to different listing)
     if (signal.aborted) return;
 
-    const routes: ActiveRoutes = { fareharbor, airwallex };
+    const routes: CyclingRoutes = result ?? { fareharbor: null, airwallex: null };
     routeCache.set(listingUrl, routes);
     activeRoutes.value = routes;
     routesLoading.value = false;
