@@ -1,0 +1,10 @@
+{
+  "name": "scripts",
+  "private": true,
+  "dependencies": {
+    "@turf/boolean-point-in-polygon": "^7.2.0",
+    "@turf/helpers": "^7.2.0",
+    "@turf/intersect": "^7.2.0",
+    "@turf/union": "^7.2.0"
+  }
+}

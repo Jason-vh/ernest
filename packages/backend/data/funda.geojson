@@ -1,0 +1,3285 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8858223,
+          52.32476
+        ]
+      },
+      "properties": {
+        "price": 465000,
+        "priceFormatted": "€ 465.000 k.k.",
+        "address": "Van Boshuizenstraat 185",
+        "bedrooms": 2,
+        "livingArea": 66,
+        "photo": "https://cloud.funda.nl/valentina_media/224/886/312.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/886/312.jpg\", \"https://cloud.funda.nl/valentina_media/224/886/313.jpg\", \"https://cloud.funda.nl/valentina_media/224/886/314.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/van-boshuizenstraat-185/43355377/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8677034,
+          52.373917
+        ]
+      },
+      "properties": {
+        "price": 585000,
+        "priceFormatted": "€ 585.000 k.k.",
+        "address": "Marcantilaan 349",
+        "bedrooms": 2,
+        "livingArea": 73,
+        "photo": "https://cloud.funda.nl/valentina_media/224/865/572.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/865/572.jpg\", \"https://cloud.funda.nl/valentina_media/224/865/573.jpg\", \"https://cloud.funda.nl/valentina_media/224/865/574.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/marcantilaan-349/43355721/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8555355,
+          52.35262
+        ]
+      },
+      "properties": {
+        "price": 535000,
+        "priceFormatted": "€ 535.000 k.k.",
+        "address": "Sluisstraat 6",
+        "bedrooms": 2,
+        "livingArea": 70,
+        "photo": "https://cloud.funda.nl/valentina_media/224/791/161.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/791/161.jpg\", \"https://cloud.funda.nl/valentina_media/224/791/162.jpg\", \"https://cloud.funda.nl/valentina_media/224/791/163.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/sluisstraat-6-3/43243841/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8191514,
+          52.346706
+        ]
+      },
+      "properties": {
+        "price": 595000,
+        "priceFormatted": "€ 595.000 k.k.",
+        "address": "Bocholtstraat 28",
+        "bedrooms": 4,
+        "livingArea": 112,
+        "photo": "https://cloud.funda.nl/valentina_media/224/740/084.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/740/084.jpg\", \"https://cloud.funda.nl/valentina_media/224/740/104.jpg\", \"https://cloud.funda.nl/valentina_media/224/740/125.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/bocholtstraat-28/89606239/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.808279,
+          52.364502
+        ]
+      },
+      "properties": {
+        "price": 485000,
+        "priceFormatted": "€ 485.000 k.k.",
+        "address": "Oeverpad 412",
+        "bedrooms": 2,
+        "livingArea": 97,
+        "photo": "https://cloud.funda.nl/valentina_media/224/728/922.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/728/922.jpg\", \"https://cloud.funda.nl/valentina_media/224/728/923.jpg\", \"https://cloud.funda.nl/valentina_media/224/728/924.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/oeverpad-412/43241369/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.806079,
+          52.364365
+        ]
+      },
+      "properties": {
+        "price": 465000,
+        "priceFormatted": "€ 465.000 k.k.",
+        "address": "Oeverpad 280",
+        "bedrooms": 2,
+        "livingArea": 97,
+        "photo": "https://cloud.funda.nl/valentina_media/224/728/032.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/728/032.jpg\", \"https://cloud.funda.nl/valentina_media/224/728/033.jpg\", \"https://cloud.funda.nl/valentina_media/224/728/034.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/oeverpad-280/43241231/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9353776,
+          52.358917
+        ]
+      },
+      "properties": {
+        "price": 450000,
+        "priceFormatted": "€ 450.000 k.k.",
+        "address": "Celebesstraat 112",
+        "bedrooms": 2,
+        "livingArea": 65,
+        "photo": "https://cloud.funda.nl/valentina_media/224/707/287.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/707/287.jpg\", \"https://cloud.funda.nl/valentina_media/224/707/288.jpg\", \"https://cloud.funda.nl/valentina_media/224/707/289.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/celebesstraat-112-b/43241790/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.7992077,
+          52.349968
+        ]
+      },
+      "properties": {
+        "price": 475000,
+        "priceFormatted": "€ 475.000 k.k.",
+        "address": "Jan van Zutphenstraat 521",
+        "bedrooms": 2,
+        "livingArea": 122,
+        "photo": "https://cloud.funda.nl/valentina_media/224/664/462.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/664/462.jpg\", \"https://cloud.funda.nl/valentina_media/224/664/463.jpg\", \"https://cloud.funda.nl/valentina_media/224/664/465.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/jan-van-zutphenstraat-521/43240663/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8992157,
+          52.3447
+        ]
+      },
+      "properties": {
+        "price": 600000,
+        "priceFormatted": "€ 600.000 k.k.",
+        "address": "Roerstraat 33",
+        "bedrooms": 2,
+        "livingArea": 71,
+        "photo": "https://cloud.funda.nl/valentina_media/224/660/315.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/660/315.jpg\", \"https://cloud.funda.nl/valentina_media/224/660/290.jpg\", \"https://cloud.funda.nl/valentina_media/224/660/300.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/roerstraat-33-1/43240449/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8772955,
+          52.32643
+        ]
+      },
+      "properties": {
+        "price": 573000,
+        "priceFormatted": "€ 573.000 k.k.",
+        "address": "Rietnesse 12",
+        "bedrooms": 4,
+        "livingArea": 109,
+        "photo": "https://cloud.funda.nl/valentina_media/224/658/783.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/658/783.jpg\", \"https://cloud.funda.nl/valentina_media/224/658/784.jpg\", \"https://cloud.funda.nl/valentina_media/224/658/785.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/rietnesse-12-3/43240400/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8924503,
+          52.35524
+        ]
+      },
+      "properties": {
+        "price": 600000,
+        "priceFormatted": "€ 600.000 k.k.",
+        "address": "Albert Cuypstraat 122",
+        "bedrooms": 2,
+        "livingArea": 70,
+        "photo": "https://cloud.funda.nl/valentina_media/224/649/393.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/649/393.jpg\", \"https://cloud.funda.nl/valentina_media/224/649/394.jpg\", \"https://cloud.funda.nl/valentina_media/224/649/395.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/albert-cuypstraat-122-a3/43249288/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.898531,
+          52.350906
+        ]
+      },
+      "properties": {
+        "price": 600000,
+        "priceFormatted": "€ 600.000 k.k.",
+        "address": "Henrick de Keijserplein 34",
+        "bedrooms": 2,
+        "livingArea": 67,
+        "photo": "https://cloud.funda.nl/valentina_media/224/637/364.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/637/364.jpg\", \"https://cloud.funda.nl/valentina_media/224/637/368.jpg\", \"https://cloud.funda.nl/valentina_media/224/637/378.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/henrick-de-keijserplein-34-2/43249975/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8434973,
+          52.363617
+        ]
+      },
+      "properties": {
+        "price": 540000,
+        "priceFormatted": "€ 540.000 k.k.",
+        "address": "Nachtwachtlaan 443",
+        "bedrooms": 3,
+        "livingArea": 98,
+        "photo": "https://cloud.funda.nl/valentina_media/224/619/438.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/619/438.jpg\", \"https://cloud.funda.nl/valentina_media/224/619/440.jpg\", \"https://cloud.funda.nl/valentina_media/224/619/442.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/nachtwachtlaan-443/43249496/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.879219,
+          52.32627
+        ]
+      },
+      "properties": {
+        "price": 475000,
+        "priceFormatted": "€ 475.000 k.k.",
+        "address": "Hellenburg 17",
+        "bedrooms": 2,
+        "livingArea": 81,
+        "photo": "https://cloud.funda.nl/valentina_media/224/609/465.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/609/465.jpg\", \"https://cloud.funda.nl/valentina_media/224/609/466.jpg\", \"https://cloud.funda.nl/valentina_media/224/609/467.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/hellenburg-17/43248121/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.857398,
+          52.378582
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Admiraal De Ruijterweg 252",
+        "bedrooms": 2,
+        "livingArea": 70,
+        "photo": "https://cloud.funda.nl/valentina_media/224/603/822.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/603/822.jpg\", \"https://cloud.funda.nl/valentina_media/224/603/823.jpg\", \"https://cloud.funda.nl/valentina_media/224/603/824.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/admiraal-de-ruijterweg-252-1/43248946/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.921361,
+          52.357246
+        ]
+      },
+      "properties": {
+        "price": 600000,
+        "priceFormatted": "€ 600.000 k.k.",
+        "address": "Vrolikstraat 401",
+        "bedrooms": 2,
+        "livingArea": 75,
+        "photo": "https://cloud.funda.nl/valentina_media/224/563/437.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/563/437.jpg\", \"https://cloud.funda.nl/valentina_media/224/563/457.jpg\", \"https://cloud.funda.nl/valentina_media/224/563/462.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/vrolikstraat-401-c/43247967/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8385053,
+          52.37907
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Bos en Lommerweg 368",
+        "bedrooms": 3,
+        "livingArea": 97,
+        "photo": "https://cloud.funda.nl/valentina_media/224/563/243.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/563/243.jpg\", \"https://cloud.funda.nl/valentina_media/224/563/230.jpg\", \"https://cloud.funda.nl/valentina_media/224/563/229.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/bos-en-lommerweg-368/43247852/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.808683,
+          52.36169
+        ]
+      },
+      "properties": {
+        "price": 485000,
+        "priceFormatted": "€ 485.000 k.k.",
+        "address": "Ruimzicht 235",
+        "bedrooms": 2,
+        "livingArea": 89,
+        "photo": "https://cloud.funda.nl/valentina_media/224/562/716.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/562/716.jpg\", \"https://cloud.funda.nl/valentina_media/224/562/717.jpg\", \"https://cloud.funda.nl/valentina_media/224/562/718.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/ruimzicht-235/43247840/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.963785,
+          52.37489
+        ]
+      },
+      "properties": {
+        "price": 595000,
+        "priceFormatted": "€ 595.000 k.k.",
+        "address": "Mary van der Sluisstraat 464",
+        "bedrooms": 2,
+        "livingArea": 91,
+        "photo": "https://cloud.funda.nl/valentina_media/224/545/649.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/545/649.jpg\", \"https://cloud.funda.nl/valentina_media/224/545/651.jpg\", \"https://cloud.funda.nl/valentina_media/224/545/652.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/mary-van-der-sluisstraat-464/43246355/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8409495,
+          52.349934
+        ]
+      },
+      "properties": {
+        "price": 495000,
+        "priceFormatted": "€ 495.000 k.k.",
+        "address": "Rijswijkstraat 21",
+        "bedrooms": 3,
+        "livingArea": 80,
+        "photo": "https://cloud.funda.nl/valentina_media/224/539/730.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/539/730.jpg\", \"https://cloud.funda.nl/valentina_media/224/539/733.jpg\", \"https://cloud.funda.nl/valentina_media/224/539/736.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/rijswijkstraat-21/43246265/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8069115,
+          52.383747
+        ]
+      },
+      "properties": {
+        "price": 525000,
+        "priceFormatted": "€ 525.000 k.k.",
+        "address": "Dolhaantjestraat 61",
+        "bedrooms": 4,
+        "livingArea": 99,
+        "photo": "https://cloud.funda.nl/valentina_media/224/522/142.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/522/142.jpg\", \"https://cloud.funda.nl/valentina_media/224/522/145.jpg\", \"https://cloud.funda.nl/valentina_media/224/522/147.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/dolhaantjestraat-61/43246794/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.92715,
+          52.360626
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Wijttenbachstraat 45",
+        "bedrooms": 2,
+        "livingArea": 65,
+        "photo": "https://cloud.funda.nl/valentina_media/224/497/137.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/497/137.jpg\", \"https://cloud.funda.nl/valentina_media/224/497/142.jpg\", \"https://cloud.funda.nl/valentina_media/224/497/146.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/wijttenbachstraat-45-b/89609675/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8120375,
+          52.34527
+        ]
+      },
+      "properties": {
+        "price": 525000,
+        "priceFormatted": "€ 525.000 k.k.",
+        "address": "Hageland 122",
+        "bedrooms": 3,
+        "livingArea": 100,
+        "photo": "https://cloud.funda.nl/valentina_media/224/407/196.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/407/196.jpg\", \"https://cloud.funda.nl/valentina_media/224/407/198.jpg\", \"https://cloud.funda.nl/valentina_media/224/407/200.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/hageland-122/43233553/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.882266,
+          52.32533
+        ]
+      },
+      "properties": {
+        "price": 495000,
+        "priceFormatted": "€ 495.000 k.k.",
+        "address": "Van Heenvlietlaan 416",
+        "bedrooms": 2,
+        "livingArea": 81,
+        "photo": "https://cloud.funda.nl/valentina_media/224/393/654.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/393/654.jpg\", \"https://cloud.funda.nl/valentina_media/224/393/655.jpg\", \"https://cloud.funda.nl/valentina_media/224/393/650.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/van-heenvlietlaan-416-3/43232147/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.870924,
+          52.325615
+        ]
+      },
+      "properties": {
+        "price": 475000,
+        "priceFormatted": "€ 475.000 k.k.",
+        "address": "Merckenburg 42",
+        "bedrooms": 2,
+        "livingArea": 78,
+        "photo": "https://cloud.funda.nl/valentina_media/224/388/911.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/388/911.jpg\", \"https://cloud.funda.nl/valentina_media/224/388/912.jpg\", \"https://cloud.funda.nl/valentina_media/224/388/972.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/merckenburg-42/43232028/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9419928,
+          52.350647
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Lord Kelvinstraat 8",
+        "bedrooms": 4,
+        "livingArea": 68,
+        "photo": "https://cloud.funda.nl/valentina_media/224/384/721.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/384/721.jpg\", \"https://cloud.funda.nl/valentina_media/224/384/722.jpg\", \"https://cloud.funda.nl/valentina_media/224/384/724.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/lord-kelvinstraat-8-1/43232929/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9437966,
+          52.368404
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Jan Boterenbroodstraat 62",
+        "bedrooms": 2,
+        "livingArea": 71,
+        "photo": "https://cloud.funda.nl/valentina_media/224/342/228.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/342/228.jpg\", \"https://cloud.funda.nl/valentina_media/224/354/292.jpg\", \"https://cloud.funda.nl/valentina_media/224/342/231.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/jan-boterenbroodstraat-62/89695340/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.869691,
+          52.32569
+        ]
+      },
+      "properties": {
+        "price": 475000,
+        "priceFormatted": "€ 475.000 k.k.",
+        "address": "Kastelenstraat 297",
+        "bedrooms": 2,
+        "livingArea": 77,
+        "photo": "https://cloud.funda.nl/valentina_media/224/337/577.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/337/577.jpg\", \"https://cloud.funda.nl/valentina_media/224/337/578.jpg\", \"https://cloud.funda.nl/valentina_media/224/337/579.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/kastelenstraat-297-2/43231670/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8573375,
+          52.378708
+        ]
+      },
+      "properties": {
+        "price": 560000,
+        "priceFormatted": "€ 560.000 k.k.",
+        "address": "Admiraal De Ruijterweg 256",
+        "bedrooms": 2,
+        "livingArea": 69,
+        "photo": "https://cloud.funda.nl/valentina_media/224/309/961.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/309/961.jpg\", \"https://cloud.funda.nl/valentina_media/224/309/966.jpg\", \"https://cloud.funda.nl/valentina_media/224/309/964.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/admiraal-de-ruijterweg-256-1/43230846/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8366513,
+          52.35448
+        ]
+      },
+      "properties": {
+        "price": 535000,
+        "priceFormatted": "€ 535.000 k.k.",
+        "address": "Wittgensteinlaan 266",
+        "bedrooms": 2,
+        "livingArea": 78,
+        "photo": "https://cloud.funda.nl/valentina_media/224/266/353.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/266/353.jpg\", \"https://cloud.funda.nl/valentina_media/224/266/367.jpg\", \"https://cloud.funda.nl/valentina_media/224/266/354.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/wittgensteinlaan-266/43239735/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9384437,
+          52.34746
+        ]
+      },
+      "properties": {
+        "price": 575000,
+        "priceFormatted": "€ 575.000 k.k.",
+        "address": "Jennerstraat 25",
+        "bedrooms": 3,
+        "livingArea": 83,
+        "photo": "https://cloud.funda.nl/valentina_media/224/043/841.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/043/841.jpg\", \"https://cloud.funda.nl/valentina_media/224/043/843.jpg\", \"https://cloud.funda.nl/valentina_media/224/043/845.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/jennerstraat-25/43223803/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8849664,
+          52.352467
+        ]
+      },
+      "properties": {
+        "price": 560000,
+        "priceFormatted": "€ 560.000 k.k.",
+        "address": "Roelof Hartstraat 15",
+        "bedrooms": 2,
+        "livingArea": 67,
+        "photo": "https://cloud.funda.nl/valentina_media/224/031/487.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/031/487.jpg\", \"https://cloud.funda.nl/valentina_media/224/031/488.jpg\", \"https://cloud.funda.nl/valentina_media/224/031/490.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/roelof-hartstraat-15-d/43223569/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8353953,
+          52.355167
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Wittgensteinlaan 44",
+        "bedrooms": 2,
+        "livingArea": 92,
+        "photo": "https://cloud.funda.nl/valentina_media/223/950/118.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/950/118.jpg\", \"https://cloud.funda.nl/valentina_media/223/950/121.jpg\", \"https://cloud.funda.nl/valentina_media/223/950/123.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/wittgensteinlaan-44/43220359/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8108163,
+          52.34324
+        ]
+      },
+      "properties": {
+        "price": 600000,
+        "priceFormatted": "€ 600.000 k.k.",
+        "address": "Henegouwenstraat 122",
+        "bedrooms": 2,
+        "livingArea": 121,
+        "photo": "https://cloud.funda.nl/valentina_media/223/909/519.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/909/519.jpg\", \"https://cloud.funda.nl/valentina_media/223/909/521.jpg\", \"https://cloud.funda.nl/valentina_media/223/909/718.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/henegouwenstraat-122/89684003/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9294233,
+          52.36971
+        ]
+      },
+      "properties": {
+        "price": 575000,
+        "priceFormatted": "€ 575.000 k.k.",
+        "address": "Blankenstraat 101",
+        "bedrooms": 2,
+        "livingArea": 65,
+        "photo": "https://cloud.funda.nl/valentina_media/223/815/597.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/815/597.jpg\", \"https://cloud.funda.nl/valentina_media/223/815/598.jpg\", \"https://cloud.funda.nl/valentina_media/223/815/599.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/blankenstraat-101-c/43227952/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.881028,
+          52.33097
+        ]
+      },
+      "properties": {
+        "price": 599000,
+        "priceFormatted": "€ 599.000 k.k.",
+        "address": "Hof van Groenen 42",
+        "bedrooms": 2,
+        "livingArea": 100,
+        "photo": "https://cloud.funda.nl/valentina_media/223/770/492.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/770/492.jpg\", \"https://cloud.funda.nl/valentina_media/223/770/495.jpg\", \"https://cloud.funda.nl/valentina_media/223/770/493.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/hof-van-groenen-42/43226756/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8363385,
+          52.353672
+        ]
+      },
+      "properties": {
+        "price": 525000,
+        "priceFormatted": "€ 525.000 k.k.",
+        "address": "Wittgensteinlaan 291",
+        "bedrooms": 2,
+        "livingArea": 77,
+        "photo": "https://cloud.funda.nl/valentina_media/223/362/343.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/362/343.jpg\", \"https://cloud.funda.nl/valentina_media/223/362/346.jpg\", \"https://cloud.funda.nl/valentina_media/223/362/326.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/wittgensteinlaan-291/43215627/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8642225,
+          52.364033
+        ]
+      },
+      "properties": {
+        "price": 599000,
+        "priceFormatted": "€ 599.000 k.k.",
+        "address": "Jacob van Lennepstraat 246",
+        "bedrooms": 2,
+        "livingArea": 74,
+        "photo": "https://cloud.funda.nl/valentina_media/223/351/819.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/351/819.jpg\", \"https://cloud.funda.nl/valentina_media/223/351/802.jpg\", \"https://cloud.funda.nl/valentina_media/223/351/810.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/jacob-van-lennepstraat-246-d/89668856/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8656383,
+          52.374744
+        ]
+      },
+      "properties": {
+        "price": 575000,
+        "priceFormatted": "€ 575.000 k.k.",
+        "address": "Marcantilaan 427",
+        "bedrooms": 2,
+        "livingArea": 70,
+        "photo": "https://cloud.funda.nl/valentina_media/223/161/397.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/161/397.jpg\", \"https://cloud.funda.nl/valentina_media/223/161/417.jpg\", \"https://cloud.funda.nl/valentina_media/223/161/396.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/marcantilaan-427/43209265/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.906713,
+          52.36928
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Valkenburgerstraat 127",
+        "bedrooms": 2,
+        "livingArea": 70,
+        "photo": "https://cloud.funda.nl/valentina_media/223/156/993.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/156/993.jpg\", \"https://cloud.funda.nl/valentina_media/223/156/994.jpg\", \"https://cloud.funda.nl/valentina_media/223/156/995.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/valkenburgerstraat-127/89663682/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.81288,
+          52.35274
+        ]
+      },
+      "properties": {
+        "price": 525000,
+        "priceFormatted": "€ 525.000 k.k.",
+        "address": "Pisuissehof 12",
+        "bedrooms": 3,
+        "livingArea": 93,
+        "photo": "https://cloud.funda.nl/valentina_media/222/408/109.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/222/408/109.jpg\", \"https://cloud.funda.nl/valentina_media/222/408/110.jpg\", \"https://cloud.funda.nl/valentina_media/222/408/111.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/pisuissehof-12/43280685/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.836645,
+          52.35379
+        ]
+      },
+      "properties": {
+        "price": 585000,
+        "priceFormatted": "€ 585.000 k.k.",
+        "address": "Wittgensteinlaan 307",
+        "bedrooms": 3,
+        "livingArea": 88,
+        "photo": "https://cloud.funda.nl/valentina_media/221/363/632.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/221/363/632.jpg\", \"https://cloud.funda.nl/valentina_media/221/363/633.jpg\", \"https://cloud.funda.nl/valentina_media/221/363/634.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/wittgensteinlaan-307/43254254/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.874437,
+          52.32752
+        ]
+      },
+      "properties": {
+        "price": 525000,
+        "priceFormatted": "€ 525.000 k.k.",
+        "address": "Van Nijenrodeweg 528",
+        "bedrooms": 2,
+        "livingArea": 86,
+        "photo": "https://cloud.funda.nl/valentina_media/221/341/359.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/221/341/359.jpg\", \"https://cloud.funda.nl/valentina_media/221/341/337.jpg\", \"https://cloud.funda.nl/valentina_media/221/341/363.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/van-nijenrodeweg-528/43254996/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8262177,
+          52.356598
+        ]
+      },
+      "properties": {
+        "price": 475000,
+        "priceFormatted": "€ 475.000 k.k.",
+        "address": "Pieter Calandlaan 46",
+        "bedrooms": 3,
+        "livingArea": 74,
+        "photo": "https://cloud.funda.nl/valentina_media/221/124/086.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/221/124/086.jpg\", \"https://cloud.funda.nl/valentina_media/221/124/091.jpg\", \"https://cloud.funda.nl/valentina_media/221/124/080.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/pieter-calandlaan-46-2/89613500/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8400655,
+          52.364475
+        ]
+      },
+      "properties": {
+        "price": 458000,
+        "priceFormatted": "€ 458.000 k.k.",
+        "address": "Derkinderenstraat 55",
+        "bedrooms": 3,
+        "livingArea": 70,
+        "photo": "https://cloud.funda.nl/valentina_media/220/618/869.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/220/618/869.jpg\", \"https://cloud.funda.nl/valentina_media/220/618/870.jpg\", \"https://cloud.funda.nl/valentina_media/220/618/871.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/derkinderenstraat-55-2/89501580/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9022765,
+          52.351974
+        ]
+      },
+      "properties": {
+        "price": 530000,
+        "priceFormatted": "€ 530.000 k.k.",
+        "address": "Tolstraat 88",
+        "bedrooms": 2,
+        "livingArea": 65,
+        "photo": "https://cloud.funda.nl/valentina_media/216/385/370.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/216/385/370.jpg\", \"https://cloud.funda.nl/valentina_media/216/385/374.jpg\", \"https://cloud.funda.nl/valentina_media/216/385/378.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/tolstraat-88-2/89408608/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.85864,
+          52.38034
+        ]
+      },
+      "properties": {
+        "price": 490000,
+        "priceFormatted": "€ 490.000 k.k.",
+        "address": "Charlotte de Bourbonstraat 27",
+        "bedrooms": 3,
+        "livingArea": 69,
+        "photo": "https://cloud.funda.nl/valentina_media/210/458/710.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/210/458/710.jpg\", \"https://cloud.funda.nl/valentina_media/210/458/704.jpg\", \"https://cloud.funda.nl/valentina_media/210/458/696.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/charlotte-de-bourbonstraat-27-1/89385123/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8133216,
+          52.352634
+        ]
+      },
+      "properties": {
+        "price": 575000,
+        "priceFormatted": "€ 575.000 k.k.",
+        "address": "Pisuissehof 19",
+        "bedrooms": 5,
+        "livingArea": 96,
+        "photo": "https://cloud.funda.nl/valentina_media/224/666/019.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/666/019.jpg\", \"https://cloud.funda.nl/valentina_media/224/666/022.jpg\", \"https://cloud.funda.nl/valentina_media/224/666/025.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/pisuissehof-19/43240600/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.807388,
+          52.36642
+        ]
+      },
+      "properties": {
+        "price": 500000,
+        "priceFormatted": "€ 500.000 k.k.",
+        "address": "President Allendelaan 103",
+        "bedrooms": 2,
+        "livingArea": 91,
+        "photo": "https://cloud.funda.nl/valentina_media/224/845/031.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/845/031.jpg\", \"https://cloud.funda.nl/valentina_media/224/844/985.jpg\", \"https://cloud.funda.nl/valentina_media/224/845/004.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/president-allendelaan-103/43244279/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.815703,
+          52.34666
+        ]
+      },
+      "properties": {
+        "price": 575000,
+        "priceFormatted": "€ 575.000 k.k.",
+        "address": "Laan van Vlaanderen 126",
+        "bedrooms": 3,
+        "livingArea": 117,
+        "photo": "https://cloud.funda.nl/valentina_media/224/823/774.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/823/774.jpg\", \"https://cloud.funda.nl/valentina_media/224/823/769.jpg\", \"https://cloud.funda.nl/valentina_media/224/823/778.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/laan-van-vlaanderen-126/43244771/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9274626,
+          52.36908
+        ]
+      },
+      "properties": {
+        "price": 599000,
+        "priceFormatted": "€ 599.000 k.k.",
+        "address": "Czaar Peterstraat 47",
+        "bedrooms": 2,
+        "livingArea": 84,
+        "photo": "https://cloud.funda.nl/valentina_media/224/780/694.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/780/694.jpg\", \"https://cloud.funda.nl/valentina_media/224/780/728.jpg\", \"https://cloud.funda.nl/valentina_media/224/780/695.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/czaar-peterstraat-47-b/43243698/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8773766,
+          52.38453
+        ]
+      },
+      "properties": {
+        "price": 595000,
+        "priceFormatted": "€ 595.000 k.k.",
+        "address": "Van der Duijnstraat 35",
+        "bedrooms": 2,
+        "livingArea": 79,
+        "photo": "https://cloud.funda.nl/valentina_media/224/735/862.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/735/862.jpg\", \"https://cloud.funda.nl/valentina_media/224/735/863.jpg\", \"https://cloud.funda.nl/valentina_media/224/735/864.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/van-der-duijnstraat-35/89606082/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.846398,
+          52.374973
+        ]
+      },
+      "properties": {
+        "price": 485000,
+        "priceFormatted": "€ 485.000 k.k.",
+        "address": "Erasmusgracht 25",
+        "bedrooms": 4,
+        "livingArea": 72,
+        "photo": "https://cloud.funda.nl/valentina_media/224/633/903.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/633/903.jpg\", \"https://cloud.funda.nl/valentina_media/224/633/898.jpg\", \"https://cloud.funda.nl/valentina_media/224/633/925.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/erasmusgracht-25-1/43249871/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.829978,
+          52.349373
+        ]
+      },
+      "properties": {
+        "price": 475000,
+        "priceFormatted": "€ 475.000 k.k.",
+        "address": "Elisabeth Boddaertstraat 34",
+        "bedrooms": 3,
+        "livingArea": 76,
+        "photo": "https://cloud.funda.nl/valentina_media/224/603/205.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/603/205.jpg\", \"https://cloud.funda.nl/valentina_media/224/603/124.jpg\", \"https://cloud.funda.nl/valentina_media/224/603/119.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/elisabeth-boddaertstraat-34-2/43248831/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.808321,
+          52.362446
+        ]
+      },
+      "properties": {
+        "price": 450000,
+        "priceFormatted": "€ 450.000 k.k.",
+        "address": "Vrijzicht 73",
+        "bedrooms": 3,
+        "livingArea": 96,
+        "photo": "https://cloud.funda.nl/valentina_media/224/552/301.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/552/301.jpg\", \"https://cloud.funda.nl/valentina_media/224/552/304.jpg\", \"https://cloud.funda.nl/valentina_media/224/552/306.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/vrijzicht-73/43247548/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9330025,
+          52.357735
+        ]
+      },
+      "properties": {
+        "price": 525000,
+        "priceFormatted": "€ 525.000 k.k.",
+        "address": "Paradijsplein 76",
+        "bedrooms": 2,
+        "livingArea": 65,
+        "photo": "https://cloud.funda.nl/valentina_media/224/455/066.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/455/066.jpg\", \"https://cloud.funda.nl/valentina_media/224/455/070.jpg\", \"https://cloud.funda.nl/valentina_media/224/455/073.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/paradijsplein-76/43234952/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.925014,
+          52.350418
+        ]
+      },
+      "properties": {
+        "price": 475000,
+        "priceFormatted": "€ 475.000 k.k.",
+        "address": "Kamerlingh Onneslaan 50",
+        "bedrooms": 2,
+        "livingArea": 75,
+        "photo": "https://cloud.funda.nl/valentina_media/224/305/189.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/305/189.jpg\", \"https://cloud.funda.nl/valentina_media/224/305/187.jpg\", \"https://cloud.funda.nl/valentina_media/224/305/185.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/kamerlingh-onneslaan-50/43230714/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.945518,
+          52.362183
+        ]
+      },
+      "properties": {
+        "price": 600000,
+        "priceFormatted": "€ 600.000 k.k.",
+        "address": "Insulindeweg 902",
+        "bedrooms": 2,
+        "livingArea": 83,
+        "photo": "https://cloud.funda.nl/valentina_media/224/286/341.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/286/341.jpg\", \"https://cloud.funda.nl/valentina_media/224/286/330.jpg\", \"https://cloud.funda.nl/valentina_media/224/286/338.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/insulindeweg-902/89693906/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.964653,
+          52.372753
+        ]
+      },
+      "properties": {
+        "price": 525000,
+        "priceFormatted": "€ 525.000 k.k.",
+        "address": "Nida Senffstraat 125",
+        "bedrooms": 2,
+        "livingArea": 68,
+        "photo": "https://cloud.funda.nl/valentina_media/224/248/319.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/248/319.jpg\", \"https://cloud.funda.nl/valentina_media/224/248/321.jpg\", \"https://cloud.funda.nl/valentina_media/224/248/323.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/nida-senffstraat-125/43238242/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9428844,
+          52.368633
+        ]
+      },
+      "properties": {
+        "price": 579000,
+        "priceFormatted": "€ 579.000 k.k.",
+        "address": "Hildo Kropplein 120",
+        "bedrooms": 3,
+        "livingArea": 96,
+        "photo": "https://cloud.funda.nl/valentina_media/224/202/111.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/202/111.jpg\", \"https://cloud.funda.nl/valentina_media/224/202/113.jpg\", \"https://cloud.funda.nl/valentina_media/224/202/116.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/hildo-kropplein-120/43237032/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8880186,
+          52.352543
+        ]
+      },
+      "properties": {
+        "price": 575000,
+        "priceFormatted": "€ 575.000 k.k.",
+        "address": "Ceintuurbaan 27",
+        "bedrooms": 2,
+        "livingArea": 67,
+        "photo": "https://cloud.funda.nl/valentina_media/224/160/003.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/160/003.jpg\", \"https://cloud.funda.nl/valentina_media/224/159/994.jpg\", \"https://cloud.funda.nl/valentina_media/224/160/004.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/ceintuurbaan-27-1/43236073/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9646425,
+          52.37275
+        ]
+      },
+      "properties": {
+        "price": 525000,
+        "priceFormatted": "€ 525.000 k.k.",
+        "address": "Nida Senffstraat 91",
+        "bedrooms": 2,
+        "livingArea": 69,
+        "photo": "https://cloud.funda.nl/valentina_media/224/153/463.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/153/463.jpg\", \"https://cloud.funda.nl/valentina_media/224/153/504.jpg\", \"https://cloud.funda.nl/valentina_media/224/153/464.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/nida-senffstraat-91/89690439/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.925838,
+          52.36857
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Oostenburgerpark 148",
+        "bedrooms": 2,
+        "livingArea": 71,
+        "photo": "https://cloud.funda.nl/valentina_media/224/061/717.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/061/717.jpg\", \"https://cloud.funda.nl/valentina_media/224/061/709.jpg\", \"https://cloud.funda.nl/valentina_media/224/061/630.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/oostenburgerpark-148/43223241/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.839966,
+          52.379864
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Leeuwendalersweg 75",
+        "bedrooms": 2,
+        "livingArea": 72,
+        "photo": "https://cloud.funda.nl/valentina_media/223/933/002.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/933/002.jpg\", \"https://cloud.funda.nl/valentina_media/223/933/003.jpg\", \"https://cloud.funda.nl/valentina_media/223/933/004.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/leeuwendalersweg-75/43220928/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.798655,
+          52.35097
+        ]
+      },
+      "properties": {
+        "price": 570000,
+        "priceFormatted": "€ 570.000 k.k.",
+        "address": "Domela Nieuwenhuisstraat 92",
+        "bedrooms": 3,
+        "livingArea": 107,
+        "photo": "https://cloud.funda.nl/valentina_media/223/896/326.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/896/326.jpg\", \"https://cloud.funda.nl/valentina_media/223/896/289.jpg\", \"https://cloud.funda.nl/valentina_media/223/896/251.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/domela-nieuwenhuisstraat-92/43229030/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.902004,
+          52.35411
+        ]
+      },
+      "properties": {
+        "price": 600000,
+        "priceFormatted": "€ 600.000 k.k.",
+        "address": "Van Woustraat 103",
+        "bedrooms": 2,
+        "livingArea": 69,
+        "photo": "https://cloud.funda.nl/valentina_media/223/761/144.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/761/144.jpg\", \"https://cloud.funda.nl/valentina_media/223/761/093.jpg\", \"https://cloud.funda.nl/valentina_media/223/761/096.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/van-woustraat-103-4/43226509/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.888029,
+          52.328094
+        ]
+      },
+      "properties": {
+        "price": 575000,
+        "priceFormatted": "€ 575.000 k.k.",
+        "address": "Beysterveld 165",
+        "bedrooms": 2,
+        "livingArea": 100,
+        "photo": "https://cloud.funda.nl/valentina_media/223/617/961.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/617/961.jpg\", \"https://cloud.funda.nl/valentina_media/223/617/883.jpg\", \"https://cloud.funda.nl/valentina_media/223/617/884.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/beysterveld-165/43212732/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8084126,
+          52.346394
+        ]
+      },
+      "properties": {
+        "price": 569000,
+        "priceFormatted": "€ 569.000 k.k.",
+        "address": "Berlaarstraat 193",
+        "bedrooms": 2,
+        "livingArea": 90,
+        "photo": "https://cloud.funda.nl/valentina_media/223/553/532.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/553/532.jpg\", \"https://cloud.funda.nl/valentina_media/223/553/535.jpg\", \"https://cloud.funda.nl/valentina_media/223/553/537.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/berlaarstraat-193/43210093/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.874308,
+          52.325657
+        ]
+      },
+      "properties": {
+        "price": 525000,
+        "priceFormatted": "€ 525.000 k.k.",
+        "address": "Zuid-Hollandstraat 122",
+        "bedrooms": 3,
+        "livingArea": 78,
+        "photo": "https://cloud.funda.nl/valentina_media/223/409/190.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/409/190.jpg\", \"https://cloud.funda.nl/valentina_media/223/409/192.jpg\", \"https://cloud.funda.nl/valentina_media/223/409/195.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/zuid-hollandstraat-122-1/43216834/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8355346,
+          52.352238
+        ]
+      },
+      "properties": {
+        "price": 590000,
+        "priceFormatted": "€ 590.000 k.k.",
+        "address": "Wittgensteinlaan 225",
+        "bedrooms": 2,
+        "livingArea": 92,
+        "photo": "https://cloud.funda.nl/valentina_media/223/269/203.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/269/203.jpg\", \"https://cloud.funda.nl/valentina_media/223/269/211.jpg\", \"https://cloud.funda.nl/valentina_media/223/269/214.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/wittgensteinlaan-225/43202152/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8770456,
+          52.334133
+        ]
+      },
+      "properties": {
+        "price": 500000,
+        "priceFormatted": "€ 500.000 k.k.",
+        "address": "Heringa-State 59",
+        "bedrooms": 3,
+        "livingArea": 78,
+        "photo": "https://cloud.funda.nl/valentina_media/223/196/922.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/196/922.jpg\", \"https://cloud.funda.nl/valentina_media/223/196/923.jpg\", \"https://cloud.funda.nl/valentina_media/223/196/924.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/heringa-state-59/43200264/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8762465,
+          52.33343
+        ]
+      },
+      "properties": {
+        "price": 500000,
+        "priceFormatted": "€ 500.000 k.k.",
+        "address": "Frieslandstraat 169",
+        "bedrooms": 2,
+        "livingArea": 72,
+        "photo": "https://cloud.funda.nl/valentina_media/222/190/313.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/222/190/313.jpg\", \"https://cloud.funda.nl/valentina_media/222/190/331.jpg\", \"https://cloud.funda.nl/valentina_media/222/190/314.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/frieslandstraat-169/43274056/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.884402,
+          52.332314
+        ]
+      },
+      "properties": {
+        "price": 475000,
+        "priceFormatted": "€ 475.000 k.k.",
+        "address": "Havikshorst 80",
+        "bedrooms": 3,
+        "livingArea": 78,
+        "photo": "https://cloud.funda.nl/valentina_media/220/977/687.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/220/977/687.jpg\", \"https://cloud.funda.nl/valentina_media/220/977/675.jpg\", \"https://cloud.funda.nl/valentina_media/220/977/677.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/havikshorst-80/89610173/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8717937,
+          52.366924
+        ]
+      },
+      "properties": {
+        "price": 600000,
+        "priceFormatted": "€ 600.000 k.k.",
+        "address": "Kinkerstraat 71",
+        "bedrooms": 2,
+        "livingArea": 77,
+        "photo": "https://cloud.funda.nl/valentina_media/220/783/509.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/220/783/509.jpg\", \"https://cloud.funda.nl/valentina_media/220/783/510.jpg\", \"https://cloud.funda.nl/valentina_media/220/783/511.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/kinkerstraat-71-e/43141081/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9280777,
+          52.359295
+        ]
+      },
+      "properties": {
+        "price": 600000,
+        "priceFormatted": "€ 600.000 k.k.",
+        "address": "Oetewalerstraat 97",
+        "bedrooms": 2,
+        "livingArea": 69,
+        "photo": "https://cloud.funda.nl/valentina_media/220/062/407.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/220/062/407.jpg\", \"https://cloud.funda.nl/valentina_media/220/062/373.jpg\", \"https://cloud.funda.nl/valentina_media/220/062/393.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/oetewalerstraat-97/43135699/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.81184,
+          52.35483
+        ]
+      },
+      "properties": {
+        "price": 499000,
+        "priceFormatted": "€ 499.000 k.k.",
+        "address": "C.K. Eloutstraat 22",
+        "bedrooms": 4,
+        "livingArea": 105,
+        "photo": "https://cloud.funda.nl/valentina_media/219/054/524.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/219/054/524.jpg\", \"https://cloud.funda.nl/valentina_media/219/054/525.jpg\", \"https://cloud.funda.nl/valentina_media/219/054/526.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/c.k.-eloutstraat-22/89566640/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.865785,
+          52.328487
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Nijenburg 40",
+        "bedrooms": 3,
+        "livingArea": 85,
+        "photo": "https://cloud.funda.nl/valentina_media/218/730/145.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/218/730/145.jpg\", \"https://cloud.funda.nl/valentina_media/218/729/966.jpg\", \"https://cloud.funda.nl/valentina_media/218/729/979.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/nijenburg-40/43105821/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8032146,
+          52.356976
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Van Suchtelen van de Haarestraat 83",
+        "bedrooms": 3,
+        "livingArea": 91,
+        "photo": "https://cloud.funda.nl/valentina_media/218/725/763.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/218/725/763.jpg\", \"https://cloud.funda.nl/valentina_media/218/725/575.jpg\", \"https://cloud.funda.nl/valentina_media/218/725/633.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/van-suchtelen-van-de-haarestraat-83/43105736/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.841471,
+          52.37607
+        ]
+      },
+      "properties": {
+        "price": 525000,
+        "priceFormatted": "€ 525.000 k.k.",
+        "address": "Jacob van Arteveldestraat 2",
+        "bedrooms": 2,
+        "livingArea": 76,
+        "photo": "https://cloud.funda.nl/valentina_media/219/648/700.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/219/648/700.jpg\", \"https://cloud.funda.nl/valentina_media/218/175/676.jpg\", \"https://cloud.funda.nl/valentina_media/218/175/681.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/jacob-van-arteveldestraat-2-a/43183779/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.808683,
+          52.36171
+        ]
+      },
+      "properties": {
+        "price": 469000,
+        "priceFormatted": "€ 469.000 k.k.",
+        "address": "Ruimzicht 219",
+        "bedrooms": 2,
+        "livingArea": 99,
+        "photo": "https://cloud.funda.nl/valentina_media/216/642/237.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/216/642/237.jpg\", \"https://cloud.funda.nl/valentina_media/216/642/239.jpg\", \"https://cloud.funda.nl/valentina_media/216/642/243.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/ruimzicht-219/43159019/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8099303,
+          52.36174
+        ]
+      },
+      "properties": {
+        "price": 450000,
+        "priceFormatted": "€ 450.000 k.k.",
+        "address": "Ruimzicht 293",
+        "bedrooms": 2,
+        "livingArea": 96,
+        "photo": "https://cloud.funda.nl/valentina_media/224/912/750.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/912/750.jpg\", \"https://cloud.funda.nl/valentina_media/224/912/752.jpg\", \"https://cloud.funda.nl/valentina_media/224/912/755.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/ruimzicht-293/43356005/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.7992377,
+          52.349907
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Jan van Zutphenstraat 587",
+        "bedrooms": 3,
+        "livingArea": 116,
+        "photo": "https://cloud.funda.nl/valentina_media/224/803/049.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/803/049.jpg\", \"https://cloud.funda.nl/valentina_media/224/803/050.jpg\", \"https://cloud.funda.nl/valentina_media/224/803/051.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/jan-van-zutphenstraat-587/43243144/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8497915,
+          52.378487
+        ]
+      },
+      "properties": {
+        "price": 495000,
+        "priceFormatted": "€ 495.000 k.k.",
+        "address": "Bos en Lommerweg 281",
+        "bedrooms": 3,
+        "livingArea": 75,
+        "photo": "https://cloud.funda.nl/valentina_media/224/555/122.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/555/122.jpg\", \"https://cloud.funda.nl/valentina_media/224/555/105.jpg\", \"https://cloud.funda.nl/valentina_media/224/556/344.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/bos-en-lommerweg-281-1/43247616/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.807537,
+          52.36626
+        ]
+      },
+      "properties": {
+        "price": 475000,
+        "priceFormatted": "€ 475.000 k.k.",
+        "address": "President Allendelaan 173",
+        "bedrooms": 3,
+        "livingArea": 94,
+        "photo": "https://cloud.funda.nl/valentina_media/223/873/191.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/873/191.jpg\", \"https://cloud.funda.nl/valentina_media/223/873/235.jpg\", \"https://cloud.funda.nl/valentina_media/223/873/195.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/president-allendelaan-173/43229405/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8042207,
+          52.345985
+        ]
+      },
+      "properties": {
+        "price": 525000,
+        "priceFormatted": "€ 525.000 k.k.",
+        "address": "Roeselarestraat 27",
+        "bedrooms": 2,
+        "livingArea": 98,
+        "photo": "https://cloud.funda.nl/valentina_media/220/213/192.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/220/213/192.jpg\", \"https://cloud.funda.nl/valentina_media/220/213/195.jpg\", \"https://cloud.funda.nl/valentina_media/220/213/205.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/roeselarestraat-27/89592634/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9442606,
+          52.369
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Zeeburgerkade 632",
+        "bedrooms": 2,
+        "livingArea": 83,
+        "photo": "https://cloud.funda.nl/valentina_media/224/559/511.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/559/511.jpg\", \"https://cloud.funda.nl/valentina_media/224/559/540.jpg\", \"https://cloud.funda.nl/valentina_media/224/559/541.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/zeeburgerkade-632/89601406/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.883556,
+          52.331905
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Oldengaarde 97",
+        "bedrooms": 2,
+        "livingArea": 77,
+        "photo": "https://cloud.funda.nl/valentina_media/224/519/251.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/519/251.jpg\", \"https://cloud.funda.nl/valentina_media/224/519/250.jpg\", \"https://cloud.funda.nl/valentina_media/224/519/252.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/oldengaarde-97/43246607/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8828416,
+          52.327587
+        ]
+      },
+      "properties": {
+        "price": 515000,
+        "priceFormatted": "€ 515.000 k.k.",
+        "address": "Van Nijenrodeweg 198",
+        "bedrooms": 3,
+        "livingArea": 89,
+        "photo": "https://cloud.funda.nl/valentina_media/224/739/134.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/739/134.jpg\", \"https://cloud.funda.nl/valentina_media/224/739/136.jpg\", \"https://cloud.funda.nl/valentina_media/224/739/138.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/van-nijenrodeweg-198/89606203/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8724623,
+          52.32575
+        ]
+      },
+      "properties": {
+        "price": 525000,
+        "priceFormatted": "€ 525.000 k.k.",
+        "address": "Kastelenstraat 229",
+        "bedrooms": 3,
+        "livingArea": 78,
+        "photo": "https://cloud.funda.nl/valentina_media/224/726/308.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/726/308.jpg\", \"https://cloud.funda.nl/valentina_media/224/726/310.jpg\", \"https://cloud.funda.nl/valentina_media/224/726/311.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/kastelenstraat-229-1/89605826/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8229895,
+          52.37958
+        ]
+      },
+      "properties": {
+        "price": 450000,
+        "priceFormatted": "€ 450.000 k.k.",
+        "address": "Jan de Jonghkade 38",
+        "bedrooms": 2,
+        "livingArea": 96,
+        "photo": "https://cloud.funda.nl/valentina_media/224/594/742.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/594/742.jpg\", \"https://cloud.funda.nl/valentina_media/224/440/924.jpg\", \"https://cloud.funda.nl/valentina_media/224/440/905.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/jan-de-jonghkade-38/43234516/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.884294,
+          52.327595
+        ]
+      },
+      "properties": {
+        "price": 525000,
+        "priceFormatted": "€ 525.000 k.k.",
+        "address": "Van Nijenrodeweg 51",
+        "bedrooms": 2,
+        "livingArea": 88,
+        "photo": "https://cloud.funda.nl/valentina_media/224/058/420.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/058/420.jpg\", \"https://cloud.funda.nl/valentina_media/224/058/429.jpg\", \"https://cloud.funda.nl/valentina_media/224/058/424.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/van-nijenrodeweg-51/89687824/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8587174,
+          52.36152
+        ]
+      },
+      "properties": {
+        "price": 585000,
+        "priceFormatted": "€ 585.000 k.k.",
+        "address": "Jacob van Lennepkade 293",
+        "bedrooms": 2,
+        "livingArea": 67,
+        "photo": "https://cloud.funda.nl/valentina_media/218/994/867.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/218/994/867.jpg\", \"https://cloud.funda.nl/valentina_media/218/994/869.jpg\", \"https://cloud.funda.nl/valentina_media/218/994/871.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/jacob-van-lennepkade-293-4/43101688/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8364215,
+          52.36946
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Jan Evertsenstraat 705",
+        "bedrooms": 2,
+        "livingArea": 93,
+        "photo": "https://cloud.funda.nl/valentina_media/216/840/819.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/216/840/819.jpg\", \"https://cloud.funda.nl/valentina_media/216/840/824.jpg\", \"https://cloud.funda.nl/valentina_media/216/840/826.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/jan-evertsenstraat-705/89517705/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.937013,
+          52.356865
+        ]
+      },
+      "properties": {
+        "price": 525000,
+        "priceFormatted": "€ 525.000 k.k.",
+        "address": "Archimedesweg 10",
+        "bedrooms": 2,
+        "livingArea": 69,
+        "photo": "https://cloud.funda.nl/valentina_media/224/439/076.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/439/076.jpg\", \"https://cloud.funda.nl/valentina_media/224/439/043.jpg\", \"https://cloud.funda.nl/valentina_media/224/439/041.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/archimedesweg-10-3/43234683/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8093495,
+          52.34657
+        ]
+      },
+      "properties": {
+        "price": 525000,
+        "priceFormatted": "€ 525.000 k.k.",
+        "address": "Berlaarstraat 107",
+        "bedrooms": 2,
+        "livingArea": 91,
+        "photo": "https://cloud.funda.nl/valentina_media/224/390/877.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/390/877.jpg\", \"https://cloud.funda.nl/valentina_media/224/390/878.jpg\", \"https://cloud.funda.nl/valentina_media/224/390/879.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/berlaarstraat-107/43232171/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.860639,
+          52.343094
+        ]
+      },
+      "properties": {
+        "price": 575000,
+        "priceFormatted": "€ 575.000 k.k.",
+        "address": "Jasonstraat 53",
+        "bedrooms": 3,
+        "livingArea": 71,
+        "photo": "https://cloud.funda.nl/valentina_media/224/048/323.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/048/323.jpg\", \"https://cloud.funda.nl/valentina_media/224/048/324.jpg\", \"https://cloud.funda.nl/valentina_media/224/048/325.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/jasonstraat-53-1/89687545/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.810854,
+          52.37986
+        ]
+      },
+      "properties": {
+        "price": 534000,
+        "priceFormatted": "€ 534.000 k.k.",
+        "address": "Willy Pétillonstraat 1",
+        "bedrooms": 2,
+        "livingArea": 83,
+        "photo": "https://cloud.funda.nl/valentina_media/221/628/517.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/221/628/517.jpg\", \"https://cloud.funda.nl/valentina_media/221/628/518.jpg\", \"https://cloud.funda.nl/valentina_media/221/628/520.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/willy-pétillonstraat-1/89625288/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8751116,
+          52.32753
+        ]
+      },
+      "properties": {
+        "price": 575000,
+        "priceFormatted": "€ 575.000 k.k.",
+        "address": "Van Nijenrodeweg 440",
+        "bedrooms": 3,
+        "livingArea": 88,
+        "photo": "https://cloud.funda.nl/valentina_media/224/405/706.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/405/706.jpg\", \"https://cloud.funda.nl/valentina_media/224/405/671.jpg\", \"https://cloud.funda.nl/valentina_media/224/405/705.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/van-nijenrodeweg-440/43233598/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9172792,
+          52.35457
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Reitzstraat 3",
+        "bedrooms": 3,
+        "livingArea": 74,
+        "photo": "https://cloud.funda.nl/valentina_media/221/825/995.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/221/825/995.jpg\", \"https://cloud.funda.nl/valentina_media/221/825/998.jpg\", \"https://cloud.funda.nl/valentina_media/221/842/103.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/reitzstraat-3-e/43276577/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8469086,
+          52.372837
+        ]
+      },
+      "properties": {
+        "price": 495000,
+        "priceFormatted": "€ 495.000 k.k.",
+        "address": "Robert Scottstraat 10",
+        "bedrooms": 4,
+        "livingArea": 79,
+        "photo": "https://cloud.funda.nl/valentina_media/218/640/215.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/218/640/215.jpg\", \"https://cloud.funda.nl/valentina_media/218/640/216.jpg\", \"https://cloud.funda.nl/valentina_media/218/640/217.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/robert-scottstraat-10/89557385/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8702555,
+          52.331356
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Valkhof 134",
+        "bedrooms": 2,
+        "livingArea": 68,
+        "photo": "https://cloud.funda.nl/valentina_media/223/910/910.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/910/910.jpg\", \"https://cloud.funda.nl/valentina_media/223/910/908.jpg\", \"https://cloud.funda.nl/valentina_media/223/910/916.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/valkhof-134/89684033/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9537272,
+          52.36787
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Nieuwevaartweg 13",
+        "bedrooms": 2,
+        "livingArea": 67,
+        "photo": "https://cloud.funda.nl/valentina_media/223/465/518.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/465/518.jpg\", \"https://cloud.funda.nl/valentina_media/223/465/515.jpg\", \"https://cloud.funda.nl/valentina_media/223/465/523.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/nieuwevaartweg-13/89672076/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8385196,
+          52.37907
+        ]
+      },
+      "properties": {
+        "price": 595000,
+        "priceFormatted": "€ 595.000 k.k.",
+        "address": "Bos en Lommerweg 362",
+        "bedrooms": 3,
+        "livingArea": 100,
+        "photo": "https://cloud.funda.nl/valentina_media/218/918/107.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/218/918/107.jpg\", \"https://cloud.funda.nl/valentina_media/218/918/108.jpg\", \"https://cloud.funda.nl/valentina_media/218/918/109.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/bos-en-lommerweg-362/43109827/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.830246,
+          52.35376
+        ]
+      },
+      "properties": {
+        "price": 520000,
+        "priceFormatted": "€ 520.000 k.k.",
+        "address": "Marten Corverhof 31",
+        "bedrooms": 2,
+        "livingArea": 75,
+        "photo": "https://cloud.funda.nl/valentina_media/224/865/242.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/865/242.jpg\", \"https://cloud.funda.nl/valentina_media/224/865/247.jpg\", \"https://cloud.funda.nl/valentina_media/224/865/250.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/marten-corverhof-31/89719358/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8789997,
+          52.385166
+        ]
+      },
+      "properties": {
+        "price": 535000,
+        "priceFormatted": "€ 535.000 k.k.",
+        "address": "Van Beuningenstraat 5",
+        "bedrooms": 2,
+        "livingArea": 73,
+        "photo": "https://cloud.funda.nl/valentina_media/224/788/449.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/788/449.jpg\", \"https://cloud.funda.nl/valentina_media/224/788/453.jpg\", \"https://cloud.funda.nl/valentina_media/224/788/456.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/van-beuningenstraat-5-c/43243889/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.880932,
+          52.38962
+        ]
+      },
+      "properties": {
+        "price": 595000,
+        "priceFormatted": "€ 595.000 k.k.",
+        "address": "Suikerplein 6",
+        "bedrooms": 2,
+        "livingArea": 74,
+        "photo": "https://cloud.funda.nl/valentina_media/224/785/827.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/785/827.jpg\", \"https://cloud.funda.nl/valentina_media/224/785/870.jpg\", \"https://cloud.funda.nl/valentina_media/224/785/828.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/suikerplein-6/89607360/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8847804,
+          52.381847
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Palmstraat 18",
+        "bedrooms": 2,
+        "livingArea": 76,
+        "photo": "https://cloud.funda.nl/valentina_media/224/780/970.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/780/970.jpg\", \"https://cloud.funda.nl/valentina_media/224/780/971.jpg\", \"https://cloud.funda.nl/valentina_media/224/780/972.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/palmstraat-18-a/43243605/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8081203,
+          52.348564
+        ]
+      },
+      "properties": {
+        "price": 515000,
+        "priceFormatted": "€ 515.000 k.k.",
+        "address": "Turnhoutplantsoen 19",
+        "bedrooms": 3,
+        "livingArea": 85,
+        "photo": "https://cloud.funda.nl/valentina_media/224/746/423.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/746/423.jpg\", \"https://cloud.funda.nl/valentina_media/224/746/425.jpg\", \"https://cloud.funda.nl/valentina_media/224/746/427.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/turnhoutplantsoen-19/43242870/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.832084,
+          52.348797
+        ]
+      },
+      "properties": {
+        "price": 485000,
+        "priceFormatted": "€ 485.000 k.k.",
+        "address": "Ottho Heldringstraat 204",
+        "bedrooms": 2,
+        "livingArea": 83,
+        "photo": "https://cloud.funda.nl/valentina_media/224/732/080.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/732/080.jpg\", \"https://cloud.funda.nl/valentina_media/224/732/095.jpg\", \"https://cloud.funda.nl/valentina_media/224/732/058.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/ottho-heldringstraat-204-d/43241342/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.927944,
+          52.36083
+        ]
+      },
+      "properties": {
+        "price": 595000,
+        "priceFormatted": "€ 595.000 k.k.",
+        "address": "Wijttenbachstraat 65",
+        "bedrooms": 2,
+        "livingArea": 91,
+        "photo": "https://cloud.funda.nl/valentina_media/224/730/183.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/730/183.jpg\", \"https://cloud.funda.nl/valentina_media/224/730/184.jpg\", \"https://cloud.funda.nl/valentina_media/224/730/185.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/wijttenbachstraat-65-b/89605934/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8787837,
+          52.38992
+        ]
+      },
+      "properties": {
+        "price": 500000,
+        "priceFormatted": "€ 500.000 k.k.",
+        "address": "Spaarndammerstraat 85",
+        "bedrooms": 2,
+        "livingArea": 65,
+        "photo": "https://cloud.funda.nl/valentina_media/224/648/875.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/648/875.jpg\", \"https://cloud.funda.nl/valentina_media/224/648/853.jpg\", \"https://cloud.funda.nl/valentina_media/224/648/855.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/spaarndammerstraat-85-a/43249276/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8609157,
+          52.366806
+        ]
+      },
+      "properties": {
+        "price": 535000,
+        "priceFormatted": "€ 535.000 k.k.",
+        "address": "Van Speijkstraat 12",
+        "bedrooms": 2,
+        "livingArea": 73,
+        "photo": "https://cloud.funda.nl/valentina_media/224/637/303.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/637/303.jpg\", \"https://cloud.funda.nl/valentina_media/224/637/308.jpg\", \"https://cloud.funda.nl/valentina_media/224/637/310.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/van-speijkstraat-12-1/43249974/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9414835,
+          52.367767
+        ]
+      },
+      "properties": {
+        "price": 475000,
+        "priceFormatted": "€ 475.000 k.k.",
+        "address": "H.J.M. Walenkampstraat 38",
+        "bedrooms": 2,
+        "livingArea": 66,
+        "photo": "https://cloud.funda.nl/valentina_media/224/626/676.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/626/676.jpg\", \"https://cloud.funda.nl/valentina_media/224/626/678.jpg\", \"https://cloud.funda.nl/valentina_media/224/626/679.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/h.j.m.-walenkampstraat-38/43249666/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8033953,
+          52.357414
+        ]
+      },
+      "properties": {
+        "price": 495000,
+        "priceFormatted": "€ 495.000 k.k.",
+        "address": "Van Suchtelen van de Haarestraat 28",
+        "bedrooms": 3,
+        "livingArea": 111,
+        "photo": "https://cloud.funda.nl/valentina_media/224/215/530.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/215/530.jpg\", \"https://cloud.funda.nl/valentina_media/224/215/534.jpg\", \"https://cloud.funda.nl/valentina_media/224/215/549.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/van-suchtelen-van-de-haarestraat-28-l/89692059/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.836138,
+          52.386547
+        ]
+      },
+      "properties": {
+        "price": 600000,
+        "priceFormatted": "€ 600.000 k.k.",
+        "address": "Lutonhof 345",
+        "bedrooms": 2,
+        "livingArea": 75,
+        "photo": "https://cloud.funda.nl/valentina_media/224/192/622.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/192/622.jpg\", \"https://cloud.funda.nl/valentina_media/224/192/623.jpg\", \"https://cloud.funda.nl/valentina_media/224/192/668.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/lutonhof-345/43237734/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8093796,
+          52.35331
+        ]
+      },
+      "properties": {
+        "price": 475000,
+        "priceFormatted": "€ 475.000 k.k.",
+        "address": "Louis Davidsstraat 17",
+        "bedrooms": 2,
+        "livingArea": 81,
+        "photo": "https://cloud.funda.nl/valentina_media/224/040/693.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/040/693.jpg\", \"https://cloud.funda.nl/valentina_media/224/040/694.jpg\", \"https://cloud.funda.nl/valentina_media/224/040/695.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/louis-davidsstraat-17/43223712/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8839126,
+          52.327583
+        ]
+      },
+      "properties": {
+        "price": 580000,
+        "priceFormatted": "€ 580.000 k.k.",
+        "address": "Van Nijenrodeweg 80",
+        "bedrooms": 2,
+        "livingArea": 87,
+        "photo": "https://cloud.funda.nl/valentina_media/223/720/416.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/720/416.jpg\", \"https://cloud.funda.nl/valentina_media/223/720/419.jpg\", \"https://cloud.funda.nl/valentina_media/223/720/420.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/van-nijenrodeweg-80/43214357/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8738956,
+          52.384293
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Van der Hoopstraat 49",
+        "bedrooms": 2,
+        "livingArea": 74,
+        "photo": "https://cloud.funda.nl/valentina_media/218/803/652.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/218/803/652.jpg\", \"https://cloud.funda.nl/valentina_media/218/803/653.jpg\", \"https://cloud.funda.nl/valentina_media/218/803/654.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/van-der-hoopstraat-49-f/43107583/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8658476,
+          52.374397
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Marcantilaan 456",
+        "bedrooms": 2,
+        "livingArea": 70,
+        "photo": "https://cloud.funda.nl/valentina_media/224/724/677.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/724/677.jpg\", \"https://cloud.funda.nl/valentina_media/224/724/678.jpg\", \"https://cloud.funda.nl/valentina_media/224/724/680.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/marcantilaan-456/43241143/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.851036,
+          52.382454
+        ]
+      },
+      "properties": {
+        "price": 539000,
+        "priceFormatted": "€ 539.000 k.k.",
+        "address": "Wiltzanghlaan 2",
+        "bedrooms": 3,
+        "livingArea": 67,
+        "photo": "https://cloud.funda.nl/valentina_media/221/622/407.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/221/622/407.jpg\", \"https://cloud.funda.nl/valentina_media/221/622/409.jpg\", \"https://cloud.funda.nl/valentina_media/221/622/410.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/wiltzanghlaan-2-d/89625167/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.806079,
+          52.364365
+        ]
+      },
+      "properties": {
+        "price": 575000,
+        "priceFormatted": "€ 575.000 k.k.",
+        "address": "Oeverpad 259",
+        "bedrooms": 3,
+        "livingArea": 111,
+        "photo": "https://cloud.funda.nl/valentina_media/221/906/125.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/221/906/125.jpg\", \"https://cloud.funda.nl/valentina_media/221/906/126.jpg\", \"https://cloud.funda.nl/valentina_media/221/906/128.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/oeverpad-259/43143827/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8927264,
+          52.375267
+        ]
+      },
+      "properties": {
+        "price": 475000,
+        "priceFormatted": "€ 475.000 k.k.",
+        "address": "Nieuwe Nieuwstraat 59",
+        "bedrooms": 2,
+        "livingArea": 69,
+        "photo": "https://cloud.funda.nl/valentina_media/224/805/402.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/805/402.jpg\", \"https://cloud.funda.nl/valentina_media/224/805/405.jpg\", \"https://cloud.funda.nl/valentina_media/224/805/407.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/nieuwe-nieuwstraat-59/43243281/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8470283,
+          52.37262
+        ]
+      },
+      "properties": {
+        "price": 600000,
+        "priceFormatted": "€ 600.000 k.k.",
+        "address": "Jan van Galenstraat 210",
+        "bedrooms": 3,
+        "livingArea": 91,
+        "photo": "https://cloud.funda.nl/valentina_media/222/837/687.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/222/837/687.jpg\", \"https://cloud.funda.nl/valentina_media/222/837/689.jpg\", \"https://cloud.funda.nl/valentina_media/222/837/766.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/jan-van-galenstraat-210-1/89655177/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.812096,
+          52.345295
+        ]
+      },
+      "properties": {
+        "price": 469000,
+        "priceFormatted": "€ 469.000 k.k.",
+        "address": "Hageland 116",
+        "bedrooms": 2,
+        "livingArea": 74,
+        "photo": "https://cloud.funda.nl/valentina_media/224/475/301.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/475/301.jpg\", \"https://cloud.funda.nl/valentina_media/224/475/304.jpg\", \"https://cloud.funda.nl/valentina_media/224/475/307.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/hageland-116/89609128/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.850085,
+          52.356674
+        ]
+      },
+      "properties": {
+        "price": 595000,
+        "priceFormatted": "€ 595.000 k.k.",
+        "address": "Haarlemmermeerstraat 38",
+        "bedrooms": 2,
+        "livingArea": 70,
+        "photo": "https://cloud.funda.nl/valentina_media/224/440/111.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/440/111.jpg\", \"https://cloud.funda.nl/valentina_media/224/440/115.jpg\", \"https://cloud.funda.nl/valentina_media/224/440/112.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/haarlemmermeerstraat-38-2/89698242/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8613596,
+          52.37271
+        ]
+      },
+      "properties": {
+        "price": 525000,
+        "priceFormatted": "€ 525.000 k.k.",
+        "address": "Lumeijstraat 18",
+        "bedrooms": 2,
+        "livingArea": 75,
+        "photo": "https://cloud.funda.nl/valentina_media/224/679/286.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/679/286.jpg\", \"https://cloud.funda.nl/valentina_media/224/430/213.jpg\", \"https://cloud.funda.nl/valentina_media/224/430/215.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/lumeijstraat-18-3/43233359/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9276667,
+          52.363552
+        ]
+      },
+      "properties": {
+        "price": 545000,
+        "priceFormatted": "€ 545.000 k.k.",
+        "address": "Wagenaarstraat 327",
+        "bedrooms": 3,
+        "livingArea": 80,
+        "photo": "https://cloud.funda.nl/valentina_media/224/380/156.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/380/156.jpg\", \"https://cloud.funda.nl/valentina_media/224/380/160.jpg\", \"https://cloud.funda.nl/valentina_media/224/380/162.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/wagenaarstraat-327/43232825/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.867579,
+          52.384567
+        ]
+      },
+      "properties": {
+        "price": 600000,
+        "priceFormatted": "€ 600.000 k.k.",
+        "address": "Waterkeringweg 65",
+        "bedrooms": 2,
+        "livingArea": 70,
+        "photo": "https://cloud.funda.nl/valentina_media/224/291/594.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/291/594.jpg\", \"https://cloud.funda.nl/valentina_media/224/291/581.jpg\", \"https://cloud.funda.nl/valentina_media/224/291/582.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/waterkeringweg-65/43230479/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8505816,
+          52.355667
+        ]
+      },
+      "properties": {
+        "price": 575000,
+        "priceFormatted": "€ 575.000 k.k.",
+        "address": "Albert Neuhuysstraat 30",
+        "bedrooms": 2,
+        "livingArea": 66,
+        "photo": "https://cloud.funda.nl/valentina_media/224/197/988.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/197/988.jpg\", \"https://cloud.funda.nl/valentina_media/224/197/989.jpg\", \"https://cloud.funda.nl/valentina_media/224/197/990.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/albert-neuhuysstraat-30-1/43237913/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.814751,
+          52.38291
+        ]
+      },
+      "properties": {
+        "price": 475000,
+        "priceFormatted": "€ 475.000 k.k.",
+        "address": "Josephus Jittastraat 95",
+        "bedrooms": 2,
+        "livingArea": 78,
+        "photo": "https://cloud.funda.nl/valentina_media/224/046/932.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/046/932.jpg\", \"https://cloud.funda.nl/valentina_media/224/046/949.jpg\", \"https://cloud.funda.nl/valentina_media/224/046/942.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/josephus-jittastraat-95/43223974/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.83186,
+          52.364372
+        ]
+      },
+      "properties": {
+        "price": 578500,
+        "priceFormatted": "€ 578.500 k.k.",
+        "address": "Rietveld Schröderpad 15",
+        "bedrooms": 2,
+        "livingArea": 82,
+        "photo": "https://cloud.funda.nl/valentina_media/223/289/696.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/289/696.jpg\", \"https://cloud.funda.nl/valentina_media/223/289/701.jpg\", \"https://cloud.funda.nl/valentina_media/223/289/704.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/rietveld-schröderpad-15/43203711/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8107224,
+          52.345955
+        ]
+      },
+      "properties": {
+        "price": 545000,
+        "priceFormatted": "€ 545.000 k.k.",
+        "address": "Kempenlaan 120",
+        "bedrooms": 2,
+        "livingArea": 112,
+        "photo": "https://cloud.funda.nl/valentina_media/222/950/307.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/222/950/307.jpg\", \"https://cloud.funda.nl/valentina_media/222/950/308.jpg\", \"https://cloud.funda.nl/valentina_media/222/950/309.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/kempenlaan-120/89658200/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8106933,
+          52.345936
+        ]
+      },
+      "properties": {
+        "price": 560000,
+        "priceFormatted": "€ 560.000 k.k.",
+        "address": "Kempenlaan 123",
+        "bedrooms": 3,
+        "livingArea": 113,
+        "photo": "https://cloud.funda.nl/valentina_media/222/860/467.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/222/860/467.jpg\", \"https://cloud.funda.nl/valentina_media/222/860/470.jpg\", \"https://cloud.funda.nl/valentina_media/222/860/474.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/kempenlaan-123/89655764/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8926983,
+          52.37648
+        ]
+      },
+      "properties": {
+        "price": 599000,
+        "priceFormatted": "€ 599.000 k.k.",
+        "address": "Spuistraat 36",
+        "bedrooms": 2,
+        "livingArea": 81,
+        "photo": "https://cloud.funda.nl/valentina_media/222/231/665.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/222/231/665.jpg\", \"https://cloud.funda.nl/valentina_media/222/231/666.jpg\", \"https://cloud.funda.nl/valentina_media/222/231/667.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/spuistraat-36-c/43285022/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.826792,
+          52.344826
+        ]
+      },
+      "properties": {
+        "price": 595000,
+        "priceFormatted": "€ 595.000 k.k.",
+        "address": "Chet Bakerstraat 187",
+        "bedrooms": 2,
+        "livingArea": 100,
+        "photo": "https://cloud.funda.nl/valentina_media/222/025/021.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/222/025/021.jpg\", \"https://cloud.funda.nl/valentina_media/222/025/022.jpg\", \"https://cloud.funda.nl/valentina_media/222/025/024.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/chet-bakerstraat-187/89634714/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8757324,
+          52.371696
+        ]
+      },
+      "properties": {
+        "price": 600000,
+        "priceFormatted": "€ 600.000 k.k.",
+        "address": "Marnixstraat 188",
+        "bedrooms": 2,
+        "livingArea": 71,
+        "photo": "https://cloud.funda.nl/valentina_media/221/076/782.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/221/076/782.jpg\", \"https://cloud.funda.nl/valentina_media/221/076/800.jpg\", \"https://cloud.funda.nl/valentina_media/221/076/801.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/marnixstraat-188-1/89612412/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.84803,
+          52.354256
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Vogelenzangstraat 23",
+        "bedrooms": 2,
+        "livingArea": 69,
+        "photo": "https://cloud.funda.nl/valentina_media/218/279/378.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/218/279/378.jpg\", \"https://cloud.funda.nl/valentina_media/218/279/379.jpg\", \"https://cloud.funda.nl/valentina_media/218/279/381.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/vogelenzangstraat-23-3/89559650/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.812614,
+          52.349487
+        ]
+      },
+      "properties": {
+        "price": 595000,
+        "priceFormatted": "€ 595.000 k.k.",
+        "address": "Kinrooistraat 2",
+        "bedrooms": 4,
+        "livingArea": 111,
+        "photo": "https://cloud.funda.nl/valentina_media/219/485/138.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/219/485/138.jpg\", \"https://cloud.funda.nl/valentina_media/219/485/140.jpg\", \"https://cloud.funda.nl/valentina_media/219/485/141.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/kinrooistraat-2/43013911/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8525167,
+          52.363174
+        ]
+      },
+      "properties": {
+        "price": 475000,
+        "priceFormatted": "€ 475.000 k.k.",
+        "address": "Postjeskade 65",
+        "bedrooms": 2,
+        "livingArea": 65,
+        "photo": "https://cloud.funda.nl/valentina_media/224/638/363.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/638/363.jpg\", \"https://cloud.funda.nl/valentina_media/224/638/335.jpg\", \"https://cloud.funda.nl/valentina_media/224/638/337.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/postjeskade-65-b/43249994/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.835458,
+          52.35367
+        ]
+      },
+      "properties": {
+        "price": 550000,
+        "priceFormatted": "€ 550.000 k.k.",
+        "address": "Wittgensteinlaan 129",
+        "bedrooms": 2,
+        "livingArea": 92,
+        "photo": "https://cloud.funda.nl/valentina_media/224/569/494.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/569/494.jpg\", \"https://cloud.funda.nl/valentina_media/224/569/495.jpg\", \"https://cloud.funda.nl/valentina_media/224/569/496.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/wittgensteinlaan-129/43247020/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9446993,
+          52.35888
+        ]
+      },
+      "properties": {
+        "price": 600000,
+        "priceFormatted": "€ 600.000 k.k.",
+        "address": "Kramatweg 92",
+        "bedrooms": 2,
+        "livingArea": 79,
+        "photo": "https://cloud.funda.nl/valentina_media/224/390/916.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/390/916.jpg\", \"https://cloud.funda.nl/valentina_media/224/390/917.jpg\", \"https://cloud.funda.nl/valentina_media/224/390/918.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/kramatweg-92-h/43232172/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8620086,
+          52.368725
+        ]
+      },
+      "properties": {
+        "price": 595000,
+        "priceFormatted": "€ 595.000 k.k.",
+        "address": "Van Kinsbergenstraat 22",
+        "bedrooms": 2,
+        "livingArea": 66,
+        "photo": "https://cloud.funda.nl/valentina_media/224/386/450.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/386/450.jpg\", \"https://cloud.funda.nl/valentina_media/224/386/452.jpg\", \"https://cloud.funda.nl/valentina_media/224/386/454.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/van-kinsbergenstraat-22-2/43232073/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.80221,
+          52.35048
+        ]
+      },
+      "properties": {
+        "price": 475000,
+        "priceFormatted": "€ 475.000 k.k.",
+        "address": "Jan van Zutphenstraat 173",
+        "bedrooms": 2,
+        "livingArea": 76,
+        "photo": "https://cloud.funda.nl/valentina_media/221/330/495.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/221/330/495.jpg\", \"https://cloud.funda.nl/valentina_media/221/330/553.jpg\", \"https://cloud.funda.nl/valentina_media/221/330/555.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/jan-van-zutphenstraat-173/43254793/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8876047,
+          52.38017
+        ]
+      },
+      "properties": {
+        "price": 595000,
+        "priceFormatted": "€ 595.000 k.k.",
+        "address": "Noordermarkt 4",
+        "bedrooms": 2,
+        "livingArea": 65,
+        "photo": "https://cloud.funda.nl/valentina_media/223/313/256.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/313/256.jpg\", \"https://cloud.funda.nl/valentina_media/223/313/258.jpg\", \"https://cloud.funda.nl/valentina_media/223/313/305.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/noordermarkt-4-2/43203304/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8345,
+          52.372852
+        ]
+      },
+      "properties": {
+        "price": 578000,
+        "priceFormatted": "€ 578.000 v.o.n.",
+        "address": "Liftado Urban 80-95 540",
+        "bedrooms": 2,
+        "livingArea": 80,
+        "photo": "https://cloud.funda.nl/valentina_media/223/051/497.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/051/497.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/499.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/501.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/liftado-urban-80-95-(bouwnr.-540)/43206246/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8345,
+          52.372852
+        ]
+      },
+      "properties": {
+        "price": 598000,
+        "priceFormatted": "€ 598.000 v.o.n.",
+        "address": "Liftado Urban 80-95 560",
+        "bedrooms": 2,
+        "livingArea": 79,
+        "photo": "https://cloud.funda.nl/valentina_media/223/051/634.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/051/634.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/638.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/640.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/liftado-urban-80-95-(bouwnr.-560)/43206245/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8345,
+          52.372852
+        ]
+      },
+      "properties": {
+        "price": 589000,
+        "priceFormatted": "€ 589.000 v.o.n.",
+        "address": "Liftado Urban 80-95 550",
+        "bedrooms": 2,
+        "livingArea": 79,
+        "photo": "https://cloud.funda.nl/valentina_media/223/051/544.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/051/544.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/548.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/551.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/liftado-urban-80-95-(bouwnr.-550)/43206232/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8345,
+          52.372852
+        ]
+      },
+      "properties": {
+        "price": 564000,
+        "priceFormatted": "€ 564.000 v.o.n.",
+        "address": "Liftado Urban 80-95 525",
+        "bedrooms": 2,
+        "livingArea": 80,
+        "photo": "https://cloud.funda.nl/valentina_media/223/051/377.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/051/377.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/381.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/386.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/liftado-urban-80-95-(bouwnr.-525)/43206231/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8345,
+          52.372852
+        ]
+      },
+      "properties": {
+        "price": 573000,
+        "priceFormatted": "€ 573.000 v.o.n.",
+        "address": "Liftado Urban 80-95 535",
+        "bedrooms": 2,
+        "livingArea": 80,
+        "photo": "https://cloud.funda.nl/valentina_media/223/051/465.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/051/465.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/468.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/471.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/liftado-urban-80-95-(bouwnr.-535)/43206230/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8345,
+          52.372852
+        ]
+      },
+      "properties": {
+        "price": 583000,
+        "priceFormatted": "€ 583.000 v.o.n.",
+        "address": "Liftado Urban 80-95 545",
+        "bedrooms": 2,
+        "livingArea": 80,
+        "photo": "https://cloud.funda.nl/valentina_media/223/051/699.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/051/699.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/700.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/701.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/liftado-urban-80-95-(bouwnr.-545)/43206238/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8345,
+          52.372852
+        ]
+      },
+      "properties": {
+        "price": 593000,
+        "priceFormatted": "€ 593.000 v.o.n.",
+        "address": "Liftado Urban 80-95 555",
+        "bedrooms": 2,
+        "livingArea": 79,
+        "photo": "https://cloud.funda.nl/valentina_media/223/051/593.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/051/593.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/599.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/602.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/liftado-urban-80-95-(bouwnr.-555)/43206233/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8345,
+          52.372852
+        ]
+      },
+      "properties": {
+        "price": 569000,
+        "priceFormatted": "€ 569.000 v.o.n.",
+        "address": "Liftado Urban 80-95 530",
+        "bedrooms": 2,
+        "livingArea": 80,
+        "photo": "https://cloud.funda.nl/valentina_media/223/051/422.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/051/422.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/428.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/432.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/liftado-urban-80-95-(bouwnr.-530)/43206228/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8345,
+          52.372852
+        ]
+      },
+      "properties": {
+        "price": 559000,
+        "priceFormatted": "€ 559.000 v.o.n.",
+        "address": "Liftado Urban 80-95 520",
+        "bedrooms": 2,
+        "livingArea": 80,
+        "photo": "https://cloud.funda.nl/valentina_media/223/051/332.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/051/332.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/337.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/342.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/liftado-urban-80-95-(bouwnr.-520)/43206217/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8345,
+          52.372852
+        ]
+      },
+      "properties": {
+        "price": 595000,
+        "priceFormatted": "€ 595.000 v.o.n.",
+        "address": "Cortado Urban 80-95 497",
+        "bedrooms": 3,
+        "livingArea": 83,
+        "photo": "https://cloud.funda.nl/valentina_media/223/051/153.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/051/153.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/157.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/161.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/cortado-urban-80-95-(bouwnr.-497)/43206214/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8345,
+          52.372852
+        ]
+      },
+      "properties": {
+        "price": 600000,
+        "priceFormatted": "€ 600.000 v.o.n.",
+        "address": "Cortado Urban 80-95 494",
+        "bedrooms": 3,
+        "livingArea": 83,
+        "photo": "https://cloud.funda.nl/valentina_media/223/051/134.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/051/134.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/141.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/145.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/cortado-urban-80-95-(bouwnr.-494)/43206213/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8345,
+          52.372852
+        ]
+      },
+      "properties": {
+        "price": 581000,
+        "priceFormatted": "€ 581.000 v.o.n.",
+        "address": "Cortado Urban 80-95 485",
+        "bedrooms": 3,
+        "livingArea": 83,
+        "photo": "https://cloud.funda.nl/valentina_media/223/051/044.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/051/044.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/045.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/046.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/cortado-urban-80-95-(bouwnr.-485)/43206202/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8345,
+          52.372852
+        ]
+      },
+      "properties": {
+        "price": 595000,
+        "priceFormatted": "€ 595.000 v.o.n.",
+        "address": "Cortado Urban 80-95 490",
+        "bedrooms": 3,
+        "livingArea": 83,
+        "photo": "https://cloud.funda.nl/valentina_media/223/051/093.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/051/093.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/096.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/100.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/cortado-urban-80-95-(bouwnr.-490)/43206200/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8345,
+          52.372852
+        ]
+      },
+      "properties": {
+        "price": 585000,
+        "priceFormatted": "€ 585.000 v.o.n.",
+        "address": "Cortado Urban 80-95 489",
+        "bedrooms": 3,
+        "livingArea": 83,
+        "photo": "https://cloud.funda.nl/valentina_media/223/051/136.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/051/136.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/139.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/143.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/cortado-urban-80-95-(bouwnr.-489)/43206209/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8345,
+          52.372852
+        ]
+      },
+      "properties": {
+        "price": 590000,
+        "priceFormatted": "€ 590.000 v.o.n.",
+        "address": "Cortado Urban 80-95 486",
+        "bedrooms": 3,
+        "livingArea": 83,
+        "photo": "https://cloud.funda.nl/valentina_media/223/051/054.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/051/054.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/058.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/061.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/cortado-urban-80-95-(bouwnr.-486)/43206207/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.8345,
+          52.372852
+        ]
+      },
+      "properties": {
+        "price": 590000,
+        "priceFormatted": "€ 590.000 v.o.n.",
+        "address": "Cortado Urban 80-95 493",
+        "bedrooms": 3,
+        "livingArea": 83,
+        "photo": "https://cloud.funda.nl/valentina_media/223/051/138.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/051/138.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/142.jpg\", \"https://cloud.funda.nl/valentina_media/223/051/144.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/cortado-urban-80-95-(bouwnr.-493)/43206292/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9409537,
+          52.350372
+        ]
+      },
+      "properties": {
+        "price": 525000,
+        "priceFormatted": "€ 525.000 k.k.",
+        "address": "Aragohof 11",
+        "bedrooms": 2,
+        "livingArea": 66,
+        "photo": "https://cloud.funda.nl/valentina_media/224/739/167.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/739/167.jpg\", \"https://cloud.funda.nl/valentina_media/224/739/154.jpg\", \"https://cloud.funda.nl/valentina_media/224/739/163.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/aragohof-11-1/43242669/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.9379296,
+          52.36058
+        ]
+      },
+      "properties": {
+        "price": 585000,
+        "priceFormatted": "€ 585.000 k.k.",
+        "address": "Obiplein 51",
+        "bedrooms": 3,
+        "livingArea": 84,
+        "photo": "https://cloud.funda.nl/valentina_media/223/809/616.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/809/616.jpg\", \"https://cloud.funda.nl/valentina_media/223/809/617.jpg\", \"https://cloud.funda.nl/valentina_media/223/809/624.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/obiplein-51/43227888/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.829959,
+          52.34974
+        ]
+      },
+      "properties": {
+        "price": 450000,
+        "priceFormatted": "€ 450.000 k.k.",
+        "address": "Elisabeth Boddaertstraat 24",
+        "bedrooms": 3,
+        "livingArea": 74,
+        "photo": "https://cloud.funda.nl/valentina_media/223/667/661.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/223/667/661.jpg\", \"https://cloud.funda.nl/valentina_media/223/667/662.jpg\", \"https://cloud.funda.nl/valentina_media/223/667/663.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/elisabeth-boddaertstraat-24-1/43213002/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.862589,
+          52.36189
+        ]
+      },
+      "properties": {
+        "price": 500000,
+        "priceFormatted": "€ 500.000 k.k.",
+        "address": "Kanaalstraat 103",
+        "bedrooms": 2,
+        "livingArea": 67,
+        "photo": "https://cloud.funda.nl/valentina_media/224/861/227.jpg",
+        "photos": "[\"https://cloud.funda.nl/valentina_media/224/861/227.jpg\", \"https://cloud.funda.nl/valentina_media/224/861/228.jpg\", \"https://cloud.funda.nl/valentina_media/224/861/229.jpg\"]",
+        "url": "https://www.funda.nl/detail/koop/amsterdam/kanaalstraat-103-l/43355628/"
+      }
+    }
+  ]
+}
