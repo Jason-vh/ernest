@@ -35,6 +35,7 @@ def fetch_all_listings():
             break
         all_listings.extend(results)
         page += 1
+        time.sleep(1)
 
     print(f"  Fetched {len(all_listings)} total listings")
     return all_listings
