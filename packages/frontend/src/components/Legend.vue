@@ -83,7 +83,7 @@ const transit: { key: TransitKey; label: string; color: string }[] = [
 <style scoped>
 .legend {
   position: absolute;
-  bottom: 28px;
+  bottom: 12px;
   left: 12px;
   background: rgba(255, 255, 255, 0.35);
   backdrop-filter: blur(16px);

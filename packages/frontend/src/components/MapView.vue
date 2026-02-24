@@ -29,6 +29,7 @@ const {
   fundaViewedVisible,
   hoveredZone,
   clickedFundaUrls,
+  fundaCount,
   markFundaClicked,
 } = useZoneState();
 
@@ -86,41 +87,6 @@ function stationsToGeoJSON(
   };
 }
 
-function addPopupHandler(map: maplibregl.Map, layerId: string) {
-  map.on("click", layerId, (e) => {
-    if (!e.features || e.features.length === 0) return;
-    const feature = e.features[0];
-    const coords = (feature.geometry as GeoJSON.Point).coordinates.slice() as [
-      number,
-      number,
-    ];
-    const { name, type } = feature.properties as { name: string; type: string };
-
-    const popupColors: Record<string, string> = {
-      tram: COLORS.tram,
-      metro: COLORS.metro,
-      train: COLORS.train,
-    };
-    const color = popupColors[type] ?? "#888";
-
-    new maplibregl.Popup({ offset: 12, closeButton: false })
-      .setLngLat(coords)
-      .setHTML(
-        `<div style="font-family:system-ui,sans-serif;font-size:13px;line-height:1.4">` +
-          `<div style="font-weight:600;font-size:14px">${name}</div>` +
-          `<div style="color:${color};text-transform:capitalize;font-weight:500;font-size:12px;margin-top:1px">${type}</div>` +
-          `</div>`,
-      )
-      .addTo(map);
-  });
-
-  map.on("mouseenter", layerId, () => {
-    map.getCanvas().style.cursor = "pointer";
-  });
-  map.on("mouseleave", layerId, () => {
-    map.getCanvas().style.cursor = "";
-  });
-}
 
 function createOfficeMarker(name: string): HTMLDivElement {
   const el = document.createElement("div");
@@ -444,6 +410,7 @@ onMounted(async () => {
     }
 
     const fundaStamped = stampClickedState(funda);
+    fundaCount.value = funda.features.length;
     map.addSource("funda", { type: "geojson", data: fundaStamped });
     map.addLayer({
       id: "funda-circles",
@@ -553,11 +520,6 @@ onMounted(async () => {
 
     updateFundaLayer();
     watch([fundaNewVisible, fundaViewedVisible], updateFundaLayer);
-
-    // Popup handlers
-    addPopupHandler(map, "tram-stops");
-    addPopupHandler(map, "metro-circles");
-    addPopupHandler(map, "train-circles-outer");
 
     // Funda popup handler
     let fundaPopup: maplibregl.Popup | null = null;

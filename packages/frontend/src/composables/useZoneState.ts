@@ -82,6 +82,7 @@ const fundaViewedVisible = ref(
 );
 const hoveredZone = ref<ZoneKey | null>(null);
 const clickedFundaUrls = ref(loadClickedFunda());
+const fundaCount = ref(0);
 
 watch(
   [zoneVisibility, transitVisibility, fundaNewVisible, fundaViewedVisible],
@@ -124,6 +125,7 @@ export function useZoneState() {
     fundaViewedVisible,
     hoveredZone,
     clickedFundaUrls,
+    fundaCount,
     toggleZone,
     toggleTransit,
     toggleFundaNew,
