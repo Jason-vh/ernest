@@ -21,6 +21,7 @@ import {
   TRANSIT_KEYS,
   type TransitKey,
 } from "../composables/useZoneState";
+import { matchBuildingsToFunda } from "../composables/useBuildingHighlights";
 
 const {
   zoneVisibility,
@@ -412,6 +413,51 @@ onMounted(async () => {
     const fundaStamped = stampClickedState(funda);
     fundaCount.value = funda.features.length;
     map.addSource("funda", { type: "geojson", data: fundaStamped });
+
+    // --- Funda building highlights (below dots) ---
+    const emptyFC: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+    map.addSource("funda-buildings", { type: "geojson", data: emptyFC });
+    map.addLayer({
+      id: "funda-building-fill",
+      type: "fill",
+      source: "funda-buildings",
+      paint: {
+        "fill-color": [
+          "case",
+          ["==", ["get", "clicked"], true],
+          "#aaa",
+          "#E8950F",
+        ],
+        "fill-opacity": [
+          "case",
+          ["==", ["get", "clicked"], true],
+          0.25,
+          0.4,
+        ],
+      },
+    });
+    map.addLayer({
+      id: "funda-building-outline",
+      type: "line",
+      source: "funda-buildings",
+      paint: {
+        "line-color": [
+          "case",
+          ["==", ["get", "clicked"], true],
+          "#aaa",
+          "#E8950F",
+        ],
+        "line-opacity": [
+          "case",
+          ["==", ["get", "clicked"], true],
+          0.4,
+          0.7,
+        ],
+        "line-width": 1.5,
+      },
+    });
+
+    // Funda dots (above building highlights)
     map.addLayer({
       id: "funda-circles",
       type: "circle",
@@ -499,21 +545,29 @@ onMounted(async () => {
     watch(transitVisibility, updateTransitLayers, { deep: true });
 
     // --- Funda visibility (new + viewed as independent toggles) ---
+    const FUNDA_LAYERS = ["funda-circles", "funda-building-fill", "funda-building-outline"];
+
     function updateFundaLayer() {
       if (!map.getLayer("funda-circles")) return;
       const showNew = fundaNewVisible.value;
       const showViewed = fundaViewedVisible.value;
 
       if (!showNew && !showViewed) {
-        map.setLayoutProperty("funda-circles", "visibility", "none");
+        for (const id of FUNDA_LAYERS) {
+          map.setLayoutProperty(id, "visibility", "none");
+        }
       } else {
-        map.setLayoutProperty("funda-circles", "visibility", "visible");
-        if (showNew && showViewed) {
-          map.setFilter("funda-circles", null);
-        } else if (showNew) {
-          map.setFilter("funda-circles", ["!=", ["get", "clicked"], true]);
-        } else {
-          map.setFilter("funda-circles", ["==", ["get", "clicked"], true]);
+        for (const id of FUNDA_LAYERS) {
+          map.setLayoutProperty(id, "visibility", "visible");
+        }
+        let filter: maplibregl.FilterSpecification | null = null;
+        if (showNew && !showViewed) {
+          filter = ["!=", ["get", "clicked"], true];
+        } else if (!showNew && showViewed) {
+          filter = ["==", ["get", "clicked"], true];
+        }
+        for (const id of FUNDA_LAYERS) {
+          map.setFilter(id, filter);
         }
       }
     }
@@ -521,13 +575,102 @@ onMounted(async () => {
     updateFundaLayer();
     watch([fundaNewVisible, fundaViewedVisible], updateFundaLayer);
 
+    // --- Building highlight handler ---
+    let lastBuildingViewKey = "";
+    let buildingDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    function updateBuildingHighlights() {
+      const emptyData: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+      const src = map.getSource("funda-buildings") as maplibregl.GeoJSONSource;
+      if (!src) return;
+
+      if (map.getZoom() < 15) {
+        if (lastBuildingViewKey !== "empty") {
+          lastBuildingViewKey = "empty";
+          src.setData(emptyData);
+          map.setPaintProperty("funda-circles", "circle-radius", 5);
+          map.setPaintProperty("funda-circles", "circle-stroke-width", 1);
+        }
+        return;
+      }
+
+      // Wait for vector tiles to finish loading — querying before this
+      // returns generalized block polygons from lower-zoom tiles
+      if (!map.isSourceLoaded("openmaptiles")) return;
+
+      // Skip if viewport hasn't meaningfully changed
+      const b = map.getBounds();
+      const viewKey = `${map.getZoom().toFixed(1)}:${b.getWest().toFixed(4)},${b.getSouth().toFixed(4)},${b.getEast().toFixed(4)},${b.getNorth().toFixed(4)}`;
+      if (viewKey === lastBuildingViewKey) return;
+      lastBuildingViewKey = viewKey;
+
+      // Get visible funda features (respecting current filters)
+      const visibleFeatures = map.queryRenderedFeatures(undefined, {
+        layers: ["funda-circles"],
+      });
+      if (visibleFeatures.length === 0) {
+        src.setData(emptyData);
+        return;
+      }
+
+      // Deduplicate by URL (queryRenderedFeatures can return duplicates across tiles)
+      const seen = new Set<string>();
+      const unique: GeoJSON.Feature[] = [];
+      for (const f of visibleFeatures) {
+        const url = f.properties?.url;
+        if (url && !seen.has(url)) {
+          seen.add(url);
+          unique.push(f);
+        }
+      }
+
+      const { buildings } = matchBuildingsToFunda(map, unique, clickedFundaUrls.value);
+      src.setData(buildings);
+      // Hide dots when building highlights are active (same frame, no flash)
+      const hideDots = buildings.features.length > 0;
+      map.setPaintProperty("funda-circles", "circle-radius", hideDots ? 0 : 5);
+      map.setPaintProperty("funda-circles", "circle-stroke-width", hideDots ? 0 : 1);
+    }
+
+    let lastBuildingUpdateTime = 0;
+    const THROTTLE_MS = 80;
+
+    function throttledBuildingUpdate() {
+      const now = Date.now();
+      if (now - lastBuildingUpdateTime >= THROTTLE_MS) {
+        lastBuildingUpdateTime = now;
+        updateBuildingHighlights();
+      } else {
+        // Schedule a trailing update for when the gesture ends
+        if (buildingDebounceTimer) clearTimeout(buildingDebounceTimer);
+        buildingDebounceTimer = setTimeout(() => {
+          lastBuildingUpdateTime = Date.now();
+          updateBuildingHighlights();
+        }, THROTTLE_MS);
+      }
+    }
+
+    map.on("move", throttledBuildingUpdate);
+    map.once("idle", updateBuildingHighlights);
+
+    // When new vector tiles load (e.g. after a fast zoom), re-query buildings
+    // since the tile data may now have individual footprints instead of blocks
+    map.on("sourcedata", (e) => {
+      if (e.sourceId === "openmaptiles" && map.getZoom() >= 15) {
+        lastBuildingViewKey = "";
+        throttledBuildingUpdate();
+      }
+    });
+
     // Funda popup handler
     let fundaPopup: maplibregl.Popup | null = null;
 
-    function showFundaPopup(feature: maplibregl.MapGeoJSONFeature) {
-      const coords = (
-        feature.geometry as GeoJSON.Point
-      ).coordinates.slice() as [number, number];
+    function showFundaPopup(
+      feature: maplibregl.MapGeoJSONFeature | GeoJSON.Feature,
+      lngLatOverride?: [number, number],
+    ) {
+      const coords = lngLatOverride ??
+        ((feature.geometry as GeoJSON.Point).coordinates.slice() as [number, number]);
       const p = feature.properties as Record<string, any>;
 
       const listPrice = Number(p.price);
@@ -598,6 +741,9 @@ onMounted(async () => {
           // Update source data so dot turns grey
           const src = map.getSource("funda") as maplibregl.GeoJSONSource;
           if (src) src.setData(stampClickedState(funda));
+          // Refresh building highlights to update colors
+          lastBuildingViewKey = "";
+          updateBuildingHighlights();
         });
       }
     }
@@ -621,17 +767,20 @@ onMounted(async () => {
       }
     }
 
+    function attachPopupHover() {
+      const el = fundaPopup?.getElement();
+      if (el) {
+        el.addEventListener("mouseenter", cancelFundaClose);
+        el.addEventListener("mouseleave", scheduleFundaClose);
+      }
+    }
+
     map.on("mouseenter", "funda-circles", (e) => {
       map.getCanvas().style.cursor = "pointer";
       cancelFundaClose();
       if (e.features && e.features.length > 0) {
         showFundaPopup(e.features[0]);
-        // Keep popup open while hovering over it
-        const el = fundaPopup?.getElement();
-        if (el) {
-          el.addEventListener("mouseenter", cancelFundaClose);
-          el.addEventListener("mouseleave", scheduleFundaClose);
-        }
+        attachPopupHover();
       }
     });
     map.on("mouseleave", "funda-circles", () => {
@@ -644,6 +793,28 @@ onMounted(async () => {
       if (e.features && e.features.length > 0) {
         cancelFundaClose();
         showFundaPopup(e.features[0]);
+      }
+    });
+
+    // --- Building highlight interaction handlers ---
+    map.on("mouseenter", "funda-building-fill", (e) => {
+      map.getCanvas().style.cursor = "pointer";
+      cancelFundaClose();
+      if (e.features && e.features.length > 0) {
+        const lngLat: [number, number] = [e.lngLat.lng, e.lngLat.lat];
+        showFundaPopup(e.features[0], lngLat);
+        attachPopupHover();
+      }
+    });
+    map.on("mouseleave", "funda-building-fill", () => {
+      map.getCanvas().style.cursor = "";
+      scheduleFundaClose();
+    });
+    map.on("click", "funda-building-fill", (e) => {
+      if (e.features && e.features.length > 0) {
+        cancelFundaClose();
+        const lngLat: [number, number] = [e.lngLat.lng, e.lngLat.lat];
+        showFundaPopup(e.features[0], lngLat);
       }
     });
   });

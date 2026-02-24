@@ -169,6 +169,13 @@ export async function loadGreyscaleStyle(
   const res = await fetch(styleUrl);
   const style: StyleSpecification = await res.json();
 
+  // Enable generateId on the openmaptiles source so queryRenderedFeatures
+  // returns distinct features (needed for building polygon matching)
+  const omtSource = style.sources?.["openmaptiles"];
+  if (omtSource && "type" in omtSource) {
+    (omtSource as Record<string, unknown>).generateId = true;
+  }
+
   for (const layer of style.layers) {
     const id = layer.id;
 
