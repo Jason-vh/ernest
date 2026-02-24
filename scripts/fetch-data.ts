@@ -16,8 +16,8 @@ const FERRY_CROSSINGS = [
     name: "Buiksloterweg (F3)",
     south: { lat: 52.3813, lon: 4.9003 },
     north: { lat: 52.3907, lon: 4.9012 },
-    crossingMinutes: 4,
-    waitMinutes: 3, // ferries every ~6 min, avg wait ~3 min
+    crossingMinutes: 3,
+    waitMinutes: 2, // ferries every ~4 min at peak, avg wait ~2 min
   },
 ];
 
@@ -534,8 +534,7 @@ async function main() {
   // Funda listings
   console.log("\nFetching Funda listings via pyfunda...");
   const fundaListings = await fetchFundaListings();
-  const filteredFunda = filterPointsInZone(fundaListings, zones);
-  console.log(`  ${filteredFunda.features.length} Funda listings within 30-min zone`);
+  console.log(`  ${fundaListings.features.length} Funda listings total`);
 
   // Lines data: skip if already exists (expensive query, data doesn't change)
   const outputDir = path.resolve(import.meta.dir, "../packages/backend/data");
@@ -565,7 +564,7 @@ async function main() {
     ),
     Bun.write(
       path.join(outputDir, "funda.geojson"),
-      JSON.stringify(filteredFunda, null, 2)
+      JSON.stringify(fundaListings, null, 2)
     ),
   ]);
 

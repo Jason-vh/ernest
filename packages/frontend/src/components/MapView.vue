@@ -155,10 +155,6 @@ onMounted(async () => {
     new maplibregl.NavigationControl({ showCompass: false }),
     "top-right",
   );
-  map.addControl(
-    new maplibregl.AttributionControl({ compact: true }),
-    "bottom-right",
-  );
 
   // Office markers
   for (const office of Object.values(OFFICES)) {

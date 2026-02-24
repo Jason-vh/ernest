@@ -85,8 +85,9 @@ const transit: { key: TransitKey; label: string; color: string }[] = [
   position: absolute;
   bottom: 28px;
   left: 12px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: 10px;
   padding: 12px 16px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);

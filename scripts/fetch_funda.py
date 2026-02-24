@@ -11,30 +11,45 @@ PRICE_MIN = 450000
 PRICE_MAX = 600000
 MIN_BEDROOMS = 2
 MIN_LIVING_AREA = 65
-ACCEPTABLE_LABELS = {"A+++", "A++", "A+", "A", "B", "C", "D"}
+ACCEPTABLE_LABELS = {"A+++", "A++", "A+", "A", "B", "C", "D", "unknown"}
 DETAIL_WORKERS = 8
+SEARCH_AREAS = ["amsterdam", "diemen", "duivendrecht", "amstelveen", "ouderkerk-aan-de-amstel"]
 
 
 def fetch_all_listings():
     f = Funda(timeout=30)
     all_listings = []
-    page = 0
+    seen_ids = set()
 
-    while True:
-        print(f"  Fetching page {page}...", file=sys.stderr)
-        results = f.search_listing(
-            "amsterdam",
-            offering_type="buy",
-            price_min=PRICE_MIN,
-            price_max=PRICE_MAX,
-            page=page,
-        )
-        if not results:
-            break
-        all_listings.extend(results)
-        page += 1
+    for area in SEARCH_AREAS:
+        page = 0
+        area_count = 0
+        try:
+            while True:
+                print(f"  [{area}] Fetching page {page}...", file=sys.stderr)
+                results = f.search_listing(
+                    area,
+                    offering_type="buy",
+                    price_min=PRICE_MIN,
+                    price_max=PRICE_MAX,
+                    page=page,
+                )
+                if not results:
+                    break
+                for listing in results:
+                    gid = listing.get("global_id")
+                    if gid and gid not in seen_ids:
+                        seen_ids.add(gid)
+                        all_listings.append(listing)
+                        area_count += 1
+                page += 1
+                time.sleep(1)
+        except Exception as e:
+            print(f"  [{area}] Error: {e}", file=sys.stderr)
 
-    print(f"  Fetched {len(all_listings)} total listings", file=sys.stderr)
+        print(f"  [{area}] {area_count} new listings", file=sys.stderr)
+
+    print(f"  Fetched {len(all_listings)} total unique listings", file=sys.stderr)
     return all_listings
 
 
