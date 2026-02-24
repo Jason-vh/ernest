@@ -4,3 +4,4 @@ dist/
 *.log
 .worktrees/
 .env
+__pycache__/
