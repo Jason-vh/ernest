@@ -22,8 +22,15 @@ import {
   type TransitKey,
 } from "../composables/useZoneState";
 
-const { zoneVisibility, transitVisibility, fundaVisible, hoveredZone } =
-  useZoneState();
+const {
+  zoneVisibility,
+  transitVisibility,
+  fundaNewVisible,
+  fundaViewedVisible,
+  hoveredZone,
+  clickedFundaUrls,
+  markFundaClicked,
+} = useZoneState();
 
 const TRANSIT_LAYERS: Record<TransitKey, string[]> = {
   train: [
@@ -426,14 +433,35 @@ onMounted(async () => {
     });
 
     // --- Funda listings (above everything) ---
-    map.addSource("funda", { type: "geojson", data: funda });
+    // Stamp clicked state onto features from localStorage
+    function stampClickedState(fc: GeoJSON.FeatureCollection): GeoJSON.FeatureCollection {
+      const clicked = clickedFundaUrls.value;
+      return {
+        ...fc,
+        features: fc.features.map((f) => ({
+          ...f,
+          properties: {
+            ...f.properties,
+            clicked: clicked.has(f.properties?.url ?? ""),
+          },
+        })),
+      };
+    }
+
+    const fundaStamped = stampClickedState(funda);
+    map.addSource("funda", { type: "geojson", data: fundaStamped });
     map.addLayer({
       id: "funda-circles",
       type: "circle",
       source: "funda",
       paint: {
         "circle-radius": 5,
-        "circle-color": "#E8950F",
+        "circle-color": [
+          "case",
+          ["==", ["get", "clicked"], true],
+          "#aaa",
+          "#E8950F",
+        ],
         "circle-opacity": 1,
         "circle-stroke-width": 1,
         "circle-stroke-color": "#fff",
@@ -508,18 +536,28 @@ onMounted(async () => {
     updateTransitLayers();
     watch(transitVisibility, updateTransitLayers, { deep: true });
 
-    // --- Funda visibility ---
+    // --- Funda visibility (new + viewed as independent toggles) ---
     function updateFundaLayer() {
       if (!map.getLayer("funda-circles")) return;
-      map.setLayoutProperty(
-        "funda-circles",
-        "visibility",
-        fundaVisible.value ? "visible" : "none",
-      );
+      const showNew = fundaNewVisible.value;
+      const showViewed = fundaViewedVisible.value;
+
+      if (!showNew && !showViewed) {
+        map.setLayoutProperty("funda-circles", "visibility", "none");
+      } else {
+        map.setLayoutProperty("funda-circles", "visibility", "visible");
+        if (showNew && showViewed) {
+          map.setFilter("funda-circles", null);
+        } else if (showNew) {
+          map.setFilter("funda-circles", ["!=", ["get", "clicked"], true]);
+        } else {
+          map.setFilter("funda-circles", ["==", ["get", "clicked"], true]);
+        }
+      }
     }
 
     updateFundaLayer();
-    watch(fundaVisible, updateFundaLayer);
+    watch([fundaNewVisible, fundaViewedVisible], updateFundaLayer);
 
     // Popup handlers
     addPopupHandler(map, "tram-stops");
@@ -527,9 +565,9 @@ onMounted(async () => {
     addPopupHandler(map, "train-circles-outer");
 
     // Funda popup handler
-    map.on("click", "funda-circles", (e) => {
-      if (!e.features || e.features.length === 0) return;
-      const feature = e.features[0];
+    let fundaPopup: maplibregl.Popup | null = null;
+
+    function showFundaPopup(feature: maplibregl.MapGeoJSONFeature) {
       const coords = (
         feature.geometry as GeoJSON.Point
       ).coordinates.slice() as [number, number];
@@ -546,7 +584,6 @@ onMounted(async () => {
         .filter(Boolean)
         .join(" · ");
 
-      // Parse photos array (GeoJSON properties are stringified)
       let photos: string[] = [];
       try {
         photos = JSON.parse(p.photos || "[]");
@@ -554,7 +591,6 @@ onMounted(async () => {
         if (p.photo) photos = [p.photo];
       }
 
-      // Masonry grid: 1 large left, 2 small right (background-image to avoid layout shift)
       const cell = (url: string) =>
         `<div style="background-image:url(${url})"></div>`;
       let gridHtml = "";
@@ -575,7 +611,8 @@ onMounted(async () => {
           `</div>`;
       }
 
-      new maplibregl.Popup({
+      if (fundaPopup) fundaPopup.remove();
+      fundaPopup = new maplibregl.Popup({
         offset: 12,
         closeButton: false,
         maxWidth: "none",
@@ -595,12 +632,62 @@ onMounted(async () => {
             `</a>`,
         )
         .addTo(map);
-    });
-    map.on("mouseenter", "funda-circles", () => {
+
+      // Track click to mark listing as visited
+      const linkEl = fundaPopup.getElement()?.querySelector(".funda-popup-link");
+      if (linkEl) {
+        linkEl.addEventListener("click", () => {
+          markFundaClicked(p.url);
+          // Update source data so dot turns grey
+          const src = map.getSource("funda") as maplibregl.GeoJSONSource;
+          if (src) src.setData(stampClickedState(funda));
+        });
+      }
+    }
+
+    let fundaCloseTimer: ReturnType<typeof setTimeout> | null = null;
+
+    function scheduleFundaClose() {
+      if (fundaCloseTimer) clearTimeout(fundaCloseTimer);
+      fundaCloseTimer = setTimeout(() => {
+        if (fundaPopup) {
+          fundaPopup.remove();
+          fundaPopup = null;
+        }
+      }, 200);
+    }
+
+    function cancelFundaClose() {
+      if (fundaCloseTimer) {
+        clearTimeout(fundaCloseTimer);
+        fundaCloseTimer = null;
+      }
+    }
+
+    map.on("mouseenter", "funda-circles", (e) => {
       map.getCanvas().style.cursor = "pointer";
+      cancelFundaClose();
+      if (e.features && e.features.length > 0) {
+        showFundaPopup(e.features[0]);
+        // Keep popup open while hovering over it
+        const el = fundaPopup?.getElement();
+        if (el) {
+          el.addEventListener("mouseenter", cancelFundaClose);
+          el.addEventListener("mouseleave", scheduleFundaClose);
+        }
+      }
     });
     map.on("mouseleave", "funda-circles", () => {
       map.getCanvas().style.cursor = "";
+      scheduleFundaClose();
+    });
+
+    // Touch fallback: tap to open, tap elsewhere to close
+    map.on("click", "funda-circles", (e) => {
+      if (e.features && e.features.length > 0) {
+        cancelFundaClose();
+        showFundaPopup(e.features[0]);
+      }
     });
   });
 });
@@ -673,8 +760,9 @@ onMounted(async () => {
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.6));
-  padding: 24px 10px 8px;
+  background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.85) 100%);
+  padding: 32px 10px 8px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
@@ -690,7 +778,7 @@ onMounted(async () => {
 
 .funda-bar-asking {
   font-size: 10px;
-  opacity: 0.75;
+  opacity: 0.85;
 }
 
 .funda-bar-details {

@@ -30,13 +30,24 @@
       </div>
     </div>
     <div class="legend-divider"></div>
-    <div
-      class="legend-item legend-item--toggle"
-      :class="{ 'legend-item--disabled': !fundaVisible }"
-      @click="toggleFunda()"
-    >
-      <span class="legend-dot" style="background-color: #E8950F"></span>
-      <span class="legend-label">Funda listings</span>
+    <div class="legend-title">Funda</div>
+    <div class="legend-items">
+      <div
+        class="legend-item legend-item--toggle"
+        :class="{ 'legend-item--disabled': !fundaNewVisible }"
+        @click="toggleFundaNew()"
+      >
+        <span class="legend-dot" style="background-color: #E8950F"></span>
+        <span class="legend-label">Unseen listings</span>
+      </div>
+      <div
+        class="legend-item legend-item--toggle"
+        :class="{ 'legend-item--disabled': !fundaViewedVisible }"
+        @click="toggleFundaViewed()"
+      >
+        <span class="legend-dot" style="background-color: #aaa"></span>
+        <span class="legend-label">Viewed listings</span>
+      </div>
     </div>
   </div>
 </template>
@@ -44,7 +55,17 @@
 <script setup lang="ts">
 import { useZoneState, type ZoneKey, type TransitKey } from "../composables/useZoneState";
 
-const { zoneVisibility, transitVisibility, fundaVisible, hoveredZone, toggleZone, toggleTransit, toggleFunda } = useZoneState();
+const {
+  zoneVisibility,
+  transitVisibility,
+  fundaNewVisible,
+  fundaViewedVisible,
+  hoveredZone,
+  toggleZone,
+  toggleTransit,
+  toggleFundaNew,
+  toggleFundaViewed,
+} = useZoneState();
 
 const zones: { key: ZoneKey; label: string; color: string }[] = [
   { key: "10", label: "< 10 min", color: "#22c55e" },

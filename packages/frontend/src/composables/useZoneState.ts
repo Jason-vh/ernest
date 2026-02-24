@@ -22,7 +22,8 @@ function readVisibility<T extends string>(
 function writeToURL(
   zones: Record<ZoneKey, boolean>,
   transit: Record<TransitKey, boolean>,
-  funda: boolean,
+  fundaNew: boolean,
+  fundaViewed: boolean,
 ) {
   const params = new URLSearchParams(window.location.search);
 
@@ -39,8 +40,13 @@ function writeToURL(
   }
 
   params.delete("funda");
-  if (!funda) {
+  if (!fundaNew) {
     params.set("funda", "0");
+  }
+
+  params.delete("funda-viewed");
+  if (!fundaViewed) {
+    params.set("funda-viewed", "0");
   }
 
   const search = params.toString();
@@ -50,17 +56,36 @@ function writeToURL(
   history.replaceState(null, "", url);
 }
 
+// Clicked funda listings (persisted in localStorage)
+const CLICKED_FUNDA_KEY = "ernest:clickedFunda";
+
+function loadClickedFunda(): Set<string> {
+  try {
+    const raw = localStorage.getItem(CLICKED_FUNDA_KEY);
+    if (raw) return new Set(JSON.parse(raw));
+  } catch { /* ignore */ }
+  return new Set();
+}
+
+function saveClickedFunda(ids: Set<string>) {
+  localStorage.setItem(CLICKED_FUNDA_KEY, JSON.stringify([...ids]));
+}
+
 // Shared singleton state
 const zoneVisibility = ref(readVisibility("zones", ZONE_KEYS));
 const transitVisibility = ref(readVisibility("transit", TRANSIT_KEYS));
-const fundaVisible = ref(
+const fundaNewVisible = ref(
   new URLSearchParams(window.location.search).get("funda") !== "0",
 );
+const fundaViewedVisible = ref(
+  new URLSearchParams(window.location.search).get("funda-viewed") !== "0",
+);
 const hoveredZone = ref<ZoneKey | null>(null);
+const clickedFundaUrls = ref(loadClickedFunda());
 
 watch(
-  [zoneVisibility, transitVisibility, fundaVisible],
-  () => writeToURL(zoneVisibility.value, transitVisibility.value, fundaVisible.value),
+  [zoneVisibility, transitVisibility, fundaNewVisible, fundaViewedVisible],
+  () => writeToURL(zoneVisibility.value, transitVisibility.value, fundaNewVisible.value, fundaViewedVisible.value),
   { deep: true },
 );
 
@@ -79,17 +104,30 @@ export function useZoneState() {
     };
   }
 
-  function toggleFunda() {
-    fundaVisible.value = !fundaVisible.value;
+  function toggleFundaNew() {
+    fundaNewVisible.value = !fundaNewVisible.value;
+  }
+
+  function toggleFundaViewed() {
+    fundaViewedVisible.value = !fundaViewedVisible.value;
+  }
+
+  function markFundaClicked(url: string) {
+    clickedFundaUrls.value = new Set([...clickedFundaUrls.value, url]);
+    saveClickedFunda(clickedFundaUrls.value);
   }
 
   return {
     zoneVisibility,
     transitVisibility,
-    fundaVisible,
+    fundaNewVisible,
+    fundaViewedVisible,
     hoveredZone,
+    clickedFundaUrls,
     toggleZone,
     toggleTransit,
-    toggleFunda,
+    toggleFundaNew,
+    toggleFundaViewed,
+    markFundaClicked,
   };
 }
