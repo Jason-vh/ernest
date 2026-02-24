@@ -29,3 +29,27 @@ export async function fetchFunda(): Promise<GeoJSON.FeatureCollection> {
   if (!res.ok) throw new Error(`Failed to fetch funda: ${res.status}`);
   return res.json();
 }
+
+export interface CyclingRoute {
+  duration: number; // minutes
+  geometry: GeoJSON.LineString;
+}
+
+export async function fetchCyclingRoute(
+  from: { lat: number; lon: number },
+  to: { lat: number; lon: number },
+  signal?: AbortSignal,
+): Promise<CyclingRoute | null> {
+  try {
+    const res = await fetch("/api/route", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to }),
+      signal,
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}

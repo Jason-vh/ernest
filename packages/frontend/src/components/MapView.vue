@@ -22,6 +22,7 @@ import {
   type TransitKey,
 } from "../composables/useZoneState";
 import { matchBuildingsToFunda } from "../composables/useBuildingHighlights";
+import { useCyclingRoutes } from "../composables/useCyclingRoutes";
 
 const {
   zoneVisibility,
@@ -34,6 +35,12 @@ const {
   fundaCount,
   markFundaClicked,
 } = useZoneState();
+
+const {
+  activeRoutes,
+  showRoutesForListing,
+  clearRoutes,
+} = useCyclingRoutes();
 
 const TRANSIT_LAYERS: Record<TransitKey, string[]> = {
   train: [
@@ -62,6 +69,10 @@ const COLORS = {
   zone10: "#22c55e",
   zone20: "#f59e0b",
   zone30: "#ef4444",
+  routeFareharbor: "#14b8a6",
+  routeFareharborCasing: "#0d7377",
+  routeAirwallex: "#818cf8",
+  routeAirwallexCasing: "#4338ca",
 };
 
 function stationsToGeoJSON(
@@ -413,8 +424,63 @@ onMounted(async () => {
     fundaCount.value = funda.features.length;
     map.addSource("funda", { type: "geojson", data: fundaStamped });
 
-    // --- Funda building highlights (below dots) ---
+    // --- Cycling route layers (above transit, below funda) ---
     const emptyFC: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+
+    map.addSource("cycling-route-fareharbor", { type: "geojson", data: emptyFC });
+    map.addSource("cycling-route-airwallex", { type: "geojson", data: emptyFC });
+
+    // FareHarbor route (teal, dashed)
+    map.addLayer({
+      id: "route-fareharbor-casing",
+      type: "line",
+      source: "cycling-route-fareharbor",
+      paint: {
+        "line-color": COLORS.routeFareharborCasing,
+        "line-width": 5,
+        "line-opacity": 0.5,
+      },
+      layout: { "line-cap": "round", "line-join": "round" },
+    });
+    map.addLayer({
+      id: "route-fareharbor-fill",
+      type: "line",
+      source: "cycling-route-fareharbor",
+      paint: {
+        "line-color": COLORS.routeFareharbor,
+        "line-width": 3,
+        "line-opacity": 0.8,
+        "line-dasharray": [2, 2],
+      },
+      layout: { "line-cap": "round", "line-join": "round" },
+    });
+
+    // Airwallex route (indigo, dashed)
+    map.addLayer({
+      id: "route-airwallex-casing",
+      type: "line",
+      source: "cycling-route-airwallex",
+      paint: {
+        "line-color": COLORS.routeAirwallexCasing,
+        "line-width": 5,
+        "line-opacity": 0.5,
+      },
+      layout: { "line-cap": "round", "line-join": "round" },
+    });
+    map.addLayer({
+      id: "route-airwallex-fill",
+      type: "line",
+      source: "cycling-route-airwallex",
+      paint: {
+        "line-color": COLORS.routeAirwallex,
+        "line-width": 3,
+        "line-opacity": 0.8,
+        "line-dasharray": [2, 2],
+      },
+      layout: { "line-cap": "round", "line-join": "round" },
+    });
+
+    // --- Funda building highlights (below dots) ---
     map.addSource("funda-buildings", { type: "geojson", data: emptyFC });
     map.addLayer({
       id: "funda-building-fill",
@@ -696,6 +762,50 @@ onMounted(async () => {
       }
     });
 
+    // --- Cycling route watcher ---
+    function routeToFeature(geometry: GeoJSON.LineString): GeoJSON.FeatureCollection {
+      return {
+        type: "FeatureCollection",
+        features: [{ type: "Feature", geometry, properties: {} }],
+      };
+    }
+
+    watch(activeRoutes, (routes) => {
+      const fhSrc = map.getSource("cycling-route-fareharbor") as maplibregl.GeoJSONSource;
+      const awSrc = map.getSource("cycling-route-airwallex") as maplibregl.GeoJSONSource;
+      if (!fhSrc || !awSrc) return;
+
+      if (routes?.fareharbor) {
+        fhSrc.setData(routeToFeature(routes.fareharbor.geometry));
+      } else {
+        fhSrc.setData(emptyFC);
+      }
+
+      if (routes?.airwallex) {
+        awSrc.setData(routeToFeature(routes.airwallex.geometry));
+      } else {
+        awSrc.setData(emptyFC);
+      }
+
+      // Update cycling times in the live popup DOM
+      const timesEl = document.querySelector(".funda-cycling-times");
+      if (!timesEl) return;
+
+      if (!routes?.fareharbor && !routes?.airwallex) {
+        timesEl.innerHTML = "";
+        return;
+      }
+
+      const parts: string[] = [];
+      if (routes?.fareharbor) {
+        parts.push(`<span class="funda-cycling-row"><span class="funda-cycling-dot" style="background:${COLORS.routeFareharbor}"></span><span style="color:${COLORS.routeFareharbor}">${routes.fareharbor.duration} min</span> to ${OFFICES.fareharbor.name}</span>`);
+      }
+      if (routes?.airwallex) {
+        parts.push(`<span class="funda-cycling-row"><span class="funda-cycling-dot" style="background:${COLORS.routeAirwallex}"></span><span style="color:${COLORS.routeAirwallex}">${routes.airwallex.duration} min</span> to ${OFFICES.airwallex.name}</span>`);
+      }
+      timesEl.innerHTML = parts.join("");
+    });
+
     // Funda popup handler
     let fundaPopup: maplibregl.Popup | null = null;
 
@@ -763,7 +873,8 @@ onMounted(async () => {
             `</div>` +
             (details ? `<div class="funda-bar-details">${details}</div>` : "") +
             `</div>` +
-            `</a>`,
+            `</a>` +
+            `<div class="funda-cycling-times"></div>`,
         )
         .addTo(map);
 
@@ -791,6 +902,7 @@ onMounted(async () => {
           fundaPopup.remove();
           fundaPopup = null;
         }
+        clearRoutes();
       }, 200);
     }
 
@@ -809,12 +921,21 @@ onMounted(async () => {
       }
     }
 
+    function triggerRoutesForFeature(feature: maplibregl.MapGeoJSONFeature | GeoJSON.Feature) {
+      const p = feature.properties as Record<string, any>;
+      const coords = (feature.geometry as GeoJSON.Point).coordinates;
+      if (p?.url && coords) {
+        showRoutesForListing(coords[1], coords[0], p.url);
+      }
+    }
+
     map.on("mouseenter", "funda-circles", (e) => {
       map.getCanvas().style.cursor = "pointer";
       cancelFundaClose();
       if (e.features && e.features.length > 0) {
         showFundaPopup(e.features[0]);
         attachPopupHover();
+        triggerRoutesForFeature(e.features[0]);
       }
     });
     map.on("mouseleave", "funda-circles", () => {
@@ -827,6 +948,7 @@ onMounted(async () => {
       if (e.features && e.features.length > 0) {
         cancelFundaClose();
         showFundaPopup(e.features[0]);
+        triggerRoutesForFeature(e.features[0]);
       }
     });
 
@@ -838,6 +960,7 @@ onMounted(async () => {
         const lngLat: [number, number] = [e.lngLat.lng, e.lngLat.lat];
         showFundaPopup(e.features[0], lngLat);
         attachPopupHover();
+        triggerRoutesForFeature(e.features[0]);
       }
     });
     map.on("mouseleave", "funda-building-fill", () => {
@@ -849,6 +972,7 @@ onMounted(async () => {
         cancelFundaClose();
         const lngLat: [number, number] = [e.lngLat.lng, e.lngLat.lat];
         showFundaPopup(e.features[0], lngLat);
+        triggerRoutesForFeature(e.features[0]);
       }
     });
   });
@@ -947,5 +1071,33 @@ onMounted(async () => {
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.funda-cycling-times:empty {
+  display: none;
+}
+
+.funda-cycling-times {
+  padding: 6px 10px;
+  font-family: system-ui, sans-serif;
+  font-size: 11px;
+  color: #555;
+  border-top: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.funda-cycling-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.funda-cycling-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 </style>

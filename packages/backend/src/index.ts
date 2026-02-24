@@ -4,6 +4,7 @@ import { serveStatic } from "hono/bun";
 import path from "path";
 import health from "./routes/health";
 import geodata from "./routes/geodata";
+import route from "./routes/route";
 
 const app = new Hono();
 
@@ -15,6 +16,7 @@ if (process.env.NODE_ENV !== "production") {
 // API routes
 app.route("/api", health);
 app.route("/api", geodata);
+app.route("/api", route);
 
 // Serve frontend static files in production
 const distDir = path.resolve(import.meta.dir, "../../frontend/dist");
