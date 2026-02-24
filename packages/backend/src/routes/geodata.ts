@@ -1,7 +1,5 @@
 import { Hono } from "hono";
 import path from "path";
-import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
-import { point } from "@turf/helpers";
 
 const geodata = new Hono();
 
@@ -56,29 +54,6 @@ async function loadData() {
   if (await fundaFile.exists()) {
     fundaData = await fundaFile.json();
   }
-}
-
-function filterPointsInZone(
-  fc: { type: string; features: any[] },
-): { type: string; features: any[] } {
-  if (!isochroneData) return fc;
-
-  const zone30 = isochroneData.features?.find(
-    (f: any) => f.properties?.zone === "30min"
-  );
-  if (!zone30) {
-    console.warn("No 30-min zone found, returning all features");
-    return fc;
-  }
-
-  const filtered = fc.features.filter((f: any) => {
-    if (f.geometry?.type !== "Point") return false;
-    const [lng, lat] = f.geometry.coordinates;
-    const pt = point([lng, lat]);
-    return booleanPointInPolygon(pt, zone30);
-  });
-
-  return { type: "FeatureCollection", features: filtered };
 }
 
 // Load data at startup
@@ -142,22 +117,20 @@ geodata.post("/internal/refresh-funda", async (c) => {
   }
 
   const received = body.features.length;
-  const filtered = filterPointsInZone(body);
-  const afterFilter = filtered.features.length;
 
   // Update in-memory data (immediately live)
-  fundaData = filtered;
-  console.log(`Funda data refreshed: ${afterFilter} listings (from ${received} received)`);
+  fundaData = body;
+  console.log(`Funda data refreshed: ${received} listings`);
 
   // Persist to volume
   try {
-    await Bun.write(volumeFundaPath, JSON.stringify(filtered));
+    await Bun.write(volumeFundaPath, JSON.stringify(body));
     console.log(`Funda data persisted to ${volumeFundaPath}`);
   } catch (e) {
     console.warn("Failed to persist funda data to volume:", e);
   }
 
-  return c.json({ ok: true, received, afterFilter });
+  return c.json({ ok: true, received });
 });
 
 export default geodata;
