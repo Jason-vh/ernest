@@ -81,6 +81,7 @@ const fundaViewedVisible = ref(
   new URLSearchParams(window.location.search).get("funda-viewed") !== "0",
 );
 const hoveredZone = ref<ZoneKey | null>(null);
+const hoveredTransit = ref<TransitKey | null>(null);
 const clickedFundaUrls = ref(loadClickedFunda());
 const fundaCount = ref(0);
 
@@ -124,6 +125,7 @@ export function useZoneState() {
     fundaNewVisible,
     fundaViewedVisible,
     hoveredZone,
+    hoveredTransit,
     clickedFundaUrls,
     fundaCount,
     toggleZone,

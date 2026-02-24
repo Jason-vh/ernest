@@ -29,6 +29,7 @@ const {
   fundaNewVisible,
   fundaViewedVisible,
   hoveredZone,
+  hoveredTransit,
   clickedFundaUrls,
   fundaCount,
   markFundaClicked,
@@ -40,13 +41,11 @@ const TRANSIT_LAYERS: Record<TransitKey, string[]> = {
     "train-lines-fill",
     "train-circles-outer",
     "train-circles-inner",
-    "train-labels",
   ],
   metro: [
     "metro-lines-casing",
     "metro-lines-fill",
     "metro-circles",
-    "metro-labels",
   ],
   tram: ["tram-lines-fill", "tram-stops"],
 };
@@ -89,17 +88,19 @@ function stationsToGeoJSON(
 }
 
 
-function createOfficeMarker(name: string): HTMLDivElement {
+
+function createOfficeDot(): HTMLDivElement {
   const el = document.createElement("div");
-  el.style.display = "flex";
-  el.style.flexDirection = "column";
-  el.style.alignItems = "center";
   el.style.pointerEvents = "none";
-  el.innerHTML = `
-    <span style="font-family:'Caveat',cursive;font-size:16px;font-weight:700;color:#222;white-space:nowrap">${name}</span>
-    <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8">
-      <circle cx="4" cy="4" r="4" fill="#222"/>
-    </svg>`;
+  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="#222" stroke="#fff" stroke-width="1"/></svg>`;
+  return el;
+}
+
+function createLabel(name: string, color: string, opacity: number): HTMLDivElement {
+  const el = document.createElement("div");
+  el.style.pointerEvents = "none";
+  el.style.opacity = String(opacity);
+  el.innerHTML = `<span style="font-family:'Architects Daughter',cursive;font-size:13px;color:${color};white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff">${name}</span>`;
   return el;
 }
 
@@ -123,11 +124,20 @@ onMounted(async () => {
     "top-right",
   );
 
-  // Office markers
+  // Office markers: dot (non-colliding) + label (collides with other labels)
+  const officeLabels: maplibregl.Marker[] = [];
   for (const office of Object.values(OFFICES)) {
-    new maplibregl.Marker({ element: createOfficeMarker(office.name) })
+    new maplibregl.Marker({ element: createOfficeDot() })
       .setLngLat([office.lon, office.lat])
       .addTo(map);
+    const label = new maplibregl.Marker({
+      element: createLabel(office.name, "#222", 1),
+      anchor: "top",
+      offset: [0, 4],
+    })
+      .setLngLat([office.lon, office.lat])
+      .addTo(map);
+    officeLabels.push(label);
   }
 
   map.on("load", async () => {
@@ -332,31 +342,27 @@ onMounted(async () => {
       paint: {
         "circle-radius": 4,
         "circle-color": COLORS.metro,
-        "circle-opacity": 0.5,
-        "circle-stroke-width": 0.5,
+        "circle-opacity": 0.6,
+        "circle-stroke-width": 1,
         "circle-stroke-color": "#fff",
       },
     });
-    map.addLayer({
-      id: "metro-labels",
-      type: "symbol",
-      source: "metro-stations",
-      layout: {
-        "text-field": ["get", "name"],
-        "text-size": 10,
-        "text-offset": [0, 1],
-        "text-anchor": "top",
-        "text-font": ["Open Sans Semibold"],
-        "text-max-width": 8,
-        "text-allow-overlap": false,
-      },
-      paint: {
-        "text-color": COLORS.metro,
-        "text-halo-color": "#fff",
-        "text-halo-width": 1,
-        "text-opacity": 0.5,
-      },
-    });
+    // Metro station labels (HTML markers for Caveat font)
+    const transitMarkers: Record<TransitKey, maplibregl.Marker[]> = {
+      train: [], metro: [], tram: [],
+    };
+    for (const feature of metroGeoJSON.features) {
+      const coords = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+      const name = feature.properties?.name;
+      if (!name) continue;
+      const marker = new maplibregl.Marker({
+        element: createLabel(name, COLORS.metro, 0.7),
+        anchor: "top",
+      })
+        .setLngLat(coords)
+        .addTo(map);
+      transitMarkers.metro.push(marker);
+    }
 
     // --- Train stations ---
     const trainGeoJSON = stationsToGeoJSON(stations, StopType.Train);
@@ -366,33 +372,26 @@ onMounted(async () => {
       type: "circle",
       source: "train-stations",
       paint: {
-        "circle-radius": 5,
+        "circle-radius": 4,
         "circle-color": COLORS.train,
-        "circle-stroke-width": 1.5,
+        "circle-opacity": 0.6,
+        "circle-stroke-width": 1,
         "circle-stroke-color": "#fff",
-        "circle-opacity": 0.5,
       },
     });
-    map.addLayer({
-      id: "train-labels",
-      type: "symbol",
-      source: "train-stations",
-      layout: {
-        "text-field": ["get", "name"],
-        "text-size": 10,
-        "text-offset": [0, 1],
-        "text-anchor": "top",
-        "text-font": ["Open Sans Bold"],
-        "text-max-width": 8,
-        "text-allow-overlap": true,
-      },
-      paint: {
-        "text-color": COLORS.train,
-        "text-halo-color": "#fff",
-        "text-halo-width": 2,
-        "text-opacity": 0.8,
-      },
-    });
+    // Train station labels (HTML markers for Caveat font)
+    for (const feature of trainGeoJSON.features) {
+      const coords = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+      const name = feature.properties?.name;
+      if (!name) continue;
+      const marker = new maplibregl.Marker({
+        element: createLabel(name, COLORS.train, 0.7),
+        anchor: "top",
+      })
+        .setLngLat(coords)
+        .addTo(map);
+      transitMarkers.train.push(marker);
+    }
 
     // --- Funda listings (above everything) ---
     // Stamp clicked state onto features from localStorage
@@ -526,23 +525,58 @@ onMounted(async () => {
     updateZoneLayers();
     watch([zoneVisibility, hoveredZone], updateZoneLayers, { deep: true });
 
-    // --- Transit visibility ---
+    // --- Transit visibility + hover highlight ---
+    const DEFAULT_LINE_OPACITY: Record<TransitKey, number> = {
+      train: 0.1, metro: 0.1, tram: 0.1,
+    };
+    const DEFAULT_CIRCLE_OPACITY: Record<TransitKey, number> = {
+      train: 0.6, metro: 0.6, tram: 0.5,
+    };
+    const DEFAULT_LABEL_OPACITY: Record<TransitKey, number> = {
+      train: 0.7, metro: 0.7, tram: 1,
+    };
+
     function updateTransitLayers() {
+      const hovered = hoveredTransit.value;
+      const someHovered = hovered !== null;
+
       for (const key of TRANSIT_KEYS) {
         const visible = transitVisibility.value[key];
+        const isHovered = hovered === key;
+
         for (const layerId of TRANSIT_LAYERS[key]) {
           if (!map.getLayer(layerId)) continue;
-          map.setLayoutProperty(
-            layerId,
-            "visibility",
-            visible ? "visible" : "none",
-          );
+          map.setLayoutProperty(layerId, "visibility", visible ? "visible" : "none");
+
+          if (visible) {
+            const isLine = layerId.includes("line");
+            const defaultOp = isLine ? DEFAULT_LINE_OPACITY[key] : DEFAULT_CIRCLE_OPACITY[key];
+            const op = someHovered ? (isHovered ? 1 : defaultOp * 0.3) : defaultOp;
+
+            if (isLine) {
+              map.setPaintProperty(layerId, "line-opacity", op);
+            } else {
+              map.setPaintProperty(layerId, "circle-opacity", op);
+            }
+          }
+        }
+
+        // HTML label markers
+        for (const marker of transitMarkers[key]) {
+          const el = marker.getElement();
+          if (!visible) {
+            el.style.display = "none";
+          } else {
+            el.style.display = "";
+            const defaultOp = DEFAULT_LABEL_OPACITY[key];
+            el.style.opacity = String(someHovered ? (isHovered ? 1 : defaultOp * 0.3) : defaultOp);
+          }
         }
       }
     }
 
     updateTransitLayers();
-    watch(transitVisibility, updateTransitLayers, { deep: true });
+    watch([transitVisibility, hoveredTransit], updateTransitLayers, { deep: true });
 
     // --- Funda visibility (new + viewed as independent toggles) ---
     const FUNDA_LAYERS = ["funda-circles", "funda-building-fill", "funda-building-outline"];
@@ -829,7 +863,7 @@ onMounted(async () => {
 </style>
 
 <style>
-@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Architects+Daughter&display=swap");
 
 .maplibregl-popup-content {
   border-radius: 8px !important;

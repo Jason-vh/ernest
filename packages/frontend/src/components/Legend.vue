@@ -23,6 +23,8 @@
         :class="{ 'legend-item--disabled': !transitVisibility[item.key] }"
         v-for="item in transit"
         :key="item.key"
+        @mouseenter="hoveredTransit = item.key"
+        @mouseleave="hoveredTransit = null"
         @click="toggleTransit(item.key)"
       >
         <span class="legend-dot" :style="{ backgroundColor: item.color }"></span>
@@ -61,6 +63,7 @@ const {
   fundaNewVisible,
   fundaViewedVisible,
   hoveredZone,
+  hoveredTransit,
   toggleZone,
   toggleTransit,
   toggleFundaNew,
