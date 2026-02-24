@@ -3,9 +3,14 @@ import { decodePolyline } from "../utils/polyline";
 
 const route = new Hono();
 
+interface LineString {
+  type: "LineString";
+  coordinates: [number, number][];
+}
+
 interface RouteResult {
   duration: number;
-  geometry: GeoJSON.LineString;
+  geometry: LineString;
 }
 
 const OFFICES = {
@@ -70,10 +75,15 @@ async function fetchValhallaRoute(
     return null;
   }
 
-  const data = await res.json();
-  const seconds = data.trip?.summary?.time ?? 0;
+  const json = await res.json();
+  const data = json != null && typeof json === "object" ? json : {};
+  const trip = "trip" in data && data.trip != null && typeof data.trip === "object" ? data.trip : {};
+  const summary = "summary" in trip && trip.summary != null && typeof trip.summary === "object" ? trip.summary : {};
+  const seconds = "time" in summary && typeof summary.time === "number" ? summary.time : 0;
   const duration = Math.round(seconds / 60);
-  const shape = data.trip?.legs?.[0]?.shape;
+  const legs = "legs" in trip && Array.isArray(trip.legs) ? trip.legs : [];
+  const firstLeg = legs[0] != null && typeof legs[0] === "object" ? legs[0] : {};
+  const shape = "shape" in firstLeg && typeof firstLeg.shape === "string" ? firstLeg.shape : undefined;
   if (!shape) return null;
 
   const coordinates = decodePolyline(shape);

@@ -5,18 +5,30 @@ import path from "path";
 import health from "./routes/health";
 import geodata from "./routes/geodata";
 import route from "./routes/route";
+import auth from "./routes/auth";
+import { initDb } from "./db";
 
 const app = new Hono();
 
 // CORS in development only
 if (process.env.NODE_ENV !== "production") {
-  app.use("/api/*", cors());
+  app.use(
+    "/api/*",
+    cors({
+      origin: "http://localhost:5173",
+      credentials: true,
+    })
+  );
 }
+
+// Run migrations before accepting requests
+await initDb();
 
 // API routes
 app.route("/api", health);
 app.route("/api", geodata);
 app.route("/api", route);
+app.route("/api/auth", auth);
 
 // Serve frontend static files in production
 const distDir = path.resolve(import.meta.dir, "../../frontend/dist");

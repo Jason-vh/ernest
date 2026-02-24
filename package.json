@@ -3,10 +3,13 @@
   "private": true,
   "workspaces": ["packages/*", "scripts"],
   "scripts": {
-    "dev:backend": "bun run --cwd packages/backend src/index.ts",
+    "dev:backend": "bun run --env-file=../../.env --cwd packages/backend src/index.ts",
     "dev:frontend": "bun run --cwd packages/frontend dev",
     "build": "bun run --cwd packages/frontend build",
     "start": "bun run --cwd packages/backend src/index.ts",
+    "db:generate": "bun run --cwd packages/backend bunx drizzle-kit generate",
+    "db:push": "bun run --cwd packages/backend bunx drizzle-kit push",
+    "db:studio": "bun run --cwd packages/backend bunx drizzle-kit studio",
     "fetch-data": "bun scripts/fetch-data.ts",
     "fetch-funda": "python3.13 scripts/fetch_funda.py"
   }

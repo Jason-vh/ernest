@@ -125,11 +125,6 @@ onMounted(async () => {
     attributionControl: false,
   });
 
-  map.addControl(
-    new maplibregl.NavigationControl({ showCompass: false }),
-    "top-right",
-  );
-
   // Office markers: dot (non-colliding) + label (collides with other labels)
   const officeLabels: maplibregl.Marker[] = [];
   for (const office of Object.values(OFFICES)) {
