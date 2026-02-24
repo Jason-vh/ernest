@@ -38,6 +38,7 @@ const {
 
 const {
   activeRoutes,
+  routesLoading,
   showRoutesForListing,
   clearRoutes,
 } = useCyclingRoutes();
@@ -806,6 +807,14 @@ onMounted(async () => {
       timesEl.innerHTML = parts.join("");
     });
 
+    watch(routesLoading, (loading) => {
+      const timesEl = document.querySelector(".funda-cycling-times");
+      if (!timesEl) return;
+      if (loading) {
+        timesEl.innerHTML = `<span class="funda-cycling-loading"><span></span><span></span></span>`;
+      }
+    });
+
     // Funda popup handler
     let fundaPopup: maplibregl.Popup | null = null;
 
@@ -1099,5 +1108,32 @@ onMounted(async () => {
   height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
+}
+
+.funda-cycling-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.funda-cycling-loading > span {
+  height: 10px;
+  border-radius: 4px;
+  background: #e5e5e5;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.funda-cycling-loading > span:first-child {
+  width: 120px;
+}
+
+.funda-cycling-loading > span:last-child {
+  width: 100px;
+  animation-delay: 0.15s;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
 }
 </style>
