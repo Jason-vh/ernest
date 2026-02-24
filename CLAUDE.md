@@ -33,7 +33,7 @@ bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 - `packages/backend/src/routes/geodata.ts` — API endpoints for isochrone, stations, lines, buurten, funda + POST /internal/refresh-funda
 - `services/funda-cron/fetch_and_push.py` — Cron job: fetches Funda listings and POSTs to backend
 - `scripts/fetch-data.ts` — Data precomputation pipeline (Valhalla + Overpass + Amsterdam BBGA + Funda + Turf)
-- `scripts/fetch_funda.py` — Python script fetching Funda listings via pyfunda. Filters: €450k–€600k, ≥2 bed, ≥65 m², energy label ≥ D, status "Beschikbaar" only
+- `scripts/fetch_funda.py` — Python script fetching Funda listings via pyfunda. Searches Amsterdam, Diemen, Duivendrecht, Amstelveen, Ouderkerk aan de Amstel. Filters: €450k–€600k, ≥2 bed, ≥65 m², energy label ≥ D or unknown, status "Beschikbaar" only. Per-area error handling so one failure doesn't stop the rest.
 
 ## Conventions
 
@@ -57,7 +57,7 @@ bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 
 ## External APIs (used by fetch-data script only)
 
-- **Valhalla** (`valhalla1.openstreetmap.de`): Cycling isochrones. Rate-limited — add delays between requests.
+- **Valhalla** (`valhalla1.openstreetmap.de`): Cycling isochrones and route queries. Isochrones are augmented with ferry supplements for Amsterdam Noord — the script computes cycling time to the Buiksloterweg ferry via `/route`, then fetches supplementary isochrones from the north landing with the remaining time budget, unioning them with `@turf/union`. Rate-limited — add delays between requests.
 - **Overpass** (`overpass.kumi.systems`): Transit stops and lines from OSM. Rate-limited — make requests sequential with delays.
 - **Amsterdam BBGA** (`api.data.amsterdam.nl`): Neighbourhood boundaries (`/v1/gebieden/buurten`) and statistics (`/v1/bbga/kerncijfers`). Free, no auth. Produces `buurten.geojson` — neighbourhood polygons with WOZ value, owner-occupied %, safety rating, and crime rate properties.
 - **Funda** (via [pyfunda](https://github.com/0xMH/pyfunda)): Property listings from Funda's mobile API. Requires `pip install pyfunda` (Python 3.13). Search results don't include coordinates — the script fetches individual listing details in parallel (8 workers) to get lat/lng and photo URLs. The `characteristics['Status']` field from detail pages is the reliable source for listing status (the top-level `status` field always says "available").

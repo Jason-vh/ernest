@@ -4,10 +4,10 @@ Amsterdam house-hunting map. Shows cycling distance zones from two offices overl
 
 ## What it does
 
-- Computes 10/20/30-minute cycling isochrones from two offices (FareHarbor and Airwallex), intersects them to show areas reachable from **both** within each time budget
+- Computes 10/20/30-minute cycling isochrones from two offices (FareHarbor and Airwallex), intersects them to show areas reachable from **both** within each time budget. Isochrones are augmented with ferry supplements for Amsterdam Noord (Buiksloterweg F3).
 - Overlays transit stations (train, metro, tram) and line geometries
 - Shows Amsterdam neighbourhood (buurt) boundaries with labels
-- Displays available Funda listings (€450k–€600k, ≥2 bed, ≥65 m², energy label ≥ D) as map markers with photo popups and estimated overbid pricing — refreshed hourly
+- Displays available Funda listings (€450k–€600k, ≥2 bed, ≥65 m²) from Amsterdam, Diemen, Duivendrecht, Amstelveen, and Ouderkerk aan de Amstel as map markers with photo popups and estimated overbid pricing — refreshed hourly
 - Greyscale base map with parks and water preserved in color
 
 ## Tech stack
@@ -105,7 +105,7 @@ Hosted on [Railway](https://railway.com) at **https://ernest.vanhattum.xyz**. Tw
 
 **Web service** (`ernest-web`): Config in `railway.toml`. Railway auto-detects Bun, builds the frontend, and runs the server. A 1 GB volume at `/data` persists Funda data across deploys.
 
-**Cron service** (`ernest-cron`): Dockerfile-based Python service in `services/funda-cron/`. Runs hourly (`0 * * * *`), fetches fresh Funda listings, and POSTs them to the web service via Railway's internal network. The web service filters listings to the 30-min cycling zone, updates in-memory data, and persists to the volume.
+**Cron service** (`ernest-cron`): Dockerfile-based Python service in `services/funda-cron/`. Runs hourly (`0 * * * *`), fetches fresh Funda listings, and POSTs them to the web service via Railway's internal network. The web service updates in-memory data and persists to the volume.
 
 Environment variables:
 - **Web service**: `NODE_ENV=production`, `REFRESH_SECRET`, `VOLUME_PATH=/data`, `PORT` (auto-set)
@@ -128,15 +128,15 @@ Environment variables:
 The `scripts/fetch-data.ts` script:
 
 1. Fetches 10/20/30-min cycling isochrones from Valhalla for both offices
-2. Computes zone intersections using `@turf/intersect`
-3. Fetches transit stops from Overpass (tram, metro, train)
-4. Deduplicates stops (prefers way/relation over node)
-5. Filters to stops within the 30-min zone using `@turf/boolean-point-in-polygon`
-6. Fetches Amsterdam neighbourhood (buurt) boundaries from `api.data.amsterdam.nl`
-7. Fetches BBGA statistics (WOZ value, owner-occupied %, safety rating, crime rate)
-8. Filters neighbourhoods to those overlapping the 30-min zone using `@turf/intersect`
-9. Spawns `fetch_funda.py` which fetches Funda listings (€450k–€600k, ≥2 bed, ≥65 m², energy label ≥ D), retrieves coordinates/photos via parallel detail fetches, and filters to status "Beschikbaar" only
-10. Filters Funda listings to the 30-min cycling zone
+2. Augments isochrones with ferry supplements for Amsterdam Noord — computes cycling time to the Buiksloterweg ferry south landing via Valhalla `/route`, fetches supplementary isochrones from the north landing with the remaining time budget, and unions them with `@turf/union`
+3. Computes zone intersections using `@turf/intersect`
+4. Fetches transit stops from Overpass (tram, metro, train)
+5. Deduplicates stops (prefers way/relation over node)
+6. Filters to stops within the 30-min zone using `@turf/boolean-point-in-polygon`
+7. Fetches Amsterdam neighbourhood (buurt) boundaries from `api.data.amsterdam.nl`
+8. Fetches BBGA statistics (WOZ value, owner-occupied %, safety rating, crime rate)
+9. Filters neighbourhoods to those overlapping the 30-min zone using `@turf/intersect`
+10. Spawns `fetch_funda.py` which searches Funda listings across Amsterdam, Diemen, Duivendrecht, Amstelveen, and Ouderkerk aan de Amstel (€450k–€600k, ≥2 bed, ≥65 m²), retrieves coordinates/photos via parallel detail fetches, and filters to status "Beschikbaar" only
 11. Writes `isochrone.geojson`, `stations.json`, `buurten.geojson`, and `funda.geojson` to `packages/backend/data/`
 
 Transit lines (`lines.geojson`) are fetched separately and cached — the script skips this if the file already exists.
