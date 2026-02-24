@@ -118,8 +118,8 @@ const HIDDEN_LAYERS = [
   "highway-shield-us-interstate",
   "road_shield_us",
   // One-way arrows
-  "road_one_way_arrow",
-  "road_one_way_arrow_opposite",
+  "road_oneway",
+  "road_oneway_opposite",
   // Rail hatching (visual noise, we draw our own lines)
   "road_major_rail_hatching",
   "road_transit_rail_hatching",
@@ -199,6 +199,19 @@ export async function loadGreyscaleStyle(
         toGreyscale
       ) as typeof layer.layout;
     }
+  }
+
+  // Reorder: move water layers above roads/bridges so zone overlays can sit
+  // between roads and water (order: buildings → roads → zones → water → labels)
+  const waterIds = new Set(["water", "water-intermittent"]);
+  const waterLayers = style.layers.filter((l) => waterIds.has(l.id));
+  const otherLayers = style.layers.filter((l) => !waterIds.has(l.id));
+
+  // Insert water after the last road/bridge/rail geometry layer (cablecar-dash)
+  const cablecarIdx = otherLayers.findIndex((l) => l.id === "cablecar-dash");
+  if (cablecarIdx !== -1) {
+    otherLayers.splice(cablecarIdx + 1, 0, ...waterLayers);
+    style.layers = otherLayers;
   }
 
   return style;

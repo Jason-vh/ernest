@@ -1,6 +1,6 @@
 <template>
   <div class="legend">
-    <div class="legend-title">Cycling to both offices</div>
+    <div class="legend-title">cycle distance</div>
     <div class="legend-items">
       <div
         class="legend-item legend-item--toggle"
@@ -16,7 +16,7 @@
       </div>
     </div>
     <div class="legend-divider"></div>
-    <div class="legend-title">Transit</div>
+    <div class="legend-title">transit</div>
     <div class="legend-items">
       <div
         class="legend-item legend-item--toggle"
@@ -30,7 +30,7 @@
       </div>
     </div>
     <div class="legend-divider"></div>
-    <div class="legend-title">Funda</div>
+    <div class="legend-title">funda</div>
     <div class="legend-items">
       <div
         class="legend-item legend-item--toggle"
@@ -38,7 +38,7 @@
         @click="toggleFundaNew()"
       >
         <span class="legend-dot" style="background-color: #E8950F"></span>
-        <span class="legend-label">Unseen listings</span>
+        <span class="legend-label">unseen listings</span>
       </div>
       <div
         class="legend-item legend-item--toggle"
@@ -46,7 +46,7 @@
         @click="toggleFundaViewed()"
       >
         <span class="legend-dot" style="background-color: #aaa"></span>
-        <span class="legend-label">Viewed listings</span>
+        <span class="legend-label">viewed listings</span>
       </div>
     </div>
   </div>
@@ -68,15 +68,15 @@ const {
 } = useZoneState();
 
 const zones: { key: ZoneKey; label: string; color: string }[] = [
-  { key: "10", label: "< 10 min", color: "#22c55e" },
-  { key: "20", label: "< 20 min", color: "#f59e0b" },
-  { key: "30", label: "< 30 min", color: "#ef4444" },
+  { key: "10", label: "in 10 mins", color: "#22c55e" },
+  { key: "20", label: "in 20 mins", color: "#f59e0b" },
+  { key: "30", label: "in 30 mins", color: "#ef4444" },
 ];
 
 const transit: { key: TransitKey; label: string; color: string }[] = [
-  { key: "train", label: "Train", color: "#003DA5" },
-  { key: "metro", label: "Metro", color: "#E4003A" },
-  { key: "tram", label: "Tram", color: "#7B2D8E" },
+  { key: "train", label: "train", color: "#003DA5" },
+  { key: "metro", label: "metro", color: "#E4003A" },
+  { key: "tram", label: "tram", color: "#7B2D8E" },
 ];
 </script>
 
@@ -85,7 +85,7 @@ const transit: { key: TransitKey; label: string; color: string }[] = [
   position: absolute;
   bottom: 28px;
   left: 12px;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.35);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-radius: 10px;

@@ -171,13 +171,12 @@ onMounted(async () => {
       fetchFunda(),
     ]);
 
-    // --- Cycling zones (inserted below water layer so water bodies mask them) ---
+    // --- Cycling zones (above buildings, below water) ---
     map.addSource("zones", { type: "geojson", data: isochrone });
 
-    // Find the first road layer after buildings to insert zones above buildings
-    const aboveBuildingsId =
-      map.getStyle().layers.find((l) => l.id === "tunnel-service-track-casing")
-        ?.id ?? undefined;
+    // Water layers have been reordered above building-top in the style.
+    // Insert zones before the first water layer so order is: buildings → zones → water
+    const waterLayerId = map.getStyle().layers.find((l) => l.id === "water")?.id ?? undefined;
 
     // 30-min zone (red, outermost)
     map.addLayer(
@@ -188,7 +187,7 @@ onMounted(async () => {
         filter: ["==", ["get", "zone"], "30min"],
         paint: { "fill-color": COLORS.zone30, "fill-opacity": 0.08 },
       },
-      aboveBuildingsId,
+      waterLayerId,
     );
     map.addLayer(
       {
@@ -203,7 +202,7 @@ onMounted(async () => {
           "line-dasharray": [4, 3],
         },
       },
-      aboveBuildingsId,
+      waterLayerId,
     );
 
     // 20-min zone (orange)
@@ -215,7 +214,7 @@ onMounted(async () => {
         filter: ["==", ["get", "zone"], "20min"],
         paint: { "fill-color": COLORS.zone20, "fill-opacity": 0.1 },
       },
-      aboveBuildingsId,
+      waterLayerId,
     );
     map.addLayer(
       {
@@ -230,7 +229,7 @@ onMounted(async () => {
           "line-dasharray": [4, 3],
         },
       },
-      aboveBuildingsId,
+      waterLayerId,
     );
 
     // 10-min zone (green, innermost)
@@ -242,7 +241,7 @@ onMounted(async () => {
         filter: ["==", ["get", "zone"], "10min"],
         paint: { "fill-color": COLORS.zone10, "fill-opacity": 0.12 },
       },
-      aboveBuildingsId,
+      waterLayerId,
     );
     map.addLayer(
       {
@@ -257,7 +256,7 @@ onMounted(async () => {
           "line-dasharray": [4, 3],
         },
       },
-      aboveBuildingsId,
+      waterLayerId,
     );
 
     // --- Transit lines ---
@@ -575,7 +574,7 @@ onMounted(async () => {
       const fmtList = `€${listPrice.toLocaleString("nl-NL")}`;
       const details = [
         p.livingArea ? `${p.livingArea} m²` : null,
-        p.bedrooms ? `${p.bedrooms} bed` : null,
+        p.bedrooms ? `${p.bedrooms} bedrooms` : null,
       ]
         .filter(Boolean)
         .join(" · ");
