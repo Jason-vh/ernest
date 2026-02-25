@@ -14,6 +14,17 @@ DETAIL_WORKERS = 8
 SEARCH_AREAS = ["amsterdam", "diemen", "duivendrecht", "amstelveen", "ouderkerk-aan-de-amstel"]
 
 
+def _is_terminal_page_error(error):
+    """Return True when search paging moved past the last available page."""
+    response = getattr(error, "response", None)
+    status_code = getattr(response, "status_code", None)
+    if status_code == 400:
+        return True
+
+    # Fallback for wrapped exceptions that only expose status in text.
+    return "400" in str(error)
+
+
 def fetch_all_listings(log=print):
     f = Funda(timeout=30)
     all_listings = []
@@ -22,13 +33,19 @@ def fetch_all_listings(log=print):
 
     while True:
         log(f"  Fetching page {page}...")
-        results = f.search_listing(
-            SEARCH_AREAS,
-            offering_type="buy",
-            price_min=PRICE_MIN,
-            price_max=PRICE_MAX,
-            page=page,
-        )
+        try:
+            results = f.search_listing(
+                SEARCH_AREAS,
+                offering_type="buy",
+                price_min=PRICE_MIN,
+                price_max=PRICE_MAX,
+                page=page,
+            )
+        except Exception as e:
+            if _is_terminal_page_error(e):
+                log(f"  Reached last page at page {page - 1} (page {page} returned 400)")
+                break
+            raise
         if not results:
             break
         for listing in results:
