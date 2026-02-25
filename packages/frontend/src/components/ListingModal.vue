@@ -3,111 +3,93 @@
     <Transition name="listing-modal">
       <div
         v-if="listing"
-        class="fixed inset-0 z-100 flex items-end justify-center bg-black/20 backdrop-blur-[6px] sm:items-center"
+        class="fixed inset-0 z-100 flex flex-col items-center justify-end bg-black/20 backdrop-blur-[6px] sm:justify-center"
         @click.self="close"
       >
-        <div
-          ref="modalRef"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Listing details"
-          tabindex="-1"
-          class="listing-panel relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[14px] bg-white/90 shadow-[0_8px_40px_rgba(0,0,0,0.15),0_1px_3px_rgba(0,0,0,0.08)] outline-none backdrop-blur-[24px] sm:my-6 sm:max-h-[calc(100dvh-3rem)] sm:max-w-[580px] sm:rounded-[14px]"
-          @keydown="trapFocus"
-        >
-          <!-- Scrollable content -->
-          <div class="flex-1 overflow-y-auto overscroll-contain">
-            <!-- Photo gallery with floating close button -->
-            <div v-if="listing.photos.length > 0" class="relative">
-              <PhotoGallery
-                :photos="listing.photos"
-                :initial-fullscreen-index="initialPhotoIndex"
-                @fullscreen-change="onFullscreenChange"
-              />
-              <!-- Cluster navigation (photo header) -->
-              <div
-                v-if="isCluster"
-                class="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5"
-              >
-                <button
-                  class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
-                  title="Previous listing"
-                  @click="navigateCluster(-1)"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                  >
-                    <path d="M15 18l-6-6 6-6" />
-                  </svg>
-                </button>
-                <span
-                  class="rounded-full bg-black/40 px-2.5 py-1 text-[11px] font-medium tabular-nums text-white/90 backdrop-blur-sm"
-                >
-                  {{ currentClusterIndex + 1 }} / {{ clusterListingIds.length }}
-                </span>
-                <button
-                  class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
-                  title="Next listing"
-                  @click="navigateCluster(1)"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                  >
-                    <path d="M9 18l6-6-6-6" />
-                  </svg>
-                </button>
-              </div>
-              <button
-                class="absolute top-2.5 right-12 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
-                title="Show on map"
-                @click="showOnMap"
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                >
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
-                </svg>
-              </button>
-              <button
-                class="absolute top-2.5 right-2.5 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
-                @click="close"
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                >
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+        <!-- Cluster nav above modal -->
+        <div v-if="isCluster" class="mb-2 flex items-center gap-3" @click.stop>
+          <button
+            class="cluster-arrow flex sm:hidden"
+            title="Previous listing (←)"
+            @click="navigateCluster(-1)"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <span
+            class="rounded-full bg-black/50 px-3 py-1 text-[12px] font-medium tabular-nums text-white/90 backdrop-blur-sm"
+          >
+            {{ currentClusterIndex + 1 }} / {{ clusterListingIds.length }}
+          </span>
+          <button
+            class="cluster-arrow flex sm:hidden"
+            title="Next listing (→)"
+            @click="navigateCluster(1)"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </button>
+        </div>
 
-            <!-- No-photo fallback header -->
-            <div v-else class="flex items-center justify-between gap-1.5 px-4 pt-3">
-              <div v-if="isCluster" class="flex items-center gap-1">
+        <!-- Row: optional prev arrow + modal + optional next arrow -->
+        <div class="flex w-full items-center justify-center gap-3">
+          <!-- Prev arrow (desktop only) -->
+          <button
+            v-if="isCluster"
+            class="cluster-arrow hidden flex-shrink-0 sm:flex"
+            title="Previous listing (←)"
+            @click="navigateCluster(-1)"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+
+          <div
+            ref="modalRef"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Listing details"
+            tabindex="-1"
+            class="listing-panel relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[14px] bg-white/90 shadow-[0_8px_40px_rgba(0,0,0,0.15),0_1px_3px_rgba(0,0,0,0.08)] outline-none backdrop-blur-[24px] sm:max-h-[calc(100dvh-6rem)] sm:max-w-[580px] sm:rounded-[14px]"
+            @keydown="trapFocus"
+          >
+            <!-- Scrollable content -->
+            <div class="flex-1 overflow-y-auto overscroll-contain">
+              <!-- Photo gallery with floating close button -->
+              <div v-if="listing.photos.length > 0" class="relative">
+                <PhotoGallery
+                  :photos="listing.photos"
+                  :initial-fullscreen-index="initialPhotoIndex"
+                  @fullscreen-change="onFullscreenChange"
+                />
                 <button
-                  class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none bg-black/8 text-[#666] transition-colors hover:bg-black/15"
-                  title="Previous listing"
-                  @click="navigateCluster(-1)"
+                  class="absolute top-2.5 right-12 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
+                  title="Show on map"
+                  @click="showOnMap"
                 >
                   <svg
                     width="14"
@@ -117,16 +99,13 @@
                     stroke="currentColor"
                     stroke-width="2.5"
                   >
-                    <path d="M15 18l-6-6 6-6" />
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
                   </svg>
                 </button>
-                <span class="px-1.5 text-[11px] font-medium tabular-nums text-[#999]">
-                  {{ currentClusterIndex + 1 }} / {{ clusterListingIds.length }}
-                </span>
                 <button
-                  class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none bg-black/8 text-[#666] transition-colors hover:bg-black/15"
-                  title="Next listing"
-                  @click="navigateCluster(1)"
+                  class="absolute top-2.5 right-2.5 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
+                  @click="close"
                 >
                   <svg
                     width="14"
@@ -136,12 +115,13 @@
                     stroke="currentColor"
                     stroke-width="2.5"
                   >
-                    <path d="M9 18l6-6-6-6" />
+                    <path d="M18 6L6 18M6 6l12 12" />
                   </svg>
                 </button>
               </div>
-              <div v-else></div>
-              <div class="flex items-center gap-1.5">
+
+              <!-- No-photo fallback header -->
+              <div v-else class="flex items-center justify-end gap-1.5 px-4 pt-3">
                 <button
                   class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none bg-black/8 text-[#666] transition-colors hover:bg-black/15"
                   title="Show on map"
@@ -175,291 +155,314 @@
                   </svg>
                 </button>
               </div>
-            </div>
 
-            <div class="flex flex-col gap-0 px-5 pt-4 pb-5">
-              <!-- Address + Price row -->
-              <div class="flex items-start justify-between gap-4">
-                <div class="min-w-0">
-                  <h2 class="m-0 text-[17px] font-semibold leading-tight text-[#1a1a1a]">
-                    {{ listing.address }}
-                  </h2>
-                  <p v-if="listing.neighbourhood" class="m-0 mt-1 text-[13px] text-[#888]">
-                    {{ listing.neighbourhood
-                    }}<span v-if="listing.postcode"> &middot; {{ listing.postcode }}</span>
-                  </p>
-                </div>
-                <div class="flex-shrink-0 text-right">
-                  <div class="text-[20px] font-bold tracking-[-0.02em] text-[#1a1a1a]">
-                    {{ formatPrice(overbidPrice) }}
+              <div class="flex flex-col gap-0 px-5 pt-4 pb-5">
+                <!-- Address + Price row -->
+                <div class="flex items-start justify-between gap-4">
+                  <div class="min-w-0">
+                    <h2 class="m-0 text-[17px] font-semibold leading-tight text-[#1a1a1a]">
+                      {{ listing.address }}
+                    </h2>
+                    <p v-if="listing.neighbourhood" class="m-0 mt-1 text-[13px] text-[#888]">
+                      {{ listing.neighbourhood
+                      }}<span v-if="listing.postcode"> &middot; {{ listing.postcode }}</span>
+                    </p>
                   </div>
-                  <div class="mt-0.5 text-[11px] text-[#999]">
-                    asking {{ formatPrice(listing.price) }}
-                  </div>
-                </div>
-              </div>
-
-              <!-- Key facts (inline) with status + energy badges -->
-              <div v-if="keyFacts || energyLabelBadge" class="mt-2.5 text-[13px] text-[#666]">
-                <span
-                  v-if="listing.status === 'Beschikbaar'"
-                  class="mr-1.5 inline-block rounded bg-emerald-500/10 px-1.5 py-[1px] text-[11px] font-semibold text-emerald-700"
-                  >Available</span
-                ><span
-                  v-if="energyLabelBadge"
-                  class="mr-1.5 inline-block rounded px-1.5 py-[1px] text-[11px] font-semibold"
-                  :class="energyLabelBadge.cls"
-                  >{{ energyLabelBadge.text }}</span
-                >{{ keyFacts }}
-              </div>
-
-              <!-- Cycling commute -->
-              <div v-if="commuteEntries.length" class="mt-1.5 text-[12px] text-[#aaa]">
-                <template v-for="(entry, i) in commuteEntries" :key="entry.label">
-                  <template v-if="i > 0"> &middot; </template>
-                  <span class="tabular-nums text-[#888]">{{ entry.mins }} min</span>
-                  {{ entry.first ? "cycle to" : "to" }} {{ entry.label }}
-                </template>
-              </div>
-
-              <!-- Actions row -->
-              <div v-if="user" class="mt-3 flex items-center gap-2">
-                <button
-                  class="reaction-btn"
-                  :class="{
-                    'reaction-btn--active reaction-btn--fav': listing.reaction === 'favourite',
-                  }"
-                  @click="toggleReaction('favourite')"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path
-                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                      :fill="listing.reaction === 'favourite' ? 'currentColor' : 'none'"
-                    />
-                  </svg>
-                  Favourite
-                </button>
-                <button
-                  class="reaction-btn"
-                  :class="{
-                    'reaction-btn--active reaction-btn--discard': listing.reaction === 'discarded',
-                  }"
-                  @click="toggleReaction('discarded')"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                  Discard
-                </button>
-                <span v-if="listing.reactionBy" class="ml-auto self-center text-[11px] text-[#bbb]">
-                  by {{ listing.reactionBy }}
-                </span>
-              </div>
-
-              <!-- Divider -->
-              <div class="my-4 h-px bg-black/6"></div>
-
-              <!-- AI highlights card -->
-              <div
-                v-if="
-                  (listing.aiPositives && listing.aiPositives.length > 0) ||
-                  (listing.aiNegatives && listing.aiNegatives.length > 0)
-                "
-                class="highlights-card"
-              >
-                <div
-                  v-if="listing.aiPositives && listing.aiPositives.length > 0"
-                  class="flex flex-col gap-[5px]"
-                >
-                  <div
-                    v-for="(item, i) in listing.aiPositives"
-                    :key="'pos-' + i"
-                    class="flex items-start gap-2 text-[13px] leading-[1.4]"
-                  >
-                    <span
-                      class="mt-[6px] h-[6px] w-[6px] flex-shrink-0 rounded-full bg-emerald-500"
-                    ></span>
-                    <span class="text-[#444]">{{ item }}</span>
+                  <div class="flex-shrink-0 text-right">
+                    <div class="text-[20px] font-bold tracking-[-0.02em] text-[#1a1a1a]">
+                      {{ formatPrice(overbidPrice) }}
+                    </div>
+                    <div class="mt-0.5 text-[11px] text-[#999]">
+                      asking {{ formatPrice(listing.price) }}
+                    </div>
                   </div>
                 </div>
+
+                <!-- Key facts (inline) with status + energy badges -->
+                <div v-if="keyFacts || energyLabelBadge" class="mt-2.5 text-[13px] text-[#666]">
+                  <span
+                    v-if="listing.status === 'Beschikbaar'"
+                    class="mr-1.5 inline-block rounded bg-emerald-500/10 px-1.5 py-[1px] text-[11px] font-semibold text-emerald-700"
+                    >Available</span
+                  ><span
+                    v-if="energyLabelBadge"
+                    class="mr-1.5 inline-block rounded px-1.5 py-[1px] text-[11px] font-semibold"
+                    :class="energyLabelBadge.cls"
+                    >{{ energyLabelBadge.text }}</span
+                  >{{ keyFacts }}
+                </div>
+
+                <!-- Cycling commute -->
+                <div v-if="commuteEntries.length" class="mt-1.5 text-[12px] text-[#aaa]">
+                  <template v-for="(entry, i) in commuteEntries" :key="entry.label">
+                    <template v-if="i > 0"> &middot; </template>
+                    <span class="tabular-nums text-[#888]">{{ entry.mins }} min</span>
+                    {{ entry.first ? "cycle to" : "to" }} {{ entry.label }}
+                  </template>
+                </div>
+
+                <!-- Actions row -->
+                <div v-if="user" class="mt-3 flex items-center gap-2">
+                  <button
+                    class="reaction-btn"
+                    :class="{
+                      'reaction-btn--active reaction-btn--fav': listing.reaction === 'favourite',
+                    }"
+                    @click="toggleReaction('favourite')"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                        :fill="listing.reaction === 'favourite' ? 'currentColor' : 'none'"
+                      />
+                    </svg>
+                    Favourite
+                  </button>
+                  <button
+                    class="reaction-btn"
+                    :class="{
+                      'reaction-btn--active reaction-btn--discard':
+                        listing.reaction === 'discarded',
+                    }"
+                    @click="toggleReaction('discarded')"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                    Discard
+                  </button>
+                  <span
+                    v-if="listing.reactionBy"
+                    class="ml-auto self-center text-[11px] text-[#bbb]"
+                  >
+                    by {{ listing.reactionBy }}
+                  </span>
+                </div>
+
+                <!-- Divider -->
+                <div class="my-4 h-px bg-black/6"></div>
+
+                <!-- AI highlights card -->
                 <div
                   v-if="
-                    listing.aiPositives &&
-                    listing.aiPositives.length > 0 &&
-                    listing.aiNegatives &&
-                    listing.aiNegatives.length > 0
+                    (listing.aiPositives && listing.aiPositives.length > 0) ||
+                    (listing.aiNegatives && listing.aiNegatives.length > 0)
                   "
-                  class="my-2.5 h-px bg-black/5"
-                ></div>
-                <div
-                  v-if="listing.aiNegatives && listing.aiNegatives.length > 0"
-                  class="flex flex-col gap-[5px]"
+                  class="highlights-card"
                 >
                   <div
-                    v-for="(item, i) in listing.aiNegatives"
-                    :key="'neg-' + i"
-                    class="flex items-start gap-2 text-[13px] leading-[1.4]"
+                    v-if="listing.aiPositives && listing.aiPositives.length > 0"
+                    class="flex flex-col gap-[5px]"
                   >
-                    <span
-                      class="mt-[6px] h-[6px] w-[6px] flex-shrink-0 rounded-full bg-amber-500"
-                    ></span>
-                    <span class="text-[#444]">{{ item }}</span>
+                    <div
+                      v-for="(item, i) in listing.aiPositives"
+                      :key="'pos-' + i"
+                      class="flex items-start gap-2 text-[13px] leading-[1.4]"
+                    >
+                      <span
+                        class="mt-[6px] h-[6px] w-[6px] flex-shrink-0 rounded-full bg-emerald-500"
+                      ></span>
+                      <span class="text-[#444]">{{ item }}</span>
+                    </div>
+                  </div>
+                  <div
+                    v-if="
+                      listing.aiPositives &&
+                      listing.aiPositives.length > 0 &&
+                      listing.aiNegatives &&
+                      listing.aiNegatives.length > 0
+                    "
+                    class="my-2.5 h-px bg-black/5"
+                  ></div>
+                  <div
+                    v-if="listing.aiNegatives && listing.aiNegatives.length > 0"
+                    class="flex flex-col gap-[5px]"
+                  >
+                    <div
+                      v-for="(item, i) in listing.aiNegatives"
+                      :key="'neg-' + i"
+                      class="flex items-start gap-2 text-[13px] leading-[1.4]"
+                    >
+                      <span
+                        class="mt-[6px] h-[6px] w-[6px] flex-shrink-0 rounded-full bg-amber-500"
+                      ></span>
+                      <span class="text-[#444]">{{ item }}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Notes (read-only display) -->
-              <div v-if="listing.notes.length > 0" class="mt-4">
-                <div class="text-[11px] font-semibold uppercase tracking-wide text-[#888]">
-                  Notes
-                </div>
-                <div v-for="note in listing.notes" :key="note.userId" class="mt-2">
-                  <div class="text-[11px] font-medium text-[#999]">{{ note.username }}</div>
-                  <p class="m-0 mt-0.5 whitespace-pre-line text-[13px] leading-[1.5] text-[#555]">
-                    {{ note.text }}
-                  </p>
-                </div>
-              </div>
-
-              <!-- Description -->
-              <div v-if="activeDescription" class="mt-4">
-                <div class="flex items-center justify-between">
+                <!-- Notes (read-only display) -->
+                <div v-if="listing.notes.length > 0" class="mt-4">
                   <div class="text-[11px] font-semibold uppercase tracking-wide text-[#888]">
-                    Description
+                    Notes
                   </div>
-                  <button
-                    v-if="listing.aiDescription && listing.description"
-                    class="cursor-pointer border-none bg-transparent p-0 font-inherit text-[11px] font-medium text-[#999] underline decoration-[#ddd] underline-offset-2 transition-colors hover:text-[#666] hover:decoration-[#aaa]"
-                    @click="showOriginalDesc = !showOriginalDesc"
+                  <div v-for="note in listing.notes" :key="note.userId" class="mt-2">
+                    <div class="text-[11px] font-medium text-[#999]">{{ note.username }}</div>
+                    <p class="m-0 mt-0.5 whitespace-pre-line text-[13px] leading-[1.5] text-[#555]">
+                      {{ note.text }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Description -->
+                <div v-if="activeDescription" class="mt-4">
+                  <div class="flex items-center justify-between">
+                    <div class="text-[11px] font-semibold uppercase tracking-wide text-[#888]">
+                      Description
+                    </div>
+                    <button
+                      v-if="listing.aiDescription && listing.description"
+                      class="cursor-pointer border-none bg-transparent p-0 font-inherit text-[11px] font-medium text-[#999] underline decoration-[#ddd] underline-offset-2 transition-colors hover:text-[#666] hover:decoration-[#aaa]"
+                      @click="showOriginalDesc = !showOriginalDesc"
+                    >
+                      {{ showOriginalDesc ? "Show translated" : "Show original" }}
+                    </button>
+                  </div>
+                  <p
+                    class="m-0 mt-1.5 whitespace-pre-line text-[13px] leading-[1.6] text-[#555]"
+                    :class="{
+                      'line-clamp-6': !descExpanded && (showOriginalDesc || !listing.aiDescription),
+                    }"
                   >
-                    {{ showOriginalDesc ? "Show translated" : "Show original" }}
+                    {{ activeDescription }}
+                  </p>
+                  <button
+                    v-if="
+                      activeDescription.length > 300 && (showOriginalDesc || !listing.aiDescription)
+                    "
+                    class="mt-1.5 cursor-pointer border-none bg-transparent p-0 font-inherit text-[12px] font-medium text-[#999] underline decoration-[#ddd] underline-offset-2 transition-colors hover:text-[#666] hover:decoration-[#aaa]"
+                    @click="descExpanded = !descExpanded"
+                  >
+                    {{ descExpanded ? "Show less" : "Read more" }}
                   </button>
                 </div>
-                <p
-                  class="m-0 mt-1.5 whitespace-pre-line text-[13px] leading-[1.6] text-[#555]"
-                  :class="{
-                    'line-clamp-6': !descExpanded && (showOriginalDesc || !listing.aiDescription),
-                  }"
-                >
-                  {{ activeDescription }}
-                </p>
-                <button
-                  v-if="
-                    activeDescription.length > 300 && (showOriginalDesc || !listing.aiDescription)
-                  "
-                  class="mt-1.5 cursor-pointer border-none bg-transparent p-0 font-inherit text-[12px] font-medium text-[#999] underline decoration-[#ddd] underline-offset-2 transition-colors hover:text-[#666] hover:decoration-[#aaa]"
-                  @click="descExpanded = !descExpanded"
-                >
-                  {{ descExpanded ? "Show less" : "Read more" }}
-                </button>
-              </div>
 
-              <!-- Neighbourhood stats card -->
-              <div
-                v-if="hasBuurtStats"
-                class="mt-4 rounded-xl border border-black/6 bg-[#f0f0ee] px-4 py-3"
-              >
-                <div class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#888]">
-                  Neighbourhood<template v-if="listing.neighbourhood">
-                    &middot; {{ listing.neighbourhood }}</template
-                  >
+                <!-- Neighbourhood stats card -->
+                <div
+                  v-if="hasBuurtStats"
+                  class="mt-4 rounded-xl border border-black/6 bg-[#f0f0ee] px-4 py-3"
+                >
+                  <div class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#888]">
+                    Neighbourhood<template v-if="listing.neighbourhood">
+                      &middot; {{ listing.neighbourhood }}</template
+                    >
+                  </div>
+                  <div class="flex flex-col gap-1.5 text-[13px]">
+                    <div
+                      v-if="listing.buurtWozValue != null"
+                      class="flex justify-between text-[#555]"
+                    >
+                      <span class="text-[#999]">Avg. WOZ value</span>
+                      <span>{{ formatPrice(listing.buurtWozValue) }}</span>
+                    </div>
+                    <div
+                      v-if="listing.buurtOwnerOccupiedPct != null"
+                      class="flex justify-between text-[#555]"
+                    >
+                      <span class="text-[#999]">Owner-occupied</span>
+                      <span>{{ listing.buurtOwnerOccupiedPct }}%</span>
+                    </div>
+                    <div
+                      v-if="listing.buurtSafetyRating != null"
+                      class="flex justify-between text-[#555]"
+                    >
+                      <span class="text-[#999]">Safety rating</span>
+                      <span>{{ listing.buurtSafetyRating }} / 10</span>
+                    </div>
+                    <div
+                      v-if="listing.buurtCrimesPer1000 != null"
+                      class="flex justify-between text-[#555]"
+                    >
+                      <span class="text-[#999]">Crimes per 1,000</span>
+                      <span>{{ listing.buurtCrimesPer1000 }}</span>
+                    </div>
+                  </div>
                 </div>
-                <div class="flex flex-col gap-1.5 text-[13px]">
-                  <div
-                    v-if="listing.buurtWozValue != null"
-                    class="flex justify-between text-[#555]"
-                  >
-                    <span class="text-[#999]">Avg. WOZ value</span>
-                    <span>{{ formatPrice(listing.buurtWozValue) }}</span>
-                  </div>
-                  <div
-                    v-if="listing.buurtOwnerOccupiedPct != null"
-                    class="flex justify-between text-[#555]"
-                  >
-                    <span class="text-[#999]">Owner-occupied</span>
-                    <span>{{ listing.buurtOwnerOccupiedPct }}%</span>
-                  </div>
-                  <div
-                    v-if="listing.buurtSafetyRating != null"
-                    class="flex justify-between text-[#555]"
-                  >
-                    <span class="text-[#999]">Safety rating</span>
-                    <span>{{ listing.buurtSafetyRating }} / 10</span>
-                  </div>
-                  <div
-                    v-if="listing.buurtCrimesPer1000 != null"
-                    class="flex justify-between text-[#555]"
-                  >
-                    <span class="text-[#999]">Crimes per 1,000</span>
-                    <span>{{ listing.buurtCrimesPer1000 }}</span>
-                  </div>
-                </div>
-              </div>
 
-              <!-- Collapsible note editor (at bottom) -->
-              <div v-if="user" class="mt-4 border-t border-black/6 pt-4">
-                <button
-                  class="flex w-full cursor-pointer items-center gap-1.5 border-none bg-transparent p-0 font-inherit text-[11px] font-semibold uppercase tracking-wide text-[#888] transition-colors hover:text-[#888]"
-                  @click="noteEditorOpen = !noteEditorOpen"
-                >
-                  <svg
-                    width="10"
-                    height="10"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    class="transition-transform"
-                    :class="{ 'rotate-90': noteEditorOpen }"
+                <!-- Collapsible note editor (at bottom) -->
+                <div v-if="user" class="mt-4 border-t border-black/6 pt-4">
+                  <button
+                    class="flex w-full cursor-pointer items-center gap-1.5 border-none bg-transparent p-0 font-inherit text-[11px] font-semibold uppercase tracking-wide text-[#888] transition-colors hover:text-[#888]"
+                    @click="noteEditorOpen = !noteEditorOpen"
                   >
-                    <path d="M9 18l6-6-6-6" />
-                  </svg>
-                  {{ ownNote ? "Edit note" : "Add note" }}
-                  <span v-if="noteSaving" class="ml-1 font-normal normal-case tracking-normal"
-                    >saving...</span
-                  >
-                  <span
-                    v-else-if="noteSaved"
-                    class="ml-1 font-normal normal-case tracking-normal text-emerald-600"
-                    >saved</span
-                  >
-                </button>
-                <div v-if="noteEditorOpen" class="mt-2">
-                  <textarea
-                    v-model="ownNoteText"
-                    rows="3"
-                    class="w-full resize-none rounded-lg border border-black/10 bg-black/[0.02] px-3 py-2 font-inherit text-[13px] text-[#333] outline-none transition-colors placeholder:text-[#bbb] focus:border-black/20 focus:bg-white"
-                    placeholder="Add a note..."
-                  ></textarea>
+                    <svg
+                      width="10"
+                      height="10"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      class="transition-transform"
+                      :class="{ 'rotate-90': noteEditorOpen }"
+                    >
+                      <path d="M9 18l6-6-6-6" />
+                    </svg>
+                    {{ ownNote ? "Edit note" : "Add note" }}
+                    <span v-if="noteSaving" class="ml-1 font-normal normal-case tracking-normal"
+                      >saving...</span
+                    >
+                    <span
+                      v-else-if="noteSaved"
+                      class="ml-1 font-normal normal-case tracking-normal text-emerald-600"
+                      >saved</span
+                    >
+                  </button>
+                  <div v-if="noteEditorOpen" class="mt-2">
+                    <textarea
+                      v-model="ownNoteText"
+                      rows="3"
+                      class="w-full resize-none rounded-lg border border-black/10 bg-black/[0.02] px-3 py-2 font-inherit text-[13px] text-[#333] outline-none transition-colors placeholder:text-[#bbb] focus:border-black/20 focus:bg-white"
+                      placeholder="Add a note..."
+                    ></textarea>
+                  </div>
                 </div>
-              </div>
-              <!-- View on Funda -->
-              <div class="mt-4 border-t border-black/6 pt-4">
-                <a
-                  :href="listing.url"
-                  target="_blank"
-                  rel="noopener"
-                  class="flex w-full items-center justify-center rounded-lg bg-black/5 py-2.5 no-underline transition-colors hover:bg-black/10"
-                >
-                  <img :src="fundaLogo" alt="View on Funda" class="h-[16px]" />
-                </a>
+                <!-- View on Funda -->
+                <div class="mt-4 border-t border-black/6 pt-4">
+                  <a
+                    :href="listing.url"
+                    target="_blank"
+                    rel="noopener"
+                    class="flex w-full items-center justify-center rounded-lg bg-black/5 py-2.5 no-underline transition-colors hover:bg-black/10"
+                  >
+                    <img :src="fundaLogo" alt="View on Funda" class="h-[16px]" />
+                  </a>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- Next arrow (desktop only) -->
+          <button
+            v-if="isCluster"
+            class="cluster-arrow hidden flex-shrink-0 sm:flex"
+            title="Next listing (→)"
+            @click="navigateCluster(1)"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
         </div>
       </div>
     </Transition>
@@ -817,6 +820,24 @@ function trapFocus(e: KeyboardEvent) {
 
 .reaction-btn--discard:hover {
   background: rgba(220, 38, 38, 0.14);
+}
+
+.cluster-arrow {
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.45);
+  color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.cluster-arrow:hover {
+  background: rgba(0, 0, 0, 0.6);
 }
 
 /* Slide-up on mobile, scale-fade on desktop */

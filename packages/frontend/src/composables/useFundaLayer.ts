@@ -232,69 +232,36 @@ export function useFundaLayer(
     if (showUnreviewed) visibleCategories.push("unreviewed");
     if (showDiscarded) visibleCategories.push("discarded");
 
+    const allVisible = showFav && showUnreviewed && showDiscarded;
+    const categoryFilter: maplibregl.FilterSpecification | null = allVisible
+      ? null
+      : ["in", ["get", "category"], ["literal", visibleCategories]];
+
+    // Apply same category filter to all funda layers
     if (visibleCategories.length === 0) {
       map.setLayoutProperty("funda-circles-hitarea", "visibility", "none");
+      map.setLayoutProperty("funda-circles", "visibility", "none");
     } else {
       map.setLayoutProperty("funda-circles-hitarea", "visibility", "visible");
-      const allVisible = showFav && showUnreviewed && showDiscarded;
-      map.setFilter(
-        "funda-circles-hitarea",
-        allVisible ? null : ["in", ["get", "category"], ["literal", visibleCategories]],
-      );
+      map.setLayoutProperty("funda-circles", "visibility", "visible");
+      map.setFilter("funda-circles-hitarea", categoryFilter);
+      map.setFilter("funda-circles", categoryFilter);
     }
+    map.setFilter("funda-building-fill", categoryFilter);
+    map.setFilter("funda-building-outline", categoryFilter);
 
-    // Visual layers: opacity + radius toggling (animated via transitions)
+    // Update circle size based on visible co-located count
     const visibleColocated = [
       "+",
       showFav ? ["get", "colocatedFavourite"] : 0,
       showUnreviewed ? ["get", "colocatedUnreviewed"] : 0,
       showDiscarded ? ["get", "colocatedDiscarded"] : 0,
     ];
-    const sizeExpr = ["case", [">", visibleColocated, 1], 6.5, 5];
     map.setPaintProperty("funda-circles", "circle-radius", [
-      "match",
-      ["get", "category"],
-      "favourite",
-      showFav ? sizeExpr : 0,
-      "discarded",
-      showDiscarded ? sizeExpr : 0,
-      showUnreviewed ? sizeExpr : 0,
-    ]);
-    map.setPaintProperty("funda-circles", "circle-opacity", [
-      "match",
-      ["get", "category"],
-      "favourite",
-      showFav ? 0.85 : 0,
-      "discarded",
-      showDiscarded ? 0.5 : 0,
-      showUnreviewed ? 0.85 : 0,
-    ]);
-    map.setPaintProperty("funda-circles", "circle-stroke-opacity", [
-      "match",
-      ["get", "category"],
-      "favourite",
-      showFav ? 1 : 0,
-      "discarded",
-      showDiscarded ? 1 : 0,
-      showUnreviewed ? 1 : 0,
-    ]);
-    map.setPaintProperty("funda-building-fill", "fill-opacity", [
-      "match",
-      ["get", "category"],
-      "favourite",
-      showFav ? 0.4 : 0,
-      "discarded",
-      showDiscarded ? 0.25 : 0,
-      showUnreviewed ? 0.4 : 0,
-    ]);
-    map.setPaintProperty("funda-building-outline", "line-opacity", [
-      "match",
-      ["get", "category"],
-      "favourite",
-      showFav ? 0.7 : 0,
-      "discarded",
-      showDiscarded ? 0.4 : 0,
-      showUnreviewed ? 0.7 : 0,
+      "case",
+      [">", visibleColocated, 1],
+      6.5,
+      5,
     ]);
   }
 
