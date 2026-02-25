@@ -431,7 +431,7 @@ const listingAgeDays = computed(() => {
 const keyFacts = computed(() => {
   if (!listing.value) return "";
   const parts: string[] = [];
-  if (listing.value.bedrooms) parts.push(`${listing.value.bedrooms} bed`);
+  if (listing.value.bedrooms) parts.push(`${listing.value.bedrooms} beds`);
   if (listing.value.livingArea) parts.push(`${listing.value.livingArea} m\u00B2`);
   if (listing.value.constructionYear) parts.push(`${listing.value.constructionYear}`);
   if (listing.value.hasGarden) parts.push("Garden");
