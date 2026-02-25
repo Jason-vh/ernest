@@ -453,23 +453,6 @@ function filterAndMergeBuurten(
 }
 
 // --- Funda listings ---
-async function fetchFundaListings(): Promise<GeoJSON.FeatureCollection> {
-  const scriptPath = path.resolve(import.meta.dir, "fetch_funda.py");
-  const proc = Bun.spawn(["python3.13", scriptPath], {
-    stdout: "pipe",
-    stderr: "inherit",
-  });
-
-  const output = await new Response(proc.stdout).text();
-  const exitCode = await proc.exited;
-
-  if (exitCode !== 0) {
-    throw new Error(`fetch_funda.py exited with code ${exitCode}`);
-  }
-
-  return JSON.parse(output);
-}
-
 function filterPointsInZone(
   fc: GeoJSON.FeatureCollection,
   zones: GeoJSON.FeatureCollection
@@ -531,11 +514,6 @@ async function main() {
   const stations = filterStationsInZone(allStations, zones);
   const filteredBuurten = filterAndMergeBuurten(buurten, zones, buurtStats);
 
-  // Funda listings
-  console.log("\nFetching Funda listings via pyfunda...");
-  const fundaListings = await fetchFundaListings();
-  console.log(`  ${fundaListings.features.length} Funda listings total`);
-
   // Lines data: skip if already exists (expensive query, data doesn't change)
   const outputDir = path.resolve(import.meta.dir, "../packages/backend/data");
   const linesPath = path.join(outputDir, "lines.geojson");
@@ -562,17 +540,12 @@ async function main() {
       path.join(outputDir, "buurten.geojson"),
       JSON.stringify(filteredBuurten, null, 2)
     ),
-    Bun.write(
-      path.join(outputDir, "funda.geojson"),
-      JSON.stringify(fundaListings, null, 2)
-    ),
   ]);
 
   console.log(`\nData written to ${outputDir}/`);
   console.log("  - isochrone.geojson (3 zone intersections)");
   console.log("  - stations.json");
   console.log("  - buurten.geojson");
-  console.log("  - funda.geojson");
 
   const tramCount = stations.filter((s) => s.type === StopType.Tram).length;
   const metroCount = stations.filter((s) => s.type === StopType.Metro).length;

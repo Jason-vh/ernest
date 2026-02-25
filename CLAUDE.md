@@ -30,7 +30,7 @@ bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 - **Backend** (`packages/backend`): Bun + Hono + Drizzle ORM + PostgreSQL. Serves precomputed data as JSON endpoints and the built frontend via `serveStatic`. Auth uses passkeys (WebAuthn) with JWT sessions. All file paths resolved via `import.meta.dir` (never relative to CWD). Database schema defined in Drizzle (`src/db/schema.ts`), migrations in `drizzle/`, applied automatically on startup.
 - **Scripts** (`scripts/`): `fetch-data.ts` runs with Bun to precompute geodata (uses Turf.js for spatial operations). `fetch_funda.py` is a thin wrapper that imports shared Funda logic from `services/funda-cron/funda_core.py` and outputs GeoJSON to stdout (called by `fetch-data.ts` via `Bun.spawn`).
 - **Cron** (`services/funda-cron/`): Python service that fetches Funda listings hourly and POSTs them to the backend's `POST /api/internal/refresh-funda` endpoint. Runs as a separate Railway cron service, communicates via Railway internal networking. Core fetch/filter/enrich logic lives in `funda_core.py`, shared with the local script.
-- **Data** (`packages/backend/data/`): Static JSON/GeoJSON files. Funda data is also persisted to a Railway volume (`/data/funda.geojson`) and loaded from there on startup if available, falling back to bundled data.
+- **Data** (`packages/backend/data/`): Static JSON/GeoJSON files (isochrone, stations, lines, buurten). Funda listings are stored in PostgreSQL (see `listings` table in schema).
 
 ## Key files
 

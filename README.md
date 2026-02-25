@@ -80,7 +80,6 @@ ernest/
         stations.json       # Filtered transit stops
         lines.geojson       # Transit line geometries
         buurten.geojson     # Neighbourhood boundaries + stats
-        funda.geojson       # Available Funda listings with coordinates + photos
   scripts/
     fetch-data.ts           # Fetches and precomputes all static data
     fetch_funda.py          # Thin wrapper: imports funda_core, outputs GeoJSON to stdout
@@ -164,7 +163,6 @@ The `scripts/fetch-data.ts` script:
 7. Fetches Amsterdam neighbourhood (buurt) boundaries from `api.data.amsterdam.nl`
 8. Fetches BBGA statistics (WOZ value, owner-occupied %, safety rating, crime rate)
 9. Filters neighbourhoods to those overlapping the 30-min zone using `@turf/intersect`
-10. Spawns `fetch_funda.py` which searches Funda listings across Amsterdam, Diemen, Duivendrecht, Amstelveen, and Ouderkerk aan de Amstel (€450k–€600k, ≥2 bed, ≥65 m²), retrieves coordinates/photos via parallel detail fetches, and filters to status "Beschikbaar" only
-11. Writes `isochrone.geojson`, `stations.json`, `buurten.geojson`, and `funda.geojson` to `packages/backend/data/`
+10. Writes `isochrone.geojson`, `stations.json`, and `buurten.geojson` to `packages/backend/data/`
 
 Transit lines (`lines.geojson`) are fetched separately and cached — the script skips this if the file already exists.
