@@ -32,6 +32,10 @@ export async function handleAiEnrich(job: Job): Promise<"completed" | "skipped">
       description: listings.description,
       photos: listings.photos,
       aiPositives: listings.aiPositives,
+      buurtWozValue: listings.buurtWozValue,
+      buurtSafetyRating: listings.buurtSafetyRating,
+      buurtCrimesPer1000: listings.buurtCrimesPer1000,
+      buurtOwnerOccupiedPct: listings.buurtOwnerOccupiedPct,
     })
     .from(listings)
     .where(eq(listings.fundaId, job.fundaId));
@@ -63,6 +67,18 @@ export async function handleAiEnrich(job: Job): Promise<"completed" | "skipped">
     `Bedrooms: ${listing.bedrooms}`,
     listing.energyLabel ? `Energy label: ${listing.energyLabel}` : null,
     listing.constructionYear ? `Construction year: ${listing.constructionYear}` : null,
+    listing.buurtWozValue
+      ? `Neighbourhood avg WOZ value: \u20AC${listing.buurtWozValue.toLocaleString("nl-NL")}`
+      : null,
+    listing.buurtSafetyRating
+      ? `Neighbourhood safety rating: ${listing.buurtSafetyRating}/10`
+      : null,
+    listing.buurtCrimesPer1000
+      ? `Neighbourhood crimes per 1000 residents: ${listing.buurtCrimesPer1000}`
+      : null,
+    listing.buurtOwnerOccupiedPct
+      ? `Neighbourhood owner-occupied: ${listing.buurtOwnerOccupiedPct}%`
+      : null,
   ]
     .filter(Boolean)
     .join("\n");
@@ -90,7 +106,7 @@ export async function handleAiEnrich(job: Job): Promise<"completed" | "skipped">
       model: "claude-haiku-4-5-20251001",
       max_tokens: 2000,
       system:
-        "You analyze Dutch real estate listings. For positives: list standout good things about this property as short phrases (e.g. 'south-facing garden', 'recently renovated bathroom'). For negatives: list downsides, required work, or concerns as short phrases (e.g. 'needs new kitchen', 'ground floor - no elevator'). Skip generic facts already visible in the listing data (price, size, bedrooms, energy label). 3-5 bullets each. For aiDescription: translate the original description to English, clean up formatting (remove ALL-CAPS, extra whitespace), remove marketing fluff, keep all factual content.",
+        "You analyze Dutch real estate listings. For positives: list standout good things about this property as short phrases (e.g. 'south-facing garden', 'recently renovated bathroom'). For negatives: list downsides, required work, or concerns as short phrases (e.g. 'needs new kitchen', 'ground floor - no elevator'). Never mention size/area, energy label, price, or number of bedrooms in positives or negatives — these are already shown in the UI. 3-5 bullets each. For aiDescription: translate the description to English, strip ALL marketing fluff and sales language (rhetorical questions, exclamations, 'can you see yourself living here', 'come in soon', etc.). Keep only factual information: room layout, finishes, orientation, outdoor space, parking, building facilities, transport links. Be concise — just the facts.",
       messages: [{ role: "user", content }],
       output_config: {
         format: {
