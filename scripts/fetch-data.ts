@@ -301,30 +301,7 @@ out center;
   return deduplicated;
 }
 
-// --- Step 3: Filter stations within the 30-min zone ---
-function filterStationsInZone(
-  stations: TransitStop[],
-  zones: GeoJSON.FeatureCollection
-): TransitStop[] {
-  // Use the 30-min zone (outermost) for filtering
-  const zone30 = zones.features.find(
-    (f) => f.properties?.zone === "30min"
-  );
-  if (!zone30) {
-    console.warn("  No 30-min zone found, returning all stations");
-    return stations;
-  }
-
-  const filtered = stations.filter((s) => {
-    const pt = point([s.lon, s.lat]);
-    return booleanPointInPolygon(pt, zone30 as any);
-  });
-
-  console.log(`  ${filtered.length} stations within 30-min zone`);
-  return filtered;
-}
-
-// --- Step 4: Fetch Amsterdam neighbourhood boundaries ---
+// --- Step 3: Fetch Amsterdam neighbourhood boundaries ---
 async function fetchBuurten(): Promise<GeoJSON.FeatureCollection> {
   console.log("Fetching Amsterdam buurt boundaries...");
   const allFeatures: GeoJSON.Feature[] = [];
@@ -511,7 +488,7 @@ async function main() {
     fetchBuurtStats(),
   ]);
 
-  const stations = filterStationsInZone(allStations, zones);
+  const stations = allStations;
   const filteredBuurten = filterAndMergeBuurten(buurten, zones, buurtStats);
 
   // Lines data: skip if already exists (expensive query, data doesn't change)

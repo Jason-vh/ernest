@@ -269,16 +269,19 @@ export function useTransitLayers(
         );
       }
 
-      // HTML label markers — CSS opacity transition
+      // HTML label markers — set opacity on the child span, not the marker
+      // wrapper, because MapLibre resets wrapper opacity on every map move
       for (const marker of transitMarkers[key]) {
         const el = marker.getElement();
-        el.style.transition = "opacity 200ms";
+        const label = el.firstElementChild as HTMLElement;
+        if (!label) continue;
+        label.style.transition = "opacity 200ms";
         if (visible) {
           const defaultOp = DEFAULT_LABEL_OPACITY[key];
-          el.style.opacity = String(someHovered ? (isHovered ? 1 : defaultOp * 0.3) : defaultOp);
+          label.style.opacity = String(someHovered ? (isHovered ? 1 : defaultOp * 0.3) : defaultOp);
           el.style.pointerEvents = "";
         } else {
-          el.style.opacity = "0";
+          label.style.opacity = "0";
           el.style.pointerEvents = "none";
         }
       }

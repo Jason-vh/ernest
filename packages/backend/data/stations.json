@@ -1,5 +1,12 @@
 [
   {
+    "id": 46199966,
+    "name": "Diemen Zuid",
+    "lat": 52.3302613,
+    "lon": 4.9560598,
+    "type": "train"
+  },
+  {
     "id": 46326414,
     "name": "Surinameplein",
     "lat": 52.3580481,
@@ -140,6 +147,20 @@
     "type": "metro"
   },
   {
+    "id": 250233796,
+    "name": "Strandvliet",
+    "lat": 52.3186119,
+    "lon": 4.9413977,
+    "type": "metro"
+  },
+  {
+    "id": 250234673,
+    "name": "Bullewijk",
+    "lat": 52.306869,
+    "lon": 4.9521292,
+    "type": "metro"
+  },
+  {
     "id": 275930365,
     "name": "Rietlandpark",
     "lat": 52.3730125,
@@ -158,6 +179,13 @@
     "name": "Flevopark",
     "lat": 52.3652037,
     "lon": 4.9520639,
+    "type": "tram"
+  },
+  {
+    "id": 286610403,
+    "name": "Oranjebaan",
+    "lat": 52.3030059,
+    "lon": 4.8717636,
     "type": "tram"
   },
   {
@@ -207,6 +235,13 @@
     "name": "Centrum Nieuw Sloten",
     "lat": 52.3463857,
     "lon": 4.8110474,
+    "type": "tram"
+  },
+  {
+    "id": 289428760,
+    "name": "Oudenaardeplantsoen",
+    "lat": 52.3449284,
+    "lon": 4.8036706,
     "type": "tram"
   },
   {
@@ -273,10 +308,24 @@
     "type": "tram"
   },
   {
+    "id": 293886212,
+    "name": "Amstelveen Stadshart",
+    "lat": 52.3012694,
+    "lon": 4.8670933,
+    "type": "tram"
+  },
+  {
     "id": 294091330,
     "name": "Parnassusweg",
     "lat": 52.3369653,
     "lon": 4.8687042,
+    "type": "tram"
+  },
+  {
+    "id": 295552866,
+    "name": "Amsterdamseweg",
+    "lat": 52.3153498,
+    "lon": 4.8552783,
     "type": "tram"
   },
   {
@@ -361,6 +410,13 @@
     "name": "Gerrit van der Veenstraat",
     "lat": 52.3488198,
     "lon": 4.8771911,
+    "type": "tram"
+  },
+  {
+    "id": 302344233,
+    "name": "Station Amstelveen",
+    "lat": 52.3015775,
+    "lon": 4.8479601,
     "type": "tram"
   },
   {
@@ -1120,6 +1176,20 @@
     "type": "tram"
   },
   {
+    "id": 2677256600,
+    "name": "Diemerparklaan",
+    "lat": 52.3555154,
+    "lon": 4.9946247,
+    "type": "tram"
+  },
+  {
+    "id": 2678427771,
+    "name": "Lumièrestraat",
+    "lat": 52.3531807,
+    "lon": 4.9990167,
+    "type": "tram"
+  },
+  {
     "id": 2941113425,
     "name": "Molenwerf",
     "lat": 52.3858873,
@@ -1134,11 +1204,25 @@
     "type": "tram"
   },
   {
+    "id": 3078345542,
+    "name": "Steigereiland",
+    "lat": 52.3627073,
+    "lon": 4.9810143,
+    "type": "tram"
+  },
+  {
     "id": 3157939509,
     "name": "Paleisstraat",
     "lat": 52.3723569,
     "lon": 4.8906536,
     "type": "tram"
+  },
+  {
+    "id": 3267307895,
+    "name": "Amsterdam ArenA",
+    "lat": 52.3159898,
+    "lon": 4.9429305,
+    "type": "train"
   },
   {
     "id": 3294629045,
@@ -1166,6 +1250,13 @@
     "name": "Van Baerlestraat",
     "lat": 52.3584538,
     "lon": 4.878318,
+    "type": "tram"
+  },
+  {
+    "id": 3295582281,
+    "name": "Vennepluimstraat",
+    "lat": 52.3576998,
+    "lon": 4.9905047,
     "type": "tram"
   },
   {
@@ -1204,11 +1295,46 @@
     "type": "train"
   },
   {
+    "id": 4005961975,
+    "name": "Amsterdam Bijlmer ArenA",
+    "lat": 52.3122449,
+    "lon": 4.9470883,
+    "type": "train"
+  },
+  {
     "id": 4040491812,
     "name": "Amsterdam Amstel",
     "lat": 52.3464656,
     "lon": 4.9175567,
     "type": "train"
+  },
+  {
+    "id": 4041642874,
+    "name": "Gaasperplas",
+    "lat": 52.3113175,
+    "lon": 4.9843223,
+    "type": "metro"
+  },
+  {
+    "id": 4041662264,
+    "name": "Ganzenhoef",
+    "lat": 52.3230792,
+    "lon": 4.9735502,
+    "type": "metro"
+  },
+  {
+    "id": 4041662265,
+    "name": "Kraaiennest",
+    "lat": 52.3170313,
+    "lon": 4.9791233,
+    "type": "metro"
+  },
+  {
+    "id": 4041664287,
+    "name": "Venserpolder",
+    "lat": 52.3267669,
+    "lon": 4.9463398,
+    "type": "metro"
   },
   {
     "id": 4041666291,
@@ -1229,6 +1355,13 @@
     "name": "Heemstedestraat",
     "lat": 52.3524713,
     "lon": 4.8343026,
+    "type": "metro"
+  },
+  {
+    "id": 4064153245,
+    "name": "Verrijn Stuartweg",
+    "lat": 52.328939,
+    "lon": 4.9662522,
     "type": "metro"
   },
   {
@@ -1272,6 +1405,27 @@
     "lat": 52.3642921,
     "lon": 4.8339612,
     "type": "metro"
+  },
+  {
+    "id": 4085675604,
+    "name": "Zaandam",
+    "lat": 52.4382493,
+    "lon": 4.8137421,
+    "type": "train"
+  },
+  {
+    "id": 4103562373,
+    "name": "Onderuit",
+    "lat": 52.3082083,
+    "lon": 4.872442,
+    "type": "tram"
+  },
+  {
+    "id": 4103567892,
+    "name": "Zonnestein",
+    "lat": 52.311833,
+    "lon": 4.8723724,
+    "type": "tram"
   },
   {
     "id": 4249280297,
@@ -1323,6 +1477,20 @@
     "type": "tram"
   },
   {
+    "id": 4957592436,
+    "name": "Molenweg",
+    "lat": 52.3085646,
+    "lon": 4.8506593,
+    "type": "tram"
+  },
+  {
+    "id": 4957592454,
+    "name": "Karselaan",
+    "lat": 52.3109438,
+    "lon": 4.8507838,
+    "type": "tram"
+  },
+  {
     "id": 5252944882,
     "name": "Amsterdam Zuid",
     "lat": 52.3388074,
@@ -1358,6 +1526,13 @@
     "type": "metro"
   },
   {
+    "id": 5487043827,
+    "name": "Sniep",
+    "lat": 52.3364299,
+    "lon": 4.9697229,
+    "type": "tram"
+  },
+  {
     "id": 5509458843,
     "name": "Amstelstation",
     "lat": 52.347445,
@@ -1383,6 +1558,20 @@
     "name": "Vijzelgracht",
     "lat": 52.3608169,
     "lon": 4.8911646,
+    "type": "metro"
+  },
+  {
+    "id": 5737467960,
+    "name": "Noorderpark",
+    "lat": 52.3889316,
+    "lon": 4.9187004,
+    "type": "metro"
+  },
+  {
+    "id": 5737467961,
+    "name": "Noord",
+    "lat": 52.4019931,
+    "lon": 4.9323589,
     "type": "metro"
   },
   {
@@ -1426,6 +1615,20 @@
     "lat": 52.352926,
     "lon": 4.948315,
     "type": "train"
+  },
+  {
+    "id": 7606698742,
+    "name": "Diemen",
+    "lat": 52.3452067,
+    "lon": 4.967465,
+    "type": "train"
+  },
+  {
+    "id": 9533383353,
+    "name": "Parklaan",
+    "lat": 52.3042535,
+    "lon": 4.8504873,
+    "type": "tram"
   },
   {
     "id": 9611530190,
