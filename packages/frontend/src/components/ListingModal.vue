@@ -11,7 +11,7 @@
           role="dialog"
           aria-modal="true"
           aria-label="Listing details"
-          class="listing-panel relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-[14px] bg-white/90 shadow-[0_8px_40px_rgba(0,0,0,0.15),0_1px_3px_rgba(0,0,0,0.08)] backdrop-blur-[24px] sm:my-6 sm:max-w-[580px] sm:rounded-[14px]"
+          class="listing-panel relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[14px] bg-white/90 shadow-[0_8px_40px_rgba(0,0,0,0.15),0_1px_3px_rgba(0,0,0,0.08)] backdrop-blur-[24px] sm:my-6 sm:max-h-[calc(100dvh-3rem)] sm:max-w-[580px] sm:rounded-[14px]"
           @keydown="trapFocus"
         >
           <!-- Scrollable content -->

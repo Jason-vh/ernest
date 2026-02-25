@@ -8,7 +8,7 @@ import { fetchIsochrone, fetchStations, fetchLines, fetchFunda } from "@/api/cli
 import { useZoneState } from "@/composables/useZoneState";
 import { useListingStore } from "@/composables/useListingStore";
 import { useMap } from "@/composables/useMap";
-import { setMap } from "@/composables/useMapPosition";
+import { setMap, flyTo } from "@/composables/useMapPosition";
 import { useOfficeMarkers } from "@/composables/useOfficeMarkers";
 import { useIsochroneLayers } from "@/composables/useIsochroneLayers";
 import { useTransitLayers } from "@/composables/useTransitLayers";
@@ -31,7 +31,8 @@ const {
   fundaDiscardedCount,
 } = useZoneState();
 
-const { listings, favouriteIds, discardedIds, selectListing, setListings } = useListingStore();
+const { listings, favouriteIds, discardedIds, selectListing, consumeDeepLink, setListings } =
+  useListingStore();
 
 const { initMap } = useMap(mapContainer);
 
@@ -55,6 +56,15 @@ onMounted(async () => {
     // Await funda (fetch was already fired in parallel, may already be resolved)
     const fundaData = await fundaPromise;
     setListings(fundaData);
+
+    // Fly to deep-linked listing if opened via URL
+    const deepLinkedId = consumeDeepLink();
+    if (deepLinkedId) {
+      const listing = listings.value.get(deepLinkedId);
+      if (listing) {
+        flyTo(listing.longitude, listing.latitude);
+      }
+    }
 
     const { refreshFundaSource } = useFundaLayer(map, listings, {
       favouriteIds,

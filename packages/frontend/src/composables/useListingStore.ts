@@ -11,8 +11,16 @@ localStorage.removeItem("ernest:viewedFunda");
 
 // Read initial ?listing= param for deep-links
 const initialParam = new URLSearchParams(window.location.search).get("listing");
+let deepLinkedId: string | null = null;
 if (initialParam) {
   selectedFundaId.value = initialParam;
+  deepLinkedId = initialParam;
+}
+
+function consumeDeepLink(): string | null {
+  const id = deepLinkedId;
+  deepLinkedId = null;
+  return id;
 }
 
 const selectedListing = computed(() => {
@@ -94,6 +102,7 @@ function setListings(items: Listing[]) {
 
   // If deep-linked listing doesn't exist, clear the param
   if (selectedFundaId.value && !map.has(selectedFundaId.value)) {
+    deepLinkedId = null;
     const params = new URLSearchParams(window.location.search);
     params.delete("listing");
     const search = params.toString();
@@ -183,6 +192,7 @@ export function useListingStore() {
     selectListing,
     closeModal,
     dismissModal,
+    consumeDeepLink,
     setListings,
     setReaction,
     saveNote,
