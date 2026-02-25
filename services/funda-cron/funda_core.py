@@ -18,34 +18,26 @@ def fetch_all_listings(log=print):
     f = Funda(timeout=30)
     all_listings = []
     seen_ids = set()
+    page = 0
 
-    for area in SEARCH_AREAS:
-        page = 0
-        area_count = 0
-        try:
-            while True:
-                log(f"  [{area}] Fetching page {page}...")
-                results = f.search_listing(
-                    area,
-                    offering_type="buy",
-                    price_min=PRICE_MIN,
-                    price_max=PRICE_MAX,
-                    page=page,
-                )
-                if not results:
-                    break
-                for listing in results:
-                    gid = listing.get("global_id")
-                    if gid and gid not in seen_ids:
-                        seen_ids.add(gid)
-                        all_listings.append(listing)
-                        area_count += 1
-                page += 1
-                time.sleep(1)
-        except Exception as e:
-            log(f"  [{area}] Error: {e}")
-
-        log(f"  [{area}] {area_count} new listings")
+    while True:
+        log(f"  Fetching page {page}...")
+        results = f.search_listing(
+            SEARCH_AREAS,
+            offering_type="buy",
+            price_min=PRICE_MIN,
+            price_max=PRICE_MAX,
+            page=page,
+        )
+        if not results:
+            break
+        for listing in results:
+            gid = listing.get("global_id")
+            if gid and gid not in seen_ids:
+                seen_ids.add(gid)
+                all_listings.append(listing)
+        page += 1
+        time.sleep(1)
 
     log(f"  Fetched {len(all_listings)} total unique listings")
     return all_listings
