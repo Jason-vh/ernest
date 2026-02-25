@@ -83,6 +83,7 @@ export const listings = pgTable(
     livingArea: integer("living_area").notNull(),
     energyLabel: text("energy_label"),
     objectType: text("object_type"),
+    houseType: text("house_type"),
     constructionYear: integer("construction_year"),
     description: text("description"),
 

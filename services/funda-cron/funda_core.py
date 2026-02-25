@@ -155,6 +155,7 @@ def to_geojson(listings, coords, details):
                     "livingArea": listing.get("living_area"),
                     "energyLabel": listing.get("energy_label") or None,
                     "objectType": listing.get("object_type") or None,
+                    "houseType": (detail.get("house_type") or None) if detail else None,
                     "constructionYear": listing.get("construction_year"),
                     "postcode": listing.get("postcode") or None,
                     "neighbourhood": listing.get("neighbourhood") or None,
