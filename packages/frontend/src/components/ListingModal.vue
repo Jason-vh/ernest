@@ -106,10 +106,7 @@
                     {{ formatPrice(overbidPrice) }}
                   </div>
                   <div class="mt-0.5 text-[11px] text-[#999]">
-                    asking {{ formatPrice(listing.price)
-                    }}<template v-if="listingAgeDays != null">
-                      &middot; {{ listingAgeDays }}d</template
-                    >
+                    asking {{ formatPrice(listing.price) }}
                   </div>
                 </div>
               </div>
@@ -126,6 +123,73 @@
                   :class="energyLabelBadge.cls"
                   >{{ energyLabelBadge.text }}</span
                 >{{ keyFacts }}
+              </div>
+
+              <!-- Cycling commute -->
+              <div
+                v-if="listing.routeFareharbor || listing.routeAirwallex"
+                class="mt-1.5 text-[12px] text-[#aaa]"
+              >
+                <span class="mr-1">Cycling</span>
+                <template v-if="listing.routeFareharbor">
+                  <span class="tabular-nums text-[#888]">{{ listing.routeFareharbor }} min</span>
+                  {{ OFFICES.fareharbor.name }}</template
+                >
+                <template v-if="listing.routeFareharbor && listing.routeAirwallex">
+                  &middot;
+                </template>
+                <template v-if="listing.routeAirwallex">
+                  <span class="tabular-nums text-[#888]">{{ listing.routeAirwallex }} min</span>
+                  {{ OFFICES.airwallex.name }}</template
+                >
+              </div>
+
+              <!-- Actions row -->
+              <div v-if="user" class="mt-3 flex items-center gap-2">
+                <button
+                  class="reaction-btn"
+                  :class="{
+                    'reaction-btn--active reaction-btn--fav': listing.reaction === 'favourite',
+                  }"
+                  @click="toggleReaction('favourite')"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                      :fill="listing.reaction === 'favourite' ? 'currentColor' : 'none'"
+                    />
+                  </svg>
+                  Favourite
+                </button>
+                <button
+                  class="reaction-btn"
+                  :class="{
+                    'reaction-btn--active reaction-btn--discard': listing.reaction === 'discarded',
+                  }"
+                  @click="toggleReaction('discarded')"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                  Discard
+                </button>
+                <span v-if="listing.reactionBy" class="ml-auto self-center text-[11px] text-[#bbb]">
+                  by {{ listing.reactionBy }}
+                </span>
               </div>
 
               <!-- Divider -->
@@ -179,76 +243,6 @@
                   </div>
                 </div>
               </div>
-
-              <!-- Cycling commute -->
-              <div
-                v-if="listing.routeFareharbor || listing.routeAirwallex"
-                class="mt-3 text-[12px] text-[#aaa]"
-              >
-                <span class="mr-1">Cycling</span>
-                <template v-if="listing.routeFareharbor">
-                  <span class="tabular-nums text-[#888]">{{ listing.routeFareharbor }} min</span>
-                  {{ OFFICES.fareharbor.name }}</template
-                >
-                <template v-if="listing.routeFareharbor && listing.routeAirwallex">
-                  &middot;
-                </template>
-                <template v-if="listing.routeAirwallex">
-                  <span class="tabular-nums text-[#888]">{{ listing.routeAirwallex }} min</span>
-                  {{ OFFICES.airwallex.name }}</template
-                >
-              </div>
-
-              <!-- Actions row -->
-              <div v-if="user" class="mt-4 flex items-center gap-2">
-                <button
-                  class="reaction-btn"
-                  :class="{
-                    'reaction-btn--active reaction-btn--fav': listing.reaction === 'favourite',
-                  }"
-                  @click="toggleReaction('favourite')"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path
-                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                      :fill="listing.reaction === 'favourite' ? 'currentColor' : 'none'"
-                    />
-                  </svg>
-                  Favourite
-                </button>
-                <button
-                  class="reaction-btn"
-                  :class="{
-                    'reaction-btn--active reaction-btn--discard': listing.reaction === 'discarded',
-                  }"
-                  @click="toggleReaction('discarded')"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                  Discard
-                </button>
-                <span v-if="listing.reactionBy" class="ml-auto self-center text-[11px] text-[#bbb]">
-                  by {{ listing.reactionBy }}
-                </span>
-              </div>
-
-              <!-- Divider before deep-dive sections -->
-              <div class="my-4 h-px bg-black/6"></div>
 
               <!-- Notes (read-only display) -->
               <div v-if="listing.notes.length > 0">
@@ -437,6 +431,7 @@ const keyFacts = computed(() => {
   if (listing.value.hasGarden) parts.push("Garden");
   if (listing.value.hasBalcony) parts.push("Balcony");
   if (listing.value.hasRoofTerrace) parts.push("Roof terrace");
+  if (listingAgeDays.value != null) parts.push(`${listingAgeDays.value} days on market`);
   return parts.join(" \u00B7 ");
 });
 
