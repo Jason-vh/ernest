@@ -80,15 +80,9 @@ export async function handleAiEnrich(job: Job): Promise<"completed" | "skipped">
     });
   }
 
-  // Prompt
   content.push({
     type: "text",
-    text: `Analyze this Dutch real estate listing and respond with a JSON object containing exactly two fields:
-
-1. "aiSummary": 1-2 sentences highlighting key features, required work, standout aspects. Be factual and concise. Note both positives and negatives.
-2. "aiDescription": The original description translated to English. Clean up formatting (remove ALL-CAPS, extra whitespace). Remove marketing fluff. Keep all factual content.
-
-Respond ONLY with the JSON object, no markdown fences or other text.`,
+    text: "Analyze this Dutch real estate listing.",
   });
 
   const response = await anthropic.messages.create(
@@ -96,13 +90,27 @@ Respond ONLY with the JSON object, no markdown fences or other text.`,
       model: "claude-haiku-4-5-20251001",
       max_tokens: 2000,
       system:
-        "You analyze Dutch real estate listings. You respond ONLY with valid JSON, no markdown fences.",
+        "You analyze Dutch real estate listings. For aiSummary: write 1-2 sentences highlighting key features, required work, standout aspects. Be factual and concise. Note both positives and negatives. For aiDescription: translate the original description to English, clean up formatting (remove ALL-CAPS, extra whitespace), remove marketing fluff, keep all factual content.",
       messages: [{ role: "user", content }],
+      output_config: {
+        format: {
+          type: "json_schema",
+          schema: {
+            type: "object",
+            properties: {
+              aiSummary: { type: "string" },
+              aiDescription: { type: "string" },
+            },
+            required: ["aiSummary", "aiDescription"],
+            additionalProperties: false,
+          },
+        },
+      },
     },
     { timeout: 30_000 },
   );
 
-  // Extract text from response
+  // With json_schema output, the response is a text block with guaranteed-valid JSON
   const textBlock = response.content.find((b) => b.type === "text");
   if (!textBlock || textBlock.type !== "text") {
     throw new Error("No text block in AI response");
@@ -110,7 +118,7 @@ Respond ONLY with the JSON object, no markdown fences or other text.`,
 
   const parsed: unknown = JSON.parse(textBlock.text);
 
-  // Runtime validate (no type assertions)
+  // Runtime validate
   if (
     typeof parsed !== "object" ||
     parsed === null ||
@@ -120,7 +128,6 @@ Respond ONLY with the JSON object, no markdown fences or other text.`,
     throw new Error("Invalid AI response shape: missing required fields");
   }
 
-  // After in-checks, TypeScript narrows the type
   const summaryVal = parsed.aiSummary;
   const descVal = parsed.aiDescription;
   if (typeof summaryVal !== "string" || typeof descVal !== "string") {
