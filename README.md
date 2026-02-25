@@ -77,7 +77,7 @@ Hosted on [Railway](https://railway.com) at **https://ernest.vanhattum.xyz**. Tw
 
 **Web service** (`ernest-web`): Config in `railway.toml`. Railway auto-detects Bun, builds the frontend, and runs the server. A 1 GB volume at `/data` persists Funda data across deploys.
 
-**Cron service** (`ernest-cron`): Dockerfile-based Python service in `services/funda-cron/`. Runs hourly (`0 * * * *`), fetches fresh Funda listings using shared logic in `funda_core.py`, and POSTs them to the web service via Railway's internal network. The web service updates in-memory data and persists to the volume. The local script (`scripts/fetch_funda.py`) imports the same `funda_core` module to ensure identical fetch behavior.
+**Cron service** (`ernest-cron`): Dockerfile-based Python service in `services/funda-cron/`. Runs hourly during daytime-ish UTC hours (`0 5-21 * * *`), fetches fresh Funda listings using shared logic in `funda_core.py`, and POSTs them to the web service via Railway's internal network. The web service updates in-memory data and persists to the volume. The local script (`scripts/fetch_funda.py`) imports the same `funda_core` module to ensure identical fetch behavior.
 
 Environment variables:
 - **Web service**: `DATABASE_URL`, `JWT_SECRET`, `ORIGIN`, `RP_ID`, `NODE_ENV=production`, `REFRESH_SECRET`, `VOLUME_PATH=/data`, `ANTHROPIC_API_KEY` (optional — AI enrichment skipped if not set), `PORT` (auto-set)
