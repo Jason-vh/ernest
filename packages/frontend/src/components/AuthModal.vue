@@ -46,7 +46,7 @@
           <div v-if="mode === 'login'" class="flex flex-col gap-3.5 p-5">
             <p class="m-0 text-[13px] leading-[1.4] text-[#888]">Use your passkey to sign in.</p>
             <button
-              class="flex items-center justify-center gap-2 rounded-[10px] border-none bg-black/6 px-4 py-3 font-inherit text-[13px] font-semibold text-[#555] transition-colors hover:not-disabled:bg-black/10 hover:not-disabled:text-[#333] disabled:cursor-default disabled:opacity-50"
+              class="flex cursor-pointer items-center justify-center gap-2 rounded-[10px] border-none bg-black/6 px-4 py-3 font-inherit text-[13px] font-semibold text-[#555] transition-colors hover:not-disabled:bg-black/10 hover:not-disabled:text-[#333] disabled:cursor-default disabled:opacity-50"
               @click="handleLogin"
               :disabled="busy"
             >
@@ -90,7 +90,7 @@
               />
             </div>
             <button
-              class="flex items-center justify-center gap-2 rounded-[10px] border-none bg-black/6 px-4 py-3 font-inherit text-[13px] font-semibold text-[#555] transition-colors hover:not-disabled:bg-black/10 hover:not-disabled:text-[#333] disabled:cursor-default disabled:opacity-50"
+              class="flex cursor-pointer items-center justify-center gap-2 rounded-[10px] border-none bg-black/6 px-4 py-3 font-inherit text-[13px] font-semibold text-[#555] transition-colors hover:not-disabled:bg-black/10 hover:not-disabled:text-[#333] disabled:cursor-default disabled:opacity-50"
               @click="handleRegister"
               :disabled="busy || !username.trim()"
             >

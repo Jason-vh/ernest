@@ -26,7 +26,7 @@ bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 ## Architecture
 
 - **Monorepo**: Bun workspaces (`packages/*`, `scripts`)
-- **Frontend** (`packages/frontend`): Vue 3 + Vite + TypeScript. Single-page app with MapLibre GL JS map.
+- **Frontend** (`packages/frontend`): Vue 3 + Vite + Tailwind CSS v4 + TypeScript. Single-page app with MapLibre GL JS map. Uses `@/` path alias (configured in both `tsconfig.json` and `vite.config.ts`). Styling uses Tailwind utilities with design tokens defined in `src/app.css` (`@theme` block) and a custom `glass` utility for glassmorphism panels.
 - **Backend** (`packages/backend`): Bun + Hono + Drizzle ORM + PostgreSQL. Serves precomputed data as JSON endpoints and the built frontend via `serveStatic`. Auth uses passkeys (WebAuthn) with JWT sessions. All file paths resolved via `import.meta.dir` (never relative to CWD). Database schema defined in Drizzle (`src/db/schema.ts`), migrations in `drizzle/`, applied automatically on startup.
 - **Scripts** (`scripts/`): `fetch-data.ts` runs with Bun to precompute geodata (uses Turf.js for spatial operations). `fetch_funda.py` is a thin wrapper that imports shared Funda logic from `services/funda-cron/funda_core.py` and outputs GeoJSON to stdout (called by `fetch-data.ts` via `Bun.spawn`).
 - **Cron** (`services/funda-cron/`): Python service that fetches Funda listings hourly and POSTs them to the backend's `POST /api/internal/refresh-funda` endpoint. Runs as a separate Railway cron service, communicates via Railway internal networking. Core fetch/filter/enrich logic lives in `funda_core.py`, shared with the local script.
@@ -34,13 +34,35 @@ bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 
 ## Key files
 
-- `packages/frontend/src/components/MapView.vue` — All map layers, sources, and interactions
+### Frontend
+
+- `packages/frontend/src/app.css` — Tailwind entry point: `@theme` design tokens, `glass` utility, full-height rules
+- `packages/frontend/src/components/MapView.vue` — Map orchestrator (~75 lines): initializes map, fetches data, wires composables
+- `packages/frontend/src/composables/useMap.ts` — Map instance creation + greyscale style loading
+- `packages/frontend/src/composables/useOfficeMarkers.ts` — Office dot + label markers (exports `createLabel` reused by transit)
+- `packages/frontend/src/composables/useIsochroneLayers.ts` — Zone fill/border layers + visibility/hover watchers
+- `packages/frontend/src/composables/useTransitLayers.ts` — Transit line/circle layers + station label markers + watchers
+- `packages/frontend/src/composables/useRouteLayers.ts` — Cycling route layers + popup DOM update watchers
+- `packages/frontend/src/composables/useFundaLayer.ts` — Funda source/layers + new/viewed visibility watcher
+- `packages/frontend/src/composables/useBuildingHighlightLayer.ts` — Building polygon matching + throttled viewport updates
+- `packages/frontend/src/composables/useMapPopups.ts` — Funda popup creation + hover/click/touch handlers
+- `packages/frontend/src/composables/useZoneState.ts` — Shared singleton: zone/transit/funda visibility, URL sync, localStorage
+- `packages/frontend/src/composables/useCyclingRoutes.ts` — Route fetching with debounce, abort, and client-side cache
+- `packages/frontend/src/composables/useBuildingHighlights.ts` — Pure function: matches buildings to funda features via point-in-polygon
 - `packages/frontend/src/geo/greyscale-style.ts` — Transforms OpenFreeMap bright style to greyscale (preserves parks/water). Controls which base map layers are hidden via `HIDDEN_LAYERS`.
-- `packages/frontend/src/geo/constants.ts` — Office coordinates, map center, default zoom
+- `packages/frontend/src/geo/constants.ts` — Office coordinates, map center, default zoom, COLORS object
+- `packages/frontend/src/geo/map-utils.ts` — `getGeoJSONSource()` runtime-safe helper (avoids `as` assertion)
+- `packages/frontend/src/styles/funda-popup.css` — MapLibre popup style overrides (global, not scoped)
+
+### Backend
+
 - `packages/backend/src/db/schema.ts` — Drizzle table definitions (users, credentials, challenges)
 - `packages/backend/src/config.ts` — Required env var validation (DATABASE_URL, JWT_SECRET, ORIGIN, RP_ID)
 - `packages/backend/src/routes/auth.ts` — WebAuthn registration/login flows, JWT session management
 - `packages/backend/src/routes/geodata.ts` — API endpoints for isochrone, stations, lines, buurten, funda + POST /internal/refresh-funda
+
+### Services & Scripts
+
 - `services/funda-cron/funda_core.py` — Shared Funda logic: fetch, filter, enrich with coordinates, convert to GeoJSON. Searches Amsterdam, Diemen, Duivendrecht, Amstelveen, Ouderkerk aan de Amstel. Filters: €450k–€600k, ≥2 bed, ≥65 m², energy label ≥ D or unknown, status "Beschikbaar" only. Per-area error handling so one failure doesn't stop the rest.
 - `services/funda-cron/fetch_and_push.py` — Cron job: calls `funda_core.fetch_and_build_geojson()` and POSTs result to backend
 - `scripts/fetch-data.ts` — Data precomputation pipeline (Valhalla + Overpass + Amsterdam BBGA + Funda + Turf)
@@ -49,14 +71,17 @@ bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 ## Conventions
 
 - TypeScript throughout with `strict: true` (both frontend and backend have tsconfigs)
-- **No type assertions** (`as`, `!`) — use runtime narrowing (type guards, `typeof` checks) instead
+- **No type assertions** (`as`, `!`) — use runtime narrowing (type guards, `typeof` checks) instead. Use `getGeoJSONSource()` from `geo/map-utils.ts` instead of `as GeoJSONSource`.
+- **Path aliases**: Frontend uses `@/` alias for `src/` (configured in `tsconfig.json` and `vite.config.ts`). All imports should use `@/` instead of relative paths.
+- **Styling**: Tailwind CSS v4 utilities. Design tokens in `src/app.css` `@theme` block. Custom `glass` utility for glassmorphism panels. Vue transition classes kept in scoped `<style>` blocks. MapLibre popup styles in `src/styles/funda-popup.css` (global).
 - **Formatting**: oxfmt (runs on pre-commit via lefthook)
 - **Linting**: oxlint with `correctness`, `suspicious`, and `perf` categories enabled. Config in `.oxlintrc.json`.
 - **Pre-commit hooks**: lefthook runs format check, lint, and type-check for both packages in parallel
 - No test framework set up yet
+- **Frontend composable pattern**: MapView.vue is a thin orchestrator. Each concern (zones, transit, routes, funda, buildings, popups) lives in its own `useXxx` composable under `src/composables/`. Composables receive the map instance and reactive state as parameters.
 - Shared types in `packages/frontend/src/types/transit.ts` (StopType enum, TransitStop interface) and `packages/frontend/src/types/buurt.ts` (BuurtProperties interface)
 - Office locations defined in both `scripts/fetch-data.ts` and `packages/frontend/src/geo/constants.ts` — keep in sync if changed
-- Transit line colors: train=#003DA5 (OV blue), metro=#E4003A (red), tram=#7B2D8E (purple), funda=#E8950F (amber)
+- Transit line colors: train=#003DA5 (OV blue), metro=#E4003A (red), tram=#7B2D8E (purple), funda=#E8950F (amber). Defined in `COLORS` object in `geo/constants.ts` and as Tailwind tokens in `app.css`.
 - Funda overbid price shown at 115% of list price in popup
 - Vite config uses `target: "esnext"` for both optimizeDeps and build (required for MapLibre GL)
 

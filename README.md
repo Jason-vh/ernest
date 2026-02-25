@@ -14,7 +14,7 @@ Amsterdam house-hunting map. Shows cycling distance zones from two offices overl
 
 | Layer | Choice |
 |---|---|
-| Frontend | Vue 3 + Vite (TypeScript) |
+| Frontend | Vue 3 + Vite + Tailwind CSS v4 (TypeScript) |
 | Backend | Bun + Hono |
 | Map | MapLibre GL JS |
 | Tiles | OpenFreeMap (`liberty` style) |
@@ -30,24 +30,51 @@ Amsterdam house-hunting map. Shows cycling distance zones from two offices overl
 ernest/
   package.json              # Bun workspaces, root scripts
   packages/
-    frontend/               # Vue 3 + Vite SPA
+    frontend/               # Vue 3 + Vite + Tailwind CSS v4 SPA
       src/
+        app.css             # Tailwind entry, @theme tokens, glass utility
         components/
-          MapView.vue       # Main map with all layers
-          Legend.vue         # Color legend overlay
+          MapView.vue       # Map orchestrator (wires composables)
+          Legend.vue         # Zone/transit toggle legend
+          FundaFilters.vue  # Funda search criteria panel
+          AuthButton.vue    # Sign in / user dropdown
+          AuthModal.vue     # Passkey login/register modal
+          StationPopup.vue  # Transit station popup content
           App.vue
-        api/client.ts       # Typed fetch wrappers
+        composables/
+          useMap.ts              # Map creation + style loading
+          useOfficeMarkers.ts    # Office dot + label markers
+          useIsochroneLayers.ts  # Zone fill/border layers + visibility
+          useTransitLayers.ts    # Transit lines/circles/labels + visibility
+          useRouteLayers.ts      # Cycling route layers + data watchers
+          useFundaLayer.ts       # Funda source/layers + visibility
+          useBuildingHighlightLayer.ts  # Building polygon matching
+          useMapPopups.ts        # Popup creation + hover/click handlers
+          useZoneState.ts        # Shared legend/filter state
+          useCyclingRoutes.ts    # Cycling route fetching
+          useAuth.ts             # Passkey auth composable
+          useBuildingHighlights.ts  # Pure building-match function
+        api/
+          client.ts         # Typed fetch wrappers
+          auth.ts           # WebAuthn API calls
         geo/
-          constants.ts      # Office coords, map center, zoom
+          constants.ts      # Office coords, map center, zoom, COLORS
           greyscale-style.ts # Transforms liberty style to greyscale
-        types/transit.ts    # StopType enum, TransitStop interface
-        types/buurt.ts      # BuurtProperties interface
+          map-utils.ts      # getGeoJSONSource() runtime-safe helper
+        styles/
+          funda-popup.css   # MapLibre popup overrides
+        types/
+          transit.ts        # StopType enum, TransitStop interface
+          buurt.ts          # BuurtProperties interface
     backend/                # Bun + Hono API server
       src/
         index.ts            # Hono app, static serving, SPA fallback
         routes/
           geodata.ts        # GET /api/* + POST /api/internal/refresh-funda
           health.ts         # GET /api/health
+          auth.ts           # WebAuthn registration/login, JWT sessions
+        db/schema.ts        # Drizzle table definitions
+        config.ts           # Required env var validation
       data/                 # Precomputed static data (bundled fallback)
         isochrone.geojson   # Zone intersection polygons (10/20/30 min)
         stations.json       # Filtered transit stops

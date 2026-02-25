@@ -7,7 +7,7 @@
     <!-- Logged in: initials avatar -->
     <button
       v-if="user"
-      class="flex h-[34px] w-[34px] items-center justify-center rounded-full border-none bg-white/45 p-0 shadow-sm backdrop-blur-2xl transition-colors hover:bg-white/65"
+      class="flex h-[34px] w-[34px] cursor-pointer items-center justify-center rounded-full border-none bg-white/45 p-0 shadow-sm backdrop-blur-2xl transition-colors hover:bg-white/65"
       aria-haspopup="true"
       :aria-expanded="showMenu"
       @click="showMenu = !showMenu"
@@ -20,7 +20,7 @@
     <!-- Logged out: sign in -->
     <button
       v-else
-      class="glass flex items-center gap-1.5 border-none px-3.5 py-2 hover:bg-glass"
+      class="glass flex cursor-pointer items-center gap-1.5 border-none px-3.5 py-2 hover:bg-glass"
       @click="$emit('open-auth')"
     >
       <span class="text-[11px] font-semibold uppercase tracking-wide text-[#999]">Sign in</span>
