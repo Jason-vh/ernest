@@ -20,51 +20,36 @@
             <button
               id="auth-modal-title"
               class="relative flex-1 cursor-pointer border-none bg-transparent py-3.5 font-inherit text-[11px] font-semibold uppercase tracking-wide transition-colors"
-              :class="mode === 'login' ? 'text-[#666]' : 'text-[#bbb] hover:text-[#888]'"
+              :class="mode === 'login' ? 'text-[#444]' : 'text-[#999] hover:text-[#666]'"
               @click="mode = 'login'"
             >
               Sign in
               <span
                 v-if="mode === 'login'"
-                class="absolute bottom-[-1px] left-1/5 right-1/5 h-0.5 rounded-sm bg-[#999]"
+                class="absolute bottom-[-1px] left-1/5 right-1/5 h-0.5 rounded-sm bg-[#666]"
               ></span>
             </button>
             <button
               class="relative flex-1 cursor-pointer border-none bg-transparent py-3.5 font-inherit text-[11px] font-semibold uppercase tracking-wide transition-colors"
-              :class="mode === 'register' ? 'text-[#666]' : 'text-[#bbb] hover:text-[#888]'"
+              :class="mode === 'register' ? 'text-[#444]' : 'text-[#999] hover:text-[#666]'"
               @click="mode = 'register'"
             >
               Create account
               <span
                 v-if="mode === 'register'"
-                class="absolute bottom-[-1px] left-1/5 right-1/5 h-0.5 rounded-sm bg-[#999]"
+                class="absolute bottom-[-1px] left-1/5 right-1/5 h-0.5 rounded-sm bg-[#666]"
               ></span>
             </button>
           </div>
 
           <!-- Login mode -->
           <div v-if="mode === 'login'" class="flex flex-col gap-3.5 p-5">
-            <p class="m-0 text-[13px] leading-[1.4] text-[#888]">Use your passkey to sign in.</p>
+            <p class="m-0 text-[13px] leading-[1.4] text-[#666]">Use your passkey to sign in.</p>
             <button
-              class="flex cursor-pointer items-center justify-center gap-2 rounded-[10px] border-none bg-black/6 px-4 py-3 font-inherit text-[13px] font-semibold text-[#555] transition-colors hover:not-disabled:bg-black/10 hover:not-disabled:text-[#333] disabled:cursor-default disabled:opacity-50"
+              class="flex cursor-pointer items-center justify-center gap-2 rounded-[10px] border-none bg-black/10 px-4 py-3 font-inherit text-[13px] font-semibold text-[#333] transition-colors hover:not-disabled:bg-black/15 hover:not-disabled:text-[#111] disabled:cursor-default disabled:opacity-50"
               @click="handleLogin"
               :disabled="busy"
             >
-              <svg
-                class="shrink-0 opacity-60"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path
-                  d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
-                />
-              </svg>
               {{ busy ? "Waiting for passkey..." : "Sign in with passkey" }}
             </button>
           </div>
@@ -73,14 +58,14 @@
           <div v-if="mode === 'register'" class="flex flex-col gap-3.5 p-5">
             <div class="flex flex-col gap-1">
               <label
-                class="text-[11px] font-semibold uppercase tracking-wide text-[#999]"
+                class="text-[11px] font-semibold uppercase tracking-wide text-[#777]"
                 for="auth-username"
                 >Username</label
               >
               <input
                 id="auth-username"
                 v-model="username"
-                class="rounded-lg border border-black/8 bg-white/50 px-3 py-2.5 font-inherit text-sm text-[#333] outline-none transition-[border-color,box-shadow] placeholder:text-[#ccc] focus:border-black/15 focus:shadow-[0_0_0_3px_rgba(0,0,0,0.04)]"
+                class="rounded-lg border border-black/12 bg-white/60 px-3 py-2.5 font-inherit text-sm text-[#222] outline-none transition-[border-color,box-shadow] placeholder:text-[#aaa] focus:border-black/20 focus:shadow-[0_0_0_3px_rgba(0,0,0,0.04)]"
                 type="text"
                 placeholder="janssen"
                 autocomplete="username"
@@ -90,25 +75,10 @@
               />
             </div>
             <button
-              class="flex cursor-pointer items-center justify-center gap-2 rounded-[10px] border-none bg-black/6 px-4 py-3 font-inherit text-[13px] font-semibold text-[#555] transition-colors hover:not-disabled:bg-black/10 hover:not-disabled:text-[#333] disabled:cursor-default disabled:opacity-50"
+              class="flex cursor-pointer items-center justify-center gap-2 rounded-[10px] border-none bg-black/10 px-4 py-3 font-inherit text-[13px] font-semibold text-[#333] transition-colors hover:not-disabled:bg-black/15 hover:not-disabled:text-[#111] disabled:cursor-default disabled:opacity-50"
               @click="handleRegister"
               :disabled="busy || !username.trim()"
             >
-              <svg
-                class="shrink-0 opacity-60"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path
-                  d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
-                />
-              </svg>
               {{ busy ? "Waiting for passkey..." : "Create account" }}
             </button>
           </div>
