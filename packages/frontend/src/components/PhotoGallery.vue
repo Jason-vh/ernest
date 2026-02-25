@@ -1,6 +1,11 @@
 <template>
-  <!-- Horizontally scrolling masonry: full | pair | full | pair ... -->
-  <div class="masonry-scroll" style="scrollbar-width: none">
+  <!-- Single photo: full-width hero -->
+  <button v-if="photos.length === 1" class="hero-single" @click="openFullscreen(0)">
+    <img :src="photos[0]" alt="Photo 1" />
+  </button>
+
+  <!-- Multiple photos: horizontally scrolling masonry -->
+  <div v-else class="masonry-scroll" style="scrollbar-width: none">
     <div class="masonry-track">
       <template v-for="(col, ci) in columns" :key="ci">
         <!-- Single full-height photo -->
@@ -211,6 +216,29 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.hero-single {
+  display: block;
+  width: 100%;
+  height: 260px;
+  padding: 0;
+  border: none;
+  background: #e5e5e5;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.hero-single img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter 0.15s ease;
+}
+
+.hero-single:hover img {
+  filter: brightness(0.92);
+}
+
 .masonry-scroll {
   overflow-x: auto;
   overscroll-behavior-x: contain;
