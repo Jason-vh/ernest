@@ -24,6 +24,24 @@ const emptyFC: GeoJSON.FeatureCollection = {
 type Category = "favourite" | "discarded" | "unreviewed";
 
 export function listingsToGeoJSON(listings: Map<string, Listing>): GeoJSON.FeatureCollection {
+  // Count co-located listings per coordinate, split by category
+  const coordCats = new Map<string, { favourite: number; unreviewed: number; discarded: number }>();
+  for (const listing of listings.values()) {
+    const key = `${listing.longitude},${listing.latitude}`;
+    let counts = coordCats.get(key);
+    if (!counts) {
+      counts = { favourite: 0, unreviewed: 0, discarded: 0 };
+      coordCats.set(key, counts);
+    }
+    const cat: Category =
+      listing.reaction === "favourite"
+        ? "favourite"
+        : listing.reaction === "discarded"
+          ? "discarded"
+          : "unreviewed";
+    counts[cat]++;
+  }
+
   const features: GeoJSON.Feature[] = [];
   for (const listing of listings.values()) {
     const category: Category =
@@ -32,6 +50,8 @@ export function listingsToGeoJSON(listings: Map<string, Listing>): GeoJSON.Featu
         : listing.reaction === "discarded"
           ? "discarded"
           : "unreviewed";
+    const key = `${listing.longitude},${listing.latitude}`;
+    const counts = coordCats.get(key)!;
     features.push({
       type: "Feature",
       geometry: {
@@ -47,9 +67,13 @@ export function listingsToGeoJSON(listings: Map<string, Listing>): GeoJSON.Featu
         livingArea: listing.livingArea,
         photo: listing.photos.length > 0 ? listing.photos[0] : "",
         category,
+        colocatedFavourite: counts.favourite,
+        colocatedUnreviewed: counts.unreviewed,
+        colocatedDiscarded: counts.discarded,
       },
     });
   }
+
   return { type: "FeatureCollection", features };
 }
 
@@ -74,6 +98,9 @@ export function useFundaLayer(
     if (!src) return;
     const geojson = listingsToGeoJSON(listings.value);
     src.setData(geojson);
+
+    // Re-apply paint properties so data-driven expressions (colocatedCount) evaluate
+    updateFundaLayer();
 
     // Update counts
     fundaFavouriteCount.value = favouriteIds.value.size;
@@ -131,21 +158,46 @@ export function useFundaLayer(
   });
 
   // Funda dots (above building highlights)
+  // Mixed-category locations (favourite + unreviewed) show as unreviewed
+  const isMixed: maplibregl.ExpressionSpecification = [
+    "all",
+    [">", ["get", "colocatedFavourite"], 0],
+    [">", ["get", "colocatedUnreviewed"], 0],
+  ];
   map.addLayer({
     id: "funda-circles",
     type: "circle",
     source: "funda",
     paint: {
-      "circle-radius": 5,
+      "circle-radius": [
+        "case",
+        [
+          ">",
+          [
+            "+",
+            ["get", "colocatedFavourite"],
+            ["get", "colocatedUnreviewed"],
+            ["get", "colocatedDiscarded"],
+          ],
+          1,
+        ],
+        6.5,
+        5,
+      ],
       "circle-radius-transition": { duration: 200, delay: 0 },
       "circle-color": [
-        "match",
-        ["get", "category"],
-        "favourite",
-        COLORS.fundaFavourite,
-        "discarded",
-        COLORS.fundaDiscarded,
+        "case",
+        isMixed,
         COLORS.fundaUnreviewed,
+        [
+          "match",
+          ["get", "category"],
+          "favourite",
+          COLORS.fundaFavourite,
+          "discarded",
+          COLORS.fundaDiscarded,
+          COLORS.fundaUnreviewed,
+        ],
       ],
       "circle-opacity": ["match", ["get", "category"], "discarded", 0.5, 0.85],
       "circle-opacity-transition": { duration: 200, delay: 0 },
@@ -192,14 +244,21 @@ export function useFundaLayer(
     }
 
     // Visual layers: opacity + radius toggling (animated via transitions)
+    const visibleColocated = [
+      "+",
+      showFav ? ["get", "colocatedFavourite"] : 0,
+      showUnreviewed ? ["get", "colocatedUnreviewed"] : 0,
+      showDiscarded ? ["get", "colocatedDiscarded"] : 0,
+    ];
+    const sizeExpr = ["case", [">", visibleColocated, 1], 6.5, 5];
     map.setPaintProperty("funda-circles", "circle-radius", [
       "match",
       ["get", "category"],
       "favourite",
-      showFav ? 5 : 0,
+      showFav ? sizeExpr : 0,
       "discarded",
-      showDiscarded ? 5 : 0,
-      showUnreviewed ? 5 : 0,
+      showDiscarded ? sizeExpr : 0,
+      showUnreviewed ? sizeExpr : 0,
     ]);
     map.setPaintProperty("funda-circles", "circle-opacity", [
       "match",

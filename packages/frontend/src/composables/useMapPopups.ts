@@ -7,14 +7,38 @@ function createCell(url: string): HTMLDivElement {
   return el;
 }
 
+/** Collect unique fundaIds from an array of map features (circle/hitarea layers). */
+function collectUniqueFundaIds(features: maplibregl.MapGeoJSONFeature[]): string[] {
+  const seen = new Set<string>();
+  const ids: string[] = [];
+  for (const f of features) {
+    const id = f.properties?.fundaId;
+    if (id && !seen.has(id)) {
+      seen.add(id);
+      ids.push(id);
+    }
+  }
+  return ids;
+}
+
 interface PopupDeps {
   map: maplibregl.Map;
   listings: { value: Map<string, Listing> };
-  selectListing: (fundaId: string) => void;
+  selectListing: (fundaId: string, opts?: { clusterIds?: string[] }) => void;
+  fundaFavouriteVisible: { value: boolean };
+  fundaUnreviewedVisible: { value: boolean };
+  fundaDiscardedVisible: { value: boolean };
 }
 
 export function useMapPopups(deps: PopupDeps) {
-  const { map, listings, selectListing } = deps;
+  const {
+    map,
+    listings,
+    selectListing,
+    fundaFavouriteVisible,
+    fundaUnreviewedVisible,
+    fundaDiscardedVisible,
+  } = deps;
 
   let fundaPopup: maplibregl.Popup | null = null;
   let fundaCloseTimer: ReturnType<typeof setTimeout> | null = null;
@@ -47,6 +71,28 @@ export function useMapPopups(deps: PopupDeps) {
     const listing = listings.value.get(p.fundaId);
     const photos: string[] = listing ? listing.photos : p.photo ? [p.photo] : [];
 
+    // Count visible co-located listings (use store coordinates, not mouse position)
+    let visibleColocated = 0;
+    if (listing) {
+      const { longitude: lng, latitude: lat } = listing;
+      for (const l of listings.value.values()) {
+        if (l.longitude !== lng || l.latitude !== lat) continue;
+        const cat =
+          l.reaction === "favourite"
+            ? "favourite"
+            : l.reaction === "discarded"
+              ? "discarded"
+              : "unreviewed";
+        if (
+          (cat === "favourite" && fundaFavouriteVisible.value) ||
+          (cat === "unreviewed" && fundaUnreviewedVisible.value) ||
+          (cat === "discarded" && fundaDiscardedVisible.value)
+        ) {
+          visibleColocated++;
+        }
+      }
+    }
+
     // Build popup DOM
     const container = document.createElement("div");
 
@@ -62,6 +108,14 @@ export function useMapPopups(deps: PopupDeps) {
         grid.appendChild(createCell(photos[i]));
       }
       inner.appendChild(grid);
+    }
+
+    // Listings count pill (top-right)
+    if (visibleColocated > 1) {
+      const pill = document.createElement("div");
+      pill.className = "funda-count-pill";
+      pill.textContent = `${visibleColocated} listings`;
+      inner.appendChild(pill);
     }
 
     // Price bar
@@ -129,13 +183,19 @@ export function useMapPopups(deps: PopupDeps) {
     }
   }
 
-  function handleFeatureClick(feature: maplibregl.MapGeoJSONFeature | GeoJSON.Feature) {
-    const fundaId = feature.properties?.fundaId;
-    if (!fundaId) return;
+  // Prevent double-firing from overlapping layers (hitarea fires first, then circles, then building-fill)
+  let clickHandled = false;
+
+  function handleFeatureClick(fundaIds: string[]) {
+    if (clickHandled || fundaIds.length === 0) return;
+    clickHandled = true;
+    requestAnimationFrame(() => {
+      clickHandled = false;
+    });
 
     closeFundaPopup();
     cancelFundaClose();
-    selectListing(fundaId);
+    selectListing(fundaIds[0], fundaIds.length > 1 ? { clusterIds: fundaIds } : undefined);
   }
 
   // Hover popups: desktop only (devices with a fine pointer)
@@ -168,20 +228,43 @@ export function useMapPopups(deps: PopupDeps) {
     });
   }
 
+  /** Query the building-fill layer at a point for the full fundaIds list. */
+  function getBuildingFundaIds(point: maplibregl.Point): string[] | null {
+    const buildings = map.queryRenderedFeatures(point, {
+      layers: ["funda-building-fill"],
+    });
+    if (buildings.length > 0) {
+      const raw = buildings[0].properties?.fundaIds;
+      if (raw) return JSON.parse(raw);
+    }
+    return null;
+  }
+
   // Click: open modal (both desktop and touch, via visible dots + hit-area layer)
+  // Circle/hitarea handlers check the building layer underneath to pick up all
+  // co-located listings (circles only return the single feature you clicked on).
   map.on("click", "funda-circles", (e) => {
     if (e.features && e.features.length > 0) {
-      handleFeatureClick(e.features[0]);
+      const ids = getBuildingFundaIds(e.point) ?? collectUniqueFundaIds(e.features);
+      handleFeatureClick(ids);
     }
   });
   map.on("click", "funda-circles-hitarea", (e) => {
     if (e.features && e.features.length > 0) {
-      handleFeatureClick(e.features[0]);
+      const ids = getBuildingFundaIds(e.point) ?? collectUniqueFundaIds(e.features);
+      handleFeatureClick(ids);
     }
   });
   map.on("click", "funda-building-fill", (e) => {
     if (e.features && e.features.length > 0) {
-      handleFeatureClick(e.features[0]);
+      const props = e.features[0].properties;
+      if (props?.fundaIds) {
+        const ids: string[] = JSON.parse(props.fundaIds);
+        handleFeatureClick(ids);
+      } else {
+        const fundaId = props?.fundaId;
+        if (fundaId) handleFeatureClick([fundaId]);
+      }
     }
   });
 

@@ -48,6 +48,21 @@
   grid-template-columns: 1fr;
 }
 
+.funda-count-pill {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  color: rgba(255, 255, 255, 0.9);
+  font-family: system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+}
+
 .funda-bar {
   position: absolute;
   bottom: 0;

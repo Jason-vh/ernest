@@ -5,6 +5,19 @@ interface MatchResult {
   matchedUrls: Set<string>;
 }
 
+type Category = "favourite" | "unreviewed" | "discarded";
+
+// Unreviewed > favourite so mixed-category buildings show as unreviewed
+const CATEGORY_PRIORITY: Record<Category, number> = {
+  unreviewed: 2,
+  favourite: 1,
+  discarded: 0,
+};
+
+function pickHigherCategory(a: Category, b: Category): Category {
+  return CATEGORY_PRIORITY[a] >= CATEGORY_PRIORITY[b] ? a : b;
+}
+
 /**
  * For each Funda feature, project its coordinates to screen pixels and
  * query the map's rendered building layer to find the underlying polygon.
@@ -21,7 +34,8 @@ export function matchBuildingsToFunda(
 ): MatchResult {
   const matched: GeoJSON.Feature[] = [];
   const matchedUrls = new Set<string>();
-  const seenGeomKeys = new Set<string>();
+  // geomKey → index in matched[] so we can append fundaIds for duplicate buildings
+  const seenGeomKeys = new Map<string, number>();
 
   for (const feature of fundaFeatures) {
     const geom = feature.geometry as GeoJSON.Point;
@@ -52,22 +66,32 @@ export function matchBuildingsToFunda(
     // Deduplicate by geometry (same building matched by multiple listings)
     const geomKey = JSON.stringify(containingPoly.coordinates);
     const fundaId = feature.properties?.fundaId ?? "";
-    const category = favouriteIds.has(fundaId)
+    const category: Category = favouriteIds.has(fundaId)
       ? "favourite"
       : discardedIds.has(fundaId)
         ? "discarded"
         : "unreviewed";
 
-    if (!seenGeomKeys.has(geomKey)) {
-      seenGeomKeys.add(geomKey);
+    const existingIdx = seenGeomKeys.get(geomKey);
+    if (existingIdx == null) {
+      seenGeomKeys.set(geomKey, matched.length);
       matched.push({
         type: "Feature",
         geometry: containingPoly,
         properties: {
           ...feature.properties,
+          fundaIds: JSON.stringify([fundaId]),
           category,
         },
       });
+    } else {
+      // Append this listing's id to the existing building feature
+      const existing = matched[existingIdx];
+      const props = existing.properties!;
+      const ids: string[] = JSON.parse(props.fundaIds);
+      ids.push(fundaId);
+      props.fundaIds = JSON.stringify(ids);
+      props.category = pickHigherCategory(props.category, category);
     }
 
     matchedUrls.add(fundaId);

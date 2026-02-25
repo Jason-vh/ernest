@@ -11,7 +11,8 @@
           role="dialog"
           aria-modal="true"
           aria-label="Listing details"
-          class="listing-panel relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[14px] bg-white/90 shadow-[0_8px_40px_rgba(0,0,0,0.15),0_1px_3px_rgba(0,0,0,0.08)] backdrop-blur-[24px] sm:my-6 sm:max-h-[calc(100dvh-3rem)] sm:max-w-[580px] sm:rounded-[14px]"
+          tabindex="-1"
+          class="listing-panel relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[14px] bg-white/90 shadow-[0_8px_40px_rgba(0,0,0,0.15),0_1px_3px_rgba(0,0,0,0.08)] outline-none backdrop-blur-[24px] sm:my-6 sm:max-h-[calc(100dvh-3rem)] sm:max-w-[580px] sm:rounded-[14px]"
           @keydown="trapFocus"
         >
           <!-- Scrollable content -->
@@ -23,6 +24,49 @@
                 :initial-fullscreen-index="initialPhotoIndex"
                 @fullscreen-change="onFullscreenChange"
               />
+              <!-- Cluster navigation (photo header) -->
+              <div
+                v-if="isCluster"
+                class="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5"
+              >
+                <button
+                  class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
+                  title="Previous listing"
+                  @click="navigateCluster(-1)"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                </button>
+                <span
+                  class="rounded-full bg-black/40 px-2.5 py-1 text-[11px] font-medium tabular-nums text-white/90 backdrop-blur-sm"
+                >
+                  {{ currentClusterIndex + 1 }} / {{ clusterListingIds.length }}
+                </span>
+                <button
+                  class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
+                  title="Next listing"
+                  @click="navigateCluster(1)"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </button>
+              </div>
               <button
                 class="absolute top-2.5 right-12 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
                 title="Show on map"
@@ -58,39 +102,79 @@
             </div>
 
             <!-- No-photo fallback header -->
-            <div v-else class="flex items-center justify-end gap-1.5 px-4 pt-3">
-              <button
-                class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none bg-black/8 text-[#666] transition-colors hover:bg-black/15"
-                title="Show on map"
-                @click="showOnMap"
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
+            <div v-else class="flex items-center justify-between gap-1.5 px-4 pt-3">
+              <div v-if="isCluster" class="flex items-center gap-1">
+                <button
+                  class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none bg-black/8 text-[#666] transition-colors hover:bg-black/15"
+                  title="Previous listing"
+                  @click="navigateCluster(-1)"
                 >
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
-                </svg>
-              </button>
-              <button
-                class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none bg-black/8 text-[#666] transition-colors hover:bg-black/15"
-                @click="close"
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                </button>
+                <span class="px-1.5 text-[11px] font-medium tabular-nums text-[#999]">
+                  {{ currentClusterIndex + 1 }} / {{ clusterListingIds.length }}
+                </span>
+                <button
+                  class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none bg-black/8 text-[#666] transition-colors hover:bg-black/15"
+                  title="Next listing"
+                  @click="navigateCluster(1)"
                 >
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              </button>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </button>
+              </div>
+              <div v-else></div>
+              <div class="flex items-center gap-1.5">
+                <button
+                  class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none bg-black/8 text-[#666] transition-colors hover:bg-black/15"
+                  title="Show on map"
+                  @click="showOnMap"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+                  </svg>
+                </button>
+                <button
+                  class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none bg-black/8 text-[#666] transition-colors hover:bg-black/15"
+                  @click="close"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <div class="flex flex-col gap-0 px-5 pt-4 pb-5">
@@ -239,7 +323,7 @@
               </div>
 
               <!-- Notes (read-only display) -->
-              <div v-if="listing.notes.length > 0">
+              <div v-if="listing.notes.length > 0" class="mt-4">
                 <div class="text-[11px] font-semibold uppercase tracking-wide text-[#888]">
                   Notes
                 </div>
@@ -267,12 +351,16 @@
                 </div>
                 <p
                   class="m-0 mt-1.5 whitespace-pre-line text-[13px] leading-[1.6] text-[#555]"
-                  :class="{ 'line-clamp-6': !descExpanded }"
+                  :class="{
+                    'line-clamp-6': !descExpanded && (showOriginalDesc || !listing.aiDescription),
+                  }"
                 >
                   {{ activeDescription }}
                 </p>
                 <button
-                  v-if="activeDescription.length > 300"
+                  v-if="
+                    activeDescription.length > 300 && (showOriginalDesc || !listing.aiDescription)
+                  "
                   class="mt-1.5 cursor-pointer border-none bg-transparent p-0 font-inherit text-[12px] font-medium text-[#999] underline decoration-[#ddd] underline-offset-2 transition-colors hover:text-[#666] hover:decoration-[#aaa]"
                   @click="descExpanded = !descExpanded"
                 >
@@ -388,10 +476,21 @@ import { OFFICES } from "@/geo/constants";
 import PhotoGallery from "@/components/PhotoGallery.vue";
 import fundaLogo from "@/assets/funda.svg";
 
-const { selectedListing, closeModal, dismissModal, setReaction, saveNote } = useListingStore();
+const {
+  selectedListing,
+  closeModal,
+  dismissModal,
+  setReaction,
+  saveNote,
+  clusterListingIds,
+  currentClusterIndex,
+  navigateCluster,
+} = useListingStore();
 const { user } = useAuth();
 
 const listing = selectedListing;
+const isCluster = computed(() => clusterListingIds.value.length > 1);
+const photoFullscreenOpen = ref(false);
 const initialPhotoIndex = ref<number | undefined>();
 const descExpanded = ref(false);
 const showOriginalDesc = ref(false);
@@ -514,6 +613,7 @@ function showOnMap() {
 }
 
 function onFullscreenChange(index: number | null) {
+  photoFullscreenOpen.value = index != null;
   const params = new URLSearchParams(window.location.search);
   if (index != null) {
     params.set("photo", String(index));
@@ -581,6 +681,9 @@ watch(
     showOriginalDesc.value = false;
     noteEditorOpen.value = false;
 
+    // Scroll inner content back to top when switching listings
+    modalRef.value?.querySelector<HTMLElement>(".overflow-y-auto")?.scrollTo({ top: 0 });
+
     // Read photo deep-link param
     const photoParam = new URLSearchParams(window.location.search).get("photo");
     if (v && photoParam != null) {
@@ -611,21 +714,23 @@ watch(
   { immediate: true },
 );
 
-// Focus trap + initial focus (only when modal opens, not on data updates)
+// Focus the modal panel itself when it opens (keeps focus trap working without
+// showing a visible focus ring on the first button/image)
 watch(listing, (v, oldV) => {
   if (v && !oldV) {
     nextTick(() => {
-      const first = modalRef.value?.querySelector<HTMLElement>(
-        "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
-      );
-      first?.focus();
+      modalRef.value?.focus();
     });
   }
 });
 
-// Global Escape key listener
+// Global keyboard listener (Escape to close, Left/Right for cluster nav)
 function onGlobalKeydown(e: KeyboardEvent) {
   if (e.key === "Escape") close();
+  if (isCluster.value && !photoFullscreenOpen.value) {
+    if (e.key === "ArrowLeft") navigateCluster(-1);
+    if (e.key === "ArrowRight") navigateCluster(1);
+  }
 }
 
 watch(listing, (v) => {
@@ -705,13 +810,13 @@ function trapFocus(e: KeyboardEvent) {
 }
 
 .reaction-btn--discard {
-  background: rgba(0, 0, 0, 0.06);
-  color: #999;
-  border-color: rgba(0, 0, 0, 0.1);
+  background: rgba(220, 38, 38, 0.08);
+  color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.18);
 }
 
 .reaction-btn--discard:hover {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(220, 38, 38, 0.14);
 }
 
 /* Slide-up on mobile, scale-fade on desktop */

@@ -87,6 +87,9 @@ onMounted(async () => {
       map,
       listings,
       selectListing,
+      fundaFavouriteVisible,
+      fundaUnreviewedVisible,
+      fundaDiscardedVisible,
     });
 
     // Re-derive GeoJSON when reaction state changes
