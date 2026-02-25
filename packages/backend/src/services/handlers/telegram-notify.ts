@@ -2,11 +2,8 @@ import { db } from "@/db";
 import { listings } from "@/db/schema";
 import type { Job } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID } from "@/config";
-import { ORIGIN } from "@/config";
+import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, ORIGIN } from "@/config";
 import type { RouteResult } from "@/services/valhalla";
-
-const CAPTION_LIMIT = 1024;
 
 async function telegramApi(method: string, body: unknown): Promise<void> {
   const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/${method}`, {
@@ -31,10 +28,7 @@ function routeMinutes(route: RouteResult | null): number | null {
 
 function buildCaption(listing: {
   address: string;
-  neighbourhood: string | null;
-  postcode: string | null;
   price: number;
-  bedrooms: number;
   livingArea: number;
   constructionYear: number | null;
   hasGarden: boolean | null;
@@ -48,60 +42,48 @@ function buildCaption(listing: {
 }): string {
   const overbidPrice = Math.round(listing.price * 1.15);
 
-  // Location line
-  const locationParts = [listing.neighbourhood, listing.postcode].filter(Boolean);
-  const locationLine = locationParts.length > 0 ? locationParts.join(" \u00B7 ") : "";
-
-  // Facts line
-  const facts: string[] = [`${listing.bedrooms} beds`, `${listing.livingArea} m\u00B2`];
-  if (listing.constructionYear) facts.push(String(listing.constructionYear));
-  if (listing.hasGarden) facts.push("Garden");
-  if (listing.hasBalcony) facts.push("Balcony");
-  if (listing.hasRoofTerrace) facts.push("Roof terrace");
-
-  // Route line
-  const routeParts: string[] = [];
-  if (listing.energyLabel) routeParts.push(`Label ${listing.energyLabel}`);
+  // Summary line: price · area · commute
+  const summaryParts: string[] = [formatPrice(overbidPrice), `${listing.livingArea} m\u00B2`];
   const fhMin = routeMinutes(listing.routeFareharbor);
   const awMin = routeMinutes(listing.routeAirwallex);
-  if (fhMin !== null) routeParts.push(`\uD83D\uDEB4 ${fhMin} min FH`);
-  if (awMin !== null) routeParts.push(`${awMin} min AW`);
-  const routeLine = routeParts.join(" \u00B7 ");
-
-  // Build with max 3 positives, 2 negatives
-  const maxPositives = 3;
-  const maxNegatives = 2;
-  const positives = (listing.aiPositives ?? []).slice(0, maxPositives);
-  const negatives = (listing.aiNegatives ?? []).slice(0, maxNegatives);
-
-  function assemble(pos: string[], neg: string[]): string {
-    const lines: string[] = [`\uD83C\uDFE0 <b>${escapeHtml(listing.address)}</b>`];
-    if (locationLine) lines.push(escapeHtml(locationLine));
-    lines.push("");
-    lines.push(
-      `\uD83D\uDCB0 ${formatPrice(listing.price)} asking \u00B7 ${formatPrice(overbidPrice)} overbid`,
-    );
-    lines.push(facts.join(" \u00B7 "));
-    if (routeLine) lines.push(routeLine);
-
-    if (pos.length > 0 || neg.length > 0) {
-      lines.push("");
-      for (const p of pos) lines.push(`\u2705 ${escapeHtml(p)}`);
-      for (const n of neg) lines.push(`\u26A0\uFE0F ${escapeHtml(n)}`);
-    }
-
-    return lines.join("\n");
+  if (fhMin !== null && awMin !== null) {
+    summaryParts.push(`${fhMin} / ${awMin} min cycle`);
+  } else if (fhMin !== null) {
+    summaryParts.push(`${fhMin} min cycle`);
+  } else if (awMin !== null) {
+    summaryParts.push(`${awMin} min cycle`);
   }
 
-  let caption = assemble(positives, negatives);
-  if (caption.length <= CAPTION_LIMIT) return caption;
+  // Extra facts
+  const extras: string[] = [];
+  if (listing.constructionYear) extras.push(String(listing.constructionYear));
+  if (listing.energyLabel && listing.energyLabel !== "unknown") {
+    extras.push(`Label ${listing.energyLabel}`);
+  }
+  if (listing.hasGarden) extras.push("Garden");
+  if (listing.hasBalcony) extras.push("Balcony");
+  if (listing.hasRoofTerrace) extras.push("Roof terrace");
 
-  // Drop positives first
-  caption = assemble([], negatives);
-  if (caption.length <= CAPTION_LIMIT) return caption;
+  const positives = (listing.aiPositives ?? []).slice(0, 3);
+  const negatives = (listing.aiNegatives ?? []).slice(0, 2);
 
-  // Drop negatives too
-  return assemble([], []);
+  const lines: string[] = [`<b>${escapeHtml(listing.address)}</b>`];
+  lines.push(summaryParts.join(" \u00B7 "));
+  if (extras.length > 0) lines.push(extras.join(" \u00B7 "));
+
+  if (positives.length > 0) {
+    lines.push("");
+    lines.push("<b>The good</b>");
+    for (const p of positives) lines.push(`- ${escapeHtml(p)}`);
+  }
+
+  if (negatives.length > 0) {
+    lines.push("");
+    lines.push("<b>The bad</b>");
+    for (const n of negatives) lines.push(`- ${escapeHtml(n)}`);
+  }
+
+  return lines.join("\n");
 }
 
 function escapeHtml(text: string): string {
@@ -116,10 +98,7 @@ export async function handleTelegramNotify(job: Job): Promise<"completed" | "ski
       fundaId: listings.fundaId,
       url: listings.url,
       address: listings.address,
-      postcode: listings.postcode,
-      neighbourhood: listings.neighbourhood,
       price: listings.price,
-      bedrooms: listings.bedrooms,
       livingArea: listings.livingArea,
       constructionYear: listings.constructionYear,
       hasGarden: listings.hasGarden,
@@ -148,44 +127,27 @@ export async function handleTelegramNotify(job: Job): Promise<"completed" | "ski
   const photos = listing.photos ?? [];
   const chatId = TELEGRAM_CHAT_ID;
 
-  // Send photos + caption
-  if (photos.length >= 2) {
-    const media = photos.slice(0, 4).map((url, i) => {
-      const item: Record<string, string> = { type: "photo", media: url };
-      if (i === 0) {
-        item.caption = caption;
-        item.parse_mode = "HTML";
-      }
-      return item;
-    });
-    await telegramApi("sendMediaGroup", { chat_id: chatId, media });
-  } else if (photos.length === 1) {
+  const ernestUrl = `${ORIGIN}/?listing=${listing.fundaId}`;
+  const replyMarkup = {
+    inline_keyboard: [[{ text: "View", url: ernestUrl }]],
+  };
+
+  if (photos.length >= 1) {
     await telegramApi("sendPhoto", {
       chat_id: chatId,
       photo: photos[0],
       caption,
       parse_mode: "HTML",
+      reply_markup: replyMarkup,
     });
   } else {
     await telegramApi("sendMessage", {
       chat_id: chatId,
       text: caption,
       parse_mode: "HTML",
+      reply_markup: replyMarkup,
     });
   }
-
-  // Send inline buttons
-  const ernestUrl = `${ORIGIN}/?listing=${listing.fundaId}`;
-  await telegramApi("sendMessage", {
-    chat_id: chatId,
-    text: "\u200b",
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "Open in Ernest", url: ernestUrl }],
-        [{ text: "View on Funda", url: listing.url }],
-      ],
-    },
-  });
 
   return "completed";
 }
