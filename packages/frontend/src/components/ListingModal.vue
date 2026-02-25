@@ -18,7 +18,11 @@
           <div class="flex-1 overflow-y-auto overscroll-contain">
             <!-- Photo gallery with floating close button -->
             <div v-if="listing.photos.length > 0" class="relative">
-              <PhotoGallery :photos="listing.photos" />
+              <PhotoGallery
+                :photos="listing.photos"
+                :initial-fullscreen-index="initialPhotoIndex"
+                @fullscreen-change="onFullscreenChange"
+              />
               <button
                 class="absolute top-2.5 right-12 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
                 title="Show on map"
@@ -398,6 +402,7 @@ const { selectedListing, closeModal, dismissModal, setReaction, saveNote } = use
 const { user } = useAuth();
 
 const listing = selectedListing;
+const initialPhotoIndex = ref<number | undefined>();
 const descExpanded = ref(false);
 const showOriginalDesc = ref(false);
 const modalRef = ref<HTMLDivElement>();
@@ -496,6 +501,18 @@ function showOnMap() {
   flyTo(longitude, latitude);
 }
 
+function onFullscreenChange(index: number | null) {
+  const params = new URLSearchParams(window.location.search);
+  if (index != null) {
+    params.set("photo", String(index));
+  } else {
+    params.delete("photo");
+  }
+  const search = params.toString();
+  const url = search ? `${window.location.pathname}?${search}` : window.location.pathname;
+  history.replaceState(null, "", url);
+}
+
 // Find own note and track if it changed
 const ownNote = computed(() => {
   if (!listing.value || !user.value) return null;
@@ -551,6 +568,16 @@ watch(
     descExpanded.value = false;
     showOriginalDesc.value = false;
     noteEditorOpen.value = false;
+
+    // Read photo deep-link param
+    const photoParam = new URLSearchParams(window.location.search).get("photo");
+    if (v && photoParam != null) {
+      const idx = parseInt(photoParam, 10);
+      initialPhotoIndex.value =
+        !Number.isNaN(idx) && idx >= 0 && idx < v.photos.length ? idx : undefined;
+    } else {
+      initialPhotoIndex.value = undefined;
+    }
     noteSaving.value = false;
     noteSaved.value = false;
     if (saveDebounceTimer) {

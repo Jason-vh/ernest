@@ -46,9 +46,12 @@ const discardedIds = computed(() => {
 });
 
 function selectListing(fundaId: string) {
+  if (selectedFundaId.value === fundaId) return;
+
   // Push a history entry so Back button closes the modal
   const params = new URLSearchParams(window.location.search);
   params.set("listing", fundaId);
+  params.delete("photo");
   const url = `${window.location.pathname}?${params.toString()}`;
   history.pushState({ listing: fundaId }, "", url);
   pushedState = true;
@@ -66,6 +69,7 @@ function closeModal() {
     // Deep-link case: remove param without adding history entry
     const params = new URLSearchParams(window.location.search);
     params.delete("listing");
+    params.delete("photo");
     const search = params.toString();
     const url = search ? `${window.location.pathname}?${search}` : window.location.pathname;
     history.replaceState(null, "", url);
@@ -78,6 +82,7 @@ function dismissModal() {
   if (!selectedFundaId.value) return;
   const params = new URLSearchParams(window.location.search);
   params.delete("listing");
+  params.delete("photo");
   const search = params.toString();
   const url = search ? `${window.location.pathname}?${search}` : window.location.pathname;
   history.replaceState(null, "", url);

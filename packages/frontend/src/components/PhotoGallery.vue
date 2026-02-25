@@ -103,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onBeforeUnmount } from "vue";
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import EmblaCarousel, { type EmblaCarouselType } from "embla-carousel";
 
 interface PhotoItem {
@@ -111,7 +111,8 @@ interface PhotoItem {
   index: number;
 }
 
-const props = defineProps<{ photos: string[] }>();
+const props = defineProps<{ photos: string[]; initialFullscreenIndex?: number }>();
+const emit = defineEmits<{ "fullscreen-change": [index: number | null] }>();
 
 const emblaRef = ref<HTMLDivElement>();
 const fullscreenOpen = ref(false);
@@ -146,6 +147,7 @@ function updateScrollState() {
   selectedIndex.value = embla.selectedScrollSnap();
   canScrollPrev.value = embla.canScrollPrev();
   canScrollNext.value = embla.canScrollNext();
+  emit("fullscreen-change", selectedIndex.value);
 }
 
 function scrollPrev() {
@@ -160,7 +162,10 @@ function onKeydown(e: KeyboardEvent) {
   if (!fullscreenOpen.value || !embla) return;
   if (e.key === "ArrowLeft") embla.scrollPrev();
   else if (e.key === "ArrowRight") embla.scrollNext();
-  else if (e.key === "Escape") closeFullscreen();
+  else if (e.key === "Escape") {
+    e.stopImmediatePropagation();
+    closeFullscreen();
+  }
 }
 
 document.addEventListener("keydown", onKeydown);
@@ -175,6 +180,7 @@ function openFullscreen(index: number) {
   previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   selectedIndex.value = index;
   fullscreenOpen.value = true;
+  emit("fullscreen-change", index);
   nextTick(() => {
     if (!emblaRef.value) return;
     embla = EmblaCarousel(emblaRef.value, { loop: false, startIndex: index });
@@ -187,6 +193,7 @@ function closeFullscreen() {
   embla?.destroy();
   embla = null;
   fullscreenOpen.value = false;
+  emit("fullscreen-change", null);
   nextTick(() => {
     if (previouslyFocused) {
       previouslyFocused.focus();
@@ -195,6 +202,12 @@ function closeFullscreen() {
     }
   });
 }
+
+onMounted(() => {
+  if (props.initialFullscreenIndex != null) {
+    openFullscreen(props.initialFullscreenIndex);
+  }
+});
 </script>
 
 <style scoped>
