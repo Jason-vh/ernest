@@ -8,6 +8,7 @@ Amsterdam house-hunting map. Shows cycling distance zones from two offices overl
 - Overlays transit stations (train, metro, tram) and line geometries
 - Shows Amsterdam neighbourhood (buurt) boundaries with labels
 - Displays available Funda listings (€450k–€600k, ≥2 bed, ≥65 m²) from Amsterdam, Diemen, Duivendrecht, Amstelveen, and Ouderkerk aan de Amstel as map markers with photo popups and estimated overbid pricing — refreshed hourly
+- AI-enriches listings with positives, negatives, and translated descriptions using Claude Haiku
 - Greyscale base map with parks and water preserved in color
 
 ## Tech stack
@@ -22,6 +23,8 @@ Amsterdam house-hunting map. Shows cycling distance zones from two offices overl
 | Transit data | Overpass API (OSM) |
 | Neighbourhood data | Amsterdam BBGA API |
 | Property listings | Funda via [pyfunda](https://github.com/0xMH/pyfunda) (Python) |
+| Database | PostgreSQL via Drizzle ORM |
+| AI enrichment | Claude Haiku (Anthropic API) |
 | Spatial ops | Turf.js |
 
 ## Getting started
@@ -68,8 +71,9 @@ Hosted on [Railway](https://railway.com) at **https://ernest.vanhattum.xyz**. Tw
 **Cron service** (`ernest-cron`): Dockerfile-based Python service in `services/funda-cron/`. Runs hourly (`0 * * * *`), fetches fresh Funda listings using shared logic in `funda_core.py`, and POSTs them to the web service via Railway's internal network. The web service updates in-memory data and persists to the volume. The local script (`scripts/fetch_funda.py`) imports the same `funda_core` module to ensure identical fetch behavior.
 
 Environment variables:
-- **Web service**: `NODE_ENV=production`, `REFRESH_SECRET`, `VOLUME_PATH=/data`, `PORT` (auto-set)
+- **Web service**: `DATABASE_URL`, `JWT_SECRET`, `ORIGIN`, `RP_ID`, `NODE_ENV=production`, `REFRESH_SECRET`, `VOLUME_PATH=/data`, `ANTHROPIC_API_KEY` (optional — AI enrichment skipped if not set), `PORT` (auto-set)
 - **Cron service**: `REFRESH_SECRET` (same value), `REFRESH_URL=http://ernest.railway.internal:8080/api/internal/refresh-funda`
+- **Database** (`ernest-db`): Railway-managed PostgreSQL, connected via internal networking
 
 ## API endpoints
 
@@ -80,7 +84,7 @@ Environment variables:
 | `GET /api/stations` | Transit stops JSON |
 | `GET /api/lines` | Transit line geometries GeoJSON |
 | `GET /api/buurten` | Neighbourhood boundaries + stats GeoJSON |
-| `GET /api/funda` | Available Funda listings GeoJSON |
+| `GET /api/funda` | Available Funda listings (with AI enrichment, reactions, notes) |
 | `POST /api/internal/refresh-funda` | Refresh Funda data (Bearer auth, used by cron service) |
 
 ## Data pipeline
@@ -99,3 +103,12 @@ The `scripts/fetch-data.ts` script:
 10. Writes `isochrone.geojson`, `stations.json`, and `buurten.geojson` to `packages/backend/data/`
 
 Transit lines (`lines.geojson`) are fetched separately and cached — the script skips this if the file already exists.
+
+## Background jobs
+
+When new listings arrive via the hourly cron refresh, the backend enqueues background jobs for active listings (status "Beschikbaar"):
+
+- **`ai-enrich`**: Sends listing photos + property data to Claude Haiku, gets back positives (standout features), negatives (concerns), and an English description with marketing fluff stripped. Rate-limited at 500ms between calls.
+- **`compute-routes`**: Computes cycling routes from the listing to both offices via Valhalla. Rate-limited at 200ms between calls.
+
+Jobs are stored in a `jobs` table with deduplication (one job per type per listing). Failed jobs retry with exponential backoff (30s → 120s → 480s). The queue processor starts automatically on server boot and also re-enqueues any un-enriched active listings.

@@ -33,6 +33,8 @@ bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 - **Scripts** (`scripts/`): `fetch-data.ts` runs with Bun to precompute geodata (uses Turf.js for spatial operations). `fetch_funda.py` is a thin wrapper that imports shared Funda logic from `services/funda-cron/funda_core.py` and outputs GeoJSON to stdout (called by `fetch-data.ts` via `Bun.spawn`).
 - **Cron** (`services/funda-cron/`): Python service that fetches Funda listings hourly and POSTs them to the backend's `POST /api/internal/refresh-funda` endpoint. Runs as a separate Railway cron service, communicates via Railway internal networking. Core fetch/filter/enrich logic lives in `funda_core.py`, shared with the local script.
 - **Data** (`packages/backend/data/`): Static JSON/GeoJSON files (isochrone, stations, lines, buurten). Funda listings are stored in PostgreSQL (see `listings` table in schema).
+- **Job queue**: Database-backed queue (`jobs` table) for background processing. Two job types: `ai-enrich` (Claude API) and `compute-routes` (Valhalla). Queue processor runs on startup, polls continuously, processes jobs sequentially with rate limiting (500ms between ai-enrich, 200ms between route jobs). Failed jobs retry with exponential backoff (30s, 120s, 480s). Jobs are only enqueued for **active** listings (status `"Beschikbaar"` or `""`, not disappeared).
+- **AI enrichment**: Uses Claude Haiku (`claude-haiku-4-5-20251001`) to enrich listings with `aiPositives` (3-5 standout features), `aiNegatives` (3-5 concerns), and `aiDescription` (English translation, marketing fluff stripped). Sends up to 20 listing photos + structured property/neighbourhood data. Requires `ANTHROPIC_API_KEY` env var — skipped if not set.
 
 ## Key files
 
@@ -56,10 +58,15 @@ bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 
 ### Backend
 
-- `packages/backend/src/db/schema.ts` — Drizzle table definitions (users, credentials, challenges)
-- `packages/backend/src/config.ts` — Required env var validation (DATABASE_URL, JWT_SECRET, ORIGIN, RP_ID)
+- `packages/backend/src/db/schema.ts` — Drizzle table definitions (users, credentials, challenges, listings, jobs, reactions, notes)
+- `packages/backend/src/config.ts` — Required env var validation (DATABASE_URL, JWT_SECRET, ORIGIN, RP_ID) + optional ANTHROPIC_API_KEY
 - `packages/backend/src/routes/auth.ts` — WebAuthn registration/login flows, JWT session management
-- `packages/backend/src/routes/geodata.ts` — API endpoints for isochrone, stations, lines, buurten, funda + POST /internal/refresh-funda
+- `packages/backend/src/routes/geodata.ts` — API endpoints for isochrone, stations, lines, buurten, funda + POST /internal/refresh-funda. Funda query filters to active listings only (`disappeared_at IS NULL` and status `"Beschikbaar"` or `""`)
+- `packages/backend/src/services/listing-sync.ts` — Upserts incoming listings, marks disappeared ones, enqueues ai-enrich + compute-routes jobs for active listings
+- `packages/backend/src/services/job-queue.ts` — Database-backed job queue: enqueue, claim, complete/fail/skip jobs
+- `packages/backend/src/services/queue-processor.ts` — Background processor: polls for pending jobs, dispatches to handlers, rate-limits
+- `packages/backend/src/services/handlers/ai-enrich.ts` — Claude API call: sends photos + property data, parses structured JSON response
+- `packages/backend/src/services/buurt-matcher.ts` — Matches listing coordinates to neighbourhood polygons for buurt stats
 
 ### Services & Scripts
 
@@ -91,7 +98,7 @@ bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 - **URL**: https://ernest.vanhattum.xyz
 - **Web service** (`ernest-web`): Railpack detects `bun.lock`, installs Bun, runs `bun install && bun run build`, then `bun run start`. Health check hits `/api/health`. Has a 1 GB volume mounted at `/data` for persisted Funda data.
 - **Cron service** (`ernest-cron`): Dockerfile-based Python service. Root directory `services/funda-cron`. Runs on schedule `0 * * * *` (hourly). Communicates with web service via Railway internal networking (`http://ernest.railway.internal:8080`).
-- **Env vars on web service**: `DATABASE_URL` (references `ernest-db`), `JWT_SECRET`, `ORIGIN=https://ernest.vanhattum.xyz`, `RP_ID=ernest.vanhattum.xyz`, `NODE_ENV=production`, `REFRESH_SECRET`, `VOLUME_PATH=/data`. `PORT` is auto-set by Railway. All four auth vars (`DATABASE_URL`, `JWT_SECRET`, `ORIGIN`, `RP_ID`) are required — server refuses to start without them.
+- **Env vars on web service**: `DATABASE_URL` (references `ernest-db`), `JWT_SECRET`, `ORIGIN=https://ernest.vanhattum.xyz`, `RP_ID=ernest.vanhattum.xyz`, `NODE_ENV=production`, `REFRESH_SECRET`, `VOLUME_PATH=/data`, `ANTHROPIC_API_KEY` (for AI enrichment). `PORT` is auto-set by Railway. All four auth vars (`DATABASE_URL`, `JWT_SECRET`, `ORIGIN`, `RP_ID`) are required — server refuses to start without them. `ANTHROPIC_API_KEY` is optional — enrichment jobs are skipped if not set.
 - **Env vars on cron service**: `REFRESH_SECRET` (same value), `REFRESH_URL=http://ernest.railway.internal:8080/api/internal/refresh-funda`.
 - **Database** (`ernest-db`): Railway-managed PostgreSQL. Connected to web service via internal networking. Drizzle migrations run on startup.
 - **Auto-deploy**: GitHub repo connected for deploy-on-push to `main`.
