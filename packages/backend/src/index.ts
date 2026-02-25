@@ -51,7 +51,7 @@ await resetStaleJobs();
 const unenriched = await db
   .select({ fundaId: listings.fundaId })
   .from(listings)
-  .where(and(isNull(listings.aiSummary), isNull(listings.disappearedAt)));
+  .where(and(isNull(listings.aiPositives), isNull(listings.disappearedAt)));
 if (unenriched.length > 0) {
   const enqueued = await enqueueMany(
     unenriched.map((r) => ({ type: "ai-enrich" as const, fundaId: r.fundaId, maxAttempts: 2 })),

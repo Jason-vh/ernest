@@ -69,7 +69,7 @@ export async function syncListings(incoming: NewListing[]): Promise<SyncResult> 
   const needAi = await db
     .select({ fundaId: listings.fundaId })
     .from(listings)
-    .where(and(isNull(listings.disappearedAt), isNull(listings.aiSummary)));
+    .where(and(isNull(listings.disappearedAt), isNull(listings.aiPositives)));
 
   const routeJobs = needRoutes.map((r) => ({
     type: "compute-routes" as const,

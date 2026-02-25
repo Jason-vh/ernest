@@ -159,7 +159,9 @@ def to_geojson(listings, coords, details):
                     "postcode": listing.get("postcode") or None,
                     "neighbourhood": listing.get("neighbourhood") or None,
                     "description": (detail.get("description") or "") if detail else "",
-                    "offeredSince": listing.get("offered_since") or None,
+                    "offeredSince": (detail.get("publication_date") if detail else None)
+                        or listing.get("publish_date")
+                        or None,
                     "hasGarden": listing.get("has_garden"),
                     "hasBalcony": listing.get("has_balcony"),
                     "hasRoofTerrace": listing.get("has_roof_terrace"),

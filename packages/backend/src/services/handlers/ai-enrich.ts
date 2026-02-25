@@ -31,7 +31,7 @@ export async function handleAiEnrich(job: Job): Promise<"completed" | "skipped">
       constructionYear: listings.constructionYear,
       description: listings.description,
       photos: listings.photos,
-      aiSummary: listings.aiSummary,
+      aiPositives: listings.aiPositives,
     })
     .from(listings)
     .where(eq(listings.fundaId, job.fundaId));
@@ -40,7 +40,7 @@ export async function handleAiEnrich(job: Job): Promise<"completed" | "skipped">
   const listing = rows[0];
 
   // Already enriched
-  if (listing.aiSummary !== null) return "skipped";
+  if (listing.aiPositives !== null) return "skipped";
 
   // Build message content
   const content: Anthropic.MessageCreateParams["messages"][number]["content"] = [];
@@ -90,7 +90,7 @@ export async function handleAiEnrich(job: Job): Promise<"completed" | "skipped">
       model: "claude-haiku-4-5-20251001",
       max_tokens: 2000,
       system:
-        "You analyze Dutch real estate listings. For aiSummary: write 1-2 sentences highlighting key features, required work, standout aspects. Be factual and concise. Note both positives and negatives. For aiDescription: translate the original description to English, clean up formatting (remove ALL-CAPS, extra whitespace), remove marketing fluff, keep all factual content.",
+        "You analyze Dutch real estate listings. For positives: list standout good things about this property as short phrases (e.g. 'south-facing garden', 'recently renovated bathroom'). For negatives: list downsides, required work, or concerns as short phrases (e.g. 'needs new kitchen', 'ground floor - no elevator'). Skip generic facts already visible in the listing data (price, size, bedrooms, energy label). 3-5 bullets each. For aiDescription: translate the original description to English, clean up formatting (remove ALL-CAPS, extra whitespace), remove marketing fluff, keep all factual content.",
       messages: [{ role: "user", content }],
       output_config: {
         format: {
@@ -98,10 +98,17 @@ export async function handleAiEnrich(job: Job): Promise<"completed" | "skipped">
           schema: {
             type: "object",
             properties: {
-              aiSummary: { type: "string" },
+              positives: {
+                type: "array",
+                items: { type: "string" },
+              },
+              negatives: {
+                type: "array",
+                items: { type: "string" },
+              },
               aiDescription: { type: "string" },
             },
-            required: ["aiSummary", "aiDescription"],
+            required: ["positives", "negatives", "aiDescription"],
             additionalProperties: false,
           },
         },
@@ -122,24 +129,28 @@ export async function handleAiEnrich(job: Job): Promise<"completed" | "skipped">
   if (
     typeof parsed !== "object" ||
     parsed === null ||
-    !("aiSummary" in parsed) ||
+    !("positives" in parsed) ||
+    !("negatives" in parsed) ||
     !("aiDescription" in parsed)
   ) {
     throw new Error("Invalid AI response shape: missing required fields");
   }
 
-  const summaryVal = parsed.aiSummary;
+  const posVal = parsed.positives;
+  const negVal = parsed.negatives;
   const descVal = parsed.aiDescription;
-  if (typeof summaryVal !== "string" || typeof descVal !== "string") {
-    throw new Error("Invalid AI response: fields must be strings");
+
+  if (!Array.isArray(posVal) || !Array.isArray(negVal) || typeof descVal !== "string") {
+    throw new Error("Invalid AI response: unexpected field types");
   }
 
-  const aiSummary = summaryVal.slice(0, 500);
+  const aiPositives = posVal.filter((s): s is string => typeof s === "string").slice(0, 8);
+  const aiNegatives = negVal.filter((s): s is string => typeof s === "string").slice(0, 8);
   const aiDescription = descVal.slice(0, 10_000);
 
   await db
     .update(listings)
-    .set({ aiSummary, aiDescription, updatedAt: sql`now()` })
+    .set({ aiPositives, aiNegatives, aiDescription, updatedAt: sql`now()` })
     .where(eq(listings.fundaId, job.fundaId));
 
   return "completed";

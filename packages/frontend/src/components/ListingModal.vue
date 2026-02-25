@@ -11,7 +11,7 @@
           role="dialog"
           aria-modal="true"
           aria-label="Listing details"
-          class="listing-panel relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-[14px] bg-white/90 shadow-[0_8px_40px_rgba(0,0,0,0.15),0_1px_3px_rgba(0,0,0,0.08)] backdrop-blur-[24px] sm:max-w-[480px] sm:rounded-[14px]"
+          class="listing-panel relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-[14px] bg-white/90 shadow-[0_8px_40px_rgba(0,0,0,0.15),0_1px_3px_rgba(0,0,0,0.08)] backdrop-blur-[24px] sm:max-w-[580px] sm:rounded-[14px]"
           @keydown="trapFocus"
         >
           <!-- Scrollable content -->
@@ -19,7 +19,6 @@
             <!-- Photo gallery with floating close button -->
             <div v-if="listing.photos.length > 0" class="relative">
               <PhotoGallery :photos="listing.photos" />
-              <!-- Floating close over photos -->
               <button
                 class="absolute top-2.5 right-2.5 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
                 @click="close"
@@ -57,172 +56,186 @@
             </div>
 
             <div class="flex flex-col gap-0 px-5 pt-4 pb-5">
-              <!-- Address + status -->
-              <div>
-                <div class="flex items-center justify-between gap-2">
+              <!-- Address + Price row -->
+              <div class="flex items-start justify-between gap-4">
+                <div class="min-w-0">
                   <h2 class="m-0 text-[17px] font-semibold leading-tight text-[#1a1a1a]">
                     {{ listing.address }}
                   </h2>
-                  <a
-                    :href="listing.url"
-                    target="_blank"
-                    rel="noopener"
-                    class="flex-shrink-0 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 no-underline transition-colors hover:bg-emerald-500/20"
-                    >Available on Funda &rarr;</a
-                  >
+                  <p v-if="listing.neighbourhood" class="m-0 mt-1 text-[13px] text-[#888]">
+                    {{ listing.neighbourhood
+                    }}<span v-if="listing.postcode"> &middot; {{ listing.postcode }}</span>
+                  </p>
                 </div>
-                <p v-if="listing.neighbourhood" class="m-0 mt-1 text-[13px] text-[#888]">
-                  {{ listing.neighbourhood
-                  }}<span v-if="listing.postcode"> &middot; {{ listing.postcode }}</span>
-                </p>
+                <div class="flex-shrink-0 text-right">
+                  <div class="text-[20px] font-bold tracking-[-0.02em] text-[#1a1a1a]">
+                    {{ formatPrice(overbidPrice) }}
+                  </div>
+                  <div class="mt-0.5 text-[11px] text-[#999]">
+                    asking {{ formatPrice(listing.price)
+                    }}<template v-if="listingAgeDays != null">
+                      &middot; {{ listingAgeDays }}d</template
+                    >
+                  </div>
+                </div>
               </div>
 
-              <!-- AI summary -->
-              <p v-if="listing.aiSummary" class="mt-3 text-[13px] leading-[1.5] text-[#555] italic">
-                {{ listing.aiSummary }}
-              </p>
-
-              <!-- Reaction buttons (only when logged in) -->
-              <div v-if="user" class="mt-3 flex gap-2">
-                <button
-                  class="reaction-btn"
-                  :class="{
-                    'reaction-btn--active reaction-btn--fav': listing.reaction === 'favourite',
-                  }"
-                  @click="toggleReaction('favourite')"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path
-                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                      :fill="listing.reaction === 'favourite' ? 'currentColor' : 'none'"
-                    />
-                  </svg>
-                  Favourite
-                </button>
-                <button
-                  class="reaction-btn"
-                  :class="{
-                    'reaction-btn--active reaction-btn--discard': listing.reaction === 'discarded',
-                  }"
-                  @click="toggleReaction('discarded')"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                  Discard
-                </button>
-                <span v-if="listing.reactionBy" class="ml-auto self-center text-[11px] text-[#bbb]">
-                  by {{ listing.reactionBy }}
-                </span>
-              </div>
-
-              <!-- Price block -->
-              <div class="mt-4">
-                <div class="text-[26px] font-bold tracking-[-0.02em] text-[#1a1a1a]">
-                  {{ formatPrice(overbidPrice) }}
-                </div>
-                <div class="mt-0.5 text-[12px] text-[#999]">
-                  based on 15% overbid on {{ formatPrice(listing.price) }}
-                </div>
+              <!-- Key facts (inline) with status badge -->
+              <div v-if="keyFacts" class="mt-2.5 text-[13px] text-[#666]">
+                <span
+                  v-if="listing.status === 'Beschikbaar'"
+                  class="mr-1.5 inline-block rounded bg-emerald-500/10 px-1.5 py-[1px] text-[11px] font-semibold text-emerald-700"
+                  >Available</span
+                >{{ keyFacts }}
               </div>
 
               <!-- Divider -->
               <div class="my-4 h-px bg-black/6"></div>
 
-              <!-- Key features (chip grid) -->
-              <div class="flex flex-wrap gap-[6px]">
-                <span v-if="listing.bedrooms" class="chip">{{ listing.bedrooms }} beds</span>
-                <span v-if="listing.livingArea" class="chip">{{ listing.livingArea }} m&sup2;</span>
-                <span v-if="listing.energyLabel" class="chip">Label {{ listing.energyLabel }}</span>
-                <span v-if="listing.constructionYear" class="chip">{{
-                  listing.constructionYear
-                }}</span>
-                <span v-if="listing.hasGarden" class="chip chip--badge">Garden</span>
-                <span v-if="listing.hasBalcony" class="chip chip--badge">Balcony</span>
-                <span v-if="listing.hasRoofTerrace" class="chip chip--badge">Roof terrace</span>
+              <!-- AI highlights card -->
+              <div
+                v-if="
+                  (listing.aiPositives && listing.aiPositives.length > 0) ||
+                  (listing.aiNegatives && listing.aiNegatives.length > 0)
+                "
+                class="highlights-card"
+              >
+                <div
+                  v-if="listing.aiPositives && listing.aiPositives.length > 0"
+                  class="flex flex-col gap-[5px]"
+                >
+                  <div
+                    v-for="(item, i) in listing.aiPositives"
+                    :key="'pos-' + i"
+                    class="flex items-start gap-2 text-[13px] leading-[1.4]"
+                  >
+                    <span
+                      class="mt-[6px] h-[6px] w-[6px] flex-shrink-0 rounded-full bg-emerald-500"
+                    ></span>
+                    <span class="text-[#444]">{{ item }}</span>
+                  </div>
+                </div>
+                <div
+                  v-if="
+                    listing.aiPositives &&
+                    listing.aiPositives.length > 0 &&
+                    listing.aiNegatives &&
+                    listing.aiNegatives.length > 0
+                  "
+                  class="my-2.5 h-px bg-black/5"
+                ></div>
+                <div
+                  v-if="listing.aiNegatives && listing.aiNegatives.length > 0"
+                  class="flex flex-col gap-[5px]"
+                >
+                  <div
+                    v-for="(item, i) in listing.aiNegatives"
+                    :key="'neg-' + i"
+                    class="flex items-start gap-2 text-[13px] leading-[1.4]"
+                  >
+                    <span
+                      class="mt-[6px] h-[6px] w-[6px] flex-shrink-0 rounded-full bg-amber-500"
+                    ></span>
+                    <span class="text-[#444]">{{ item }}</span>
+                  </div>
+                </div>
               </div>
 
-              <!-- Cycling times card -->
+              <!-- Cycling commute -->
               <div
                 v-if="listing.routeFareharbor || listing.routeAirwallex"
-                class="mt-4 flex flex-col gap-2 rounded-[10px] bg-black/[0.03] p-3.5"
+                class="mt-3 text-[12px] text-[#aaa]"
               >
-                <div class="text-[11px] font-semibold uppercase tracking-wide text-[#aaa]">
-                  Cycling
-                </div>
-                <div class="flex flex-col gap-1.5">
-                  <div v-if="listing.routeFareharbor" class="flex items-center gap-2.5 text-[13px]">
-                    <span
-                      class="inline-block h-[7px] w-[7px] rounded-full"
-                      :style="{ background: COLORS.routeFareharbor }"
-                    ></span>
-                    <span
-                      :style="{ color: COLORS.routeFareharbor }"
-                      class="font-semibold tabular-nums"
-                      >{{ listing.routeFareharbor }} min</span
-                    >
-                    <span class="text-[#888]">to {{ OFFICES.fareharbor.name }}</span>
-                  </div>
-                  <div v-if="listing.routeAirwallex" class="flex items-center gap-2.5 text-[13px]">
-                    <span
-                      class="inline-block h-[7px] w-[7px] rounded-full"
-                      :style="{ background: COLORS.routeAirwallex }"
-                    ></span>
-                    <span
-                      :style="{ color: COLORS.routeAirwallex }"
-                      class="font-semibold tabular-nums"
-                      >{{ listing.routeAirwallex }} min</span
-                    >
-                    <span class="text-[#888]">to {{ OFFICES.airwallex.name }}</span>
-                  </div>
-                </div>
+                <span class="mr-1">Cycling</span>
+                <template v-if="listing.routeFareharbor">
+                  <span class="tabular-nums text-[#888]">{{ listing.routeFareharbor }} min</span>
+                  {{ OFFICES.fareharbor.name }}</template
+                >
+                <template v-if="listing.routeFareharbor && listing.routeAirwallex">
+                  &middot;
+                </template>
+                <template v-if="listing.routeAirwallex">
+                  <span class="tabular-nums text-[#888]">{{ listing.routeAirwallex }} min</span>
+                  {{ OFFICES.airwallex.name }}</template
+                >
               </div>
 
-              <!-- Notes section -->
-              <div v-if="listing.notes.length > 0 || user" class="mt-4">
+              <!-- Actions row -->
+              <div class="mt-4 flex items-center gap-2">
+                <template v-if="user">
+                  <button
+                    class="reaction-btn"
+                    :class="{
+                      'reaction-btn--active reaction-btn--fav': listing.reaction === 'favourite',
+                    }"
+                    @click="toggleReaction('favourite')"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                        :fill="listing.reaction === 'favourite' ? 'currentColor' : 'none'"
+                      />
+                    </svg>
+                    Favourite
+                  </button>
+                  <button
+                    class="reaction-btn"
+                    :class="{
+                      'reaction-btn--active reaction-btn--discard':
+                        listing.reaction === 'discarded',
+                    }"
+                    @click="toggleReaction('discarded')"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                    Discard
+                  </button>
+                  <span
+                    v-if="listing.reactionBy"
+                    class="ml-auto self-center text-[11px] text-[#bbb]"
+                  >
+                    by {{ listing.reactionBy }}
+                  </span>
+                </template>
+                <a
+                  :href="listing.url"
+                  target="_blank"
+                  rel="noopener"
+                  class="ml-auto flex-shrink-0 rounded-full bg-black/5 px-3 py-1.5 text-[11px] font-semibold text-[#666] no-underline transition-colors hover:bg-black/10"
+                  :class="{ 'ml-0': !user }"
+                  >View on Funda &rarr;</a
+                >
+              </div>
+
+              <!-- Divider before deep-dive sections -->
+              <div class="my-4 h-px bg-black/6"></div>
+
+              <!-- Notes (read-only display) -->
+              <div v-if="listing.notes.length > 0">
                 <div class="text-[11px] font-semibold uppercase tracking-wide text-[#aaa]">
                   Notes
                 </div>
-                <!-- Existing notes from other users -->
                 <div v-for="note in listing.notes" :key="note.userId" class="mt-2">
                   <div class="text-[11px] font-medium text-[#999]">{{ note.username }}</div>
-                  <p class="m-0 mt-0.5 text-[13px] leading-[1.5] text-[#555]">{{ note.text }}</p>
+                  <p class="m-0 mt-0.5 whitespace-pre-line text-[13px] leading-[1.5] text-[#555]">
+                    {{ note.text }}
+                  </p>
                 </div>
-                <!-- Own note input -->
-                <div v-if="user" class="mt-3">
-                  <textarea
-                    v-model="ownNoteText"
-                    rows="2"
-                    class="w-full resize-none rounded-lg border border-black/10 bg-black/[0.02] px-3 py-2 font-inherit text-[13px] text-[#333] outline-none transition-colors placeholder:text-[#bbb] focus:border-black/20 focus:bg-white"
-                    placeholder="Add a note..."
-                  ></textarea>
-                  <button
-                    v-if="ownNoteChanged"
-                    class="mt-1.5 cursor-pointer rounded-md border-none bg-[#1a1a1a] px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:bg-[#333]"
-                    @click="handleSaveNote"
-                  >
-                    Save note
-                  </button>
-                </div>
-              </div>
-
-              <!-- Offered since -->
-              <div v-if="listing.offeredSince" class="mt-4 text-[12px] text-[#aaa]">
-                Listed since {{ listing.offeredSince }}
               </div>
 
               <!-- Description -->
@@ -253,6 +266,44 @@
                   {{ descExpanded ? "Show less" : "Read more" }}
                 </button>
               </div>
+
+              <!-- Collapsible note editor (at bottom) -->
+              <div v-if="user" class="mt-4 border-t border-black/6 pt-4">
+                <button
+                  class="flex w-full cursor-pointer items-center gap-1.5 border-none bg-transparent p-0 font-inherit text-[11px] font-semibold uppercase tracking-wide text-[#aaa] transition-colors hover:text-[#888]"
+                  @click="noteEditorOpen = !noteEditorOpen"
+                >
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    class="transition-transform"
+                    :class="{ 'rotate-90': noteEditorOpen }"
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                  {{ ownNote ? "Edit note" : "Add note" }}
+                  <span v-if="noteSaving" class="ml-1 font-normal normal-case tracking-normal"
+                    >saving...</span
+                  >
+                  <span
+                    v-else-if="noteSaved"
+                    class="ml-1 font-normal normal-case tracking-normal text-emerald-600"
+                    >saved</span
+                  >
+                </button>
+                <div v-if="noteEditorOpen" class="mt-2">
+                  <textarea
+                    v-model="ownNoteText"
+                    rows="3"
+                    class="w-full resize-none rounded-lg border border-black/10 bg-black/[0.02] px-3 py-2 font-inherit text-[13px] text-[#333] outline-none transition-colors placeholder:text-[#bbb] focus:border-black/20 focus:bg-white"
+                    placeholder="Add a note..."
+                  ></textarea>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -266,7 +317,7 @@ import { ref, computed, watch, nextTick } from "vue";
 import type { ReactionType } from "@ernest/shared";
 import { useListingStore } from "@/composables/useListingStore";
 import { useAuth } from "@/composables/useAuth";
-import { OFFICES, COLORS } from "@/geo/constants";
+import { OFFICES } from "@/geo/constants";
 import PhotoGallery from "@/components/PhotoGallery.vue";
 
 const { selectedListing, closeModal, setReaction, saveNote } = useListingStore();
@@ -277,10 +328,37 @@ const descExpanded = ref(false);
 const showOriginalDesc = ref(false);
 const modalRef = ref<HTMLDivElement>();
 const ownNoteText = ref("");
+const noteEditorOpen = ref(false);
+const noteSaving = ref(false);
+const noteSaved = ref(false);
+let saveDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+let savedFadeTimer: ReturnType<typeof setTimeout> | null = null;
+let prevFundaId: string | null = null;
 
 const overbidPrice = computed(() => {
   if (!listing.value) return 0;
   return Math.round(listing.value.price * 1.15);
+});
+
+const listingAgeDays = computed(() => {
+  if (!listing.value?.offeredSince) return null;
+  const offered = new Date(listing.value.offeredSince);
+  if (Number.isNaN(offered.getTime())) return null;
+  const diff = Date.now() - offered.getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+});
+
+const keyFacts = computed(() => {
+  if (!listing.value) return "";
+  const parts: string[] = [];
+  if (listing.value.bedrooms) parts.push(`${listing.value.bedrooms} bed`);
+  if (listing.value.livingArea) parts.push(`${listing.value.livingArea} m\u00B2`);
+  if (listing.value.energyLabel) parts.push(`Label ${listing.value.energyLabel}`);
+  if (listing.value.constructionYear) parts.push(`${listing.value.constructionYear}`);
+  if (listing.value.hasGarden) parts.push("Garden");
+  if (listing.value.hasBalcony) parts.push("Balcony");
+  if (listing.value.hasRoofTerrace) parts.push("Roof terrace");
+  return parts.join(" \u00B7 ");
 });
 
 const activeDescription = computed(() => {
@@ -296,6 +374,15 @@ function formatPrice(price: number): string {
 }
 
 function close() {
+  // Flush any pending auto-save before closing
+  if (saveDebounceTimer && listing.value && user.value && ownNoteChanged.value) {
+    clearTimeout(saveDebounceTimer);
+    saveDebounceTimer = null;
+    saveNote(listing.value.fundaId, ownNoteText.value.trim(), {
+      id: user.value.id,
+      username: user.value.username,
+    });
+  }
   closeModal();
 }
 
@@ -316,23 +403,58 @@ function toggleReaction(reaction: ReactionType) {
   setReaction(listing.value.fundaId, newReaction, user.value.username);
 }
 
-function handleSaveNote() {
-  if (!listing.value || !user.value) return;
-  saveNote(listing.value.fundaId, ownNoteText.value.trim(), {
-    id: user.value.id,
-    username: user.value.username,
-  });
-}
+// Auto-save note on text change (debounced 1s)
+watch(ownNoteText, () => {
+  if (!listing.value || !user.value || !ownNoteChanged.value) return;
+  if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
+  if (savedFadeTimer) {
+    clearTimeout(savedFadeTimer);
+    savedFadeTimer = null;
+  }
+  noteSaved.value = false;
 
-// Reset state when listing changes
+  saveDebounceTimer = setTimeout(async () => {
+    saveDebounceTimer = null;
+    if (!listing.value || !user.value || !ownNoteChanged.value) return;
+
+    noteSaving.value = true;
+    await saveNote(listing.value.fundaId, ownNoteText.value.trim(), {
+      id: user.value.id,
+      username: user.value.username,
+    });
+    noteSaving.value = false;
+    noteSaved.value = true;
+    savedFadeTimer = setTimeout(() => {
+      noteSaved.value = false;
+    }, 2000);
+  }, 1000);
+});
+
+// Reset state only when switching to a different listing (not on data updates)
 watch(
   listing,
   (v) => {
+    const newId = v?.fundaId ?? null;
+    if (newId === prevFundaId) return;
+    prevFundaId = newId;
+
     descExpanded.value = false;
     showOriginalDesc.value = false;
+    noteEditorOpen.value = false;
+    noteSaving.value = false;
+    noteSaved.value = false;
+    if (saveDebounceTimer) {
+      clearTimeout(saveDebounceTimer);
+      saveDebounceTimer = null;
+    }
+    if (savedFadeTimer) {
+      clearTimeout(savedFadeTimer);
+      savedFadeTimer = null;
+    }
     if (v && user.value) {
       const note = v.notes.find((n) => n.userId === user.value!.id);
       ownNoteText.value = note?.text ?? "";
+      if (note) noteEditorOpen.value = true;
     } else {
       ownNoteText.value = "";
     }
@@ -340,9 +462,9 @@ watch(
   { immediate: true },
 );
 
-// Focus trap + initial focus
-watch(listing, (v) => {
-  if (v) {
+// Focus trap + initial focus (only when modal opens, not on data updates)
+watch(listing, (v, oldV) => {
+  if (v && !oldV) {
     nextTick(() => {
       const first = modalRef.value?.querySelector<HTMLElement>(
         "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
@@ -352,7 +474,7 @@ watch(listing, (v) => {
   }
 });
 
-// Global Escape key listener — works regardless of focus location
+// Global Escape key listener
 function onGlobalKeydown(e: KeyboardEvent) {
   if (e.key === "Escape") close();
 }
@@ -393,23 +515,11 @@ function trapFocus(e: KeyboardEvent) {
 </script>
 
 <style scoped>
-.chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 11px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  font-size: 12px;
-  font-weight: 500;
-  color: #555;
-  white-space: nowrap;
-}
-
-.chip--badge {
-  background: rgba(34, 197, 94, 0.08);
-  border-color: rgba(34, 197, 94, 0.15);
-  color: #2d8a4e;
+.highlights-card {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #f7f7f6;
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .reaction-btn {

@@ -105,7 +105,8 @@ export const listings = pgTable("listings", {
   routeAirwallex: jsonb("route_airwallex").$type<RouteResult>(),
 
   // AI enrichment
-  aiSummary: text("ai_summary"),
+  aiPositives: jsonb("ai_positives").$type<string[]>(),
+  aiNegatives: jsonb("ai_negatives").$type<string[]>(),
   aiDescription: text("ai_description"),
 
   // Timestamps

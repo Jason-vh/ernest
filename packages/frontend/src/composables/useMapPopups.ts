@@ -88,14 +88,6 @@ export function useMapPopups(deps: PopupDeps) {
     inner.appendChild(bar);
     container.appendChild(inner);
 
-    // AI summary
-    if (listing?.aiSummary) {
-      const summaryEl = document.createElement("div");
-      summaryEl.className = "funda-ai-summary";
-      summaryEl.textContent = listing.aiSummary;
-      container.appendChild(summaryEl);
-    }
-
     if (fundaPopup) fundaPopup.remove();
     fundaPopup = new maplibregl.Popup({
       offset: 12,

@@ -111,9 +111,39 @@
 .funda-ai-summary {
   padding: 6px 10px 8px;
   font-size: 11px;
-  color: #666;
   line-height: 1.45;
   border-top: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.funda-ai-pos,
+.funda-ai-neg {
+  padding-left: 12px;
+  position: relative;
+}
+
+.funda-ai-pos::before,
+.funda-ai-neg::before {
+  position: absolute;
+  left: 0;
+}
+
+.funda-ai-pos {
+  color: #2d8a4e;
+}
+
+.funda-ai-pos::before {
+  content: "+";
+}
+
+.funda-ai-neg {
+  color: #b45309;
+}
+
+.funda-ai-neg::before {
+  content: "\2013";
 }
 
 .funda-cycling-loading {
