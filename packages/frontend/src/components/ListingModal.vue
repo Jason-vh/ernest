@@ -377,9 +377,11 @@
                   :href="listing.url"
                   target="_blank"
                   rel="noopener"
-                  class="flex w-full items-center justify-center rounded-lg bg-black/5 py-2 text-[13px] font-semibold text-[#555] no-underline transition-colors hover:bg-black/10"
-                  >View on Funda &rarr;</a
+                  class="flex w-full items-center justify-center gap-2 rounded-lg bg-black/5 py-2 text-[13px] font-semibold text-[#555] no-underline transition-colors hover:bg-black/10"
                 >
+                  <img :src="fundaLogo" alt="" class="h-[14px]" />
+                  View on Funda &rarr;
+                </a>
               </div>
             </div>
           </div>
@@ -397,6 +399,7 @@ import { useAuth } from "@/composables/useAuth";
 import { flyTo } from "@/composables/useMapPosition";
 import { OFFICES } from "@/geo/constants";
 import PhotoGallery from "@/components/PhotoGallery.vue";
+import fundaLogo from "@/assets/funda.svg";
 
 const { selectedListing, closeModal, dismissModal, setReaction, saveNote } = useListingStore();
 const { user } = useAuth();
@@ -441,9 +444,9 @@ const keyFacts = computed(() => {
 const energyLabelBadge = computed(() => {
   if (!listing.value) return null;
   const label = listing.value.energyLabel;
-  if (!label) return { text: "No energy label", cls: "bg-red-500/10 text-red-700" };
+  if (!label || label.toLowerCase() === "unknown")
+    return { text: "No energy label", cls: "bg-red-500/10 text-red-700" };
   if (label === "D") return { text: `Label ${label}`, cls: "bg-amber-500/10 text-amber-700" };
-  if (label === "C") return { text: `Label ${label}`, cls: "bg-black/5 text-[#666]" };
   return { text: `Label ${label}`, cls: "bg-emerald-500/10 text-emerald-700" };
 });
 
