@@ -30,6 +30,8 @@ def fetch_all_listings(log=print):
     all_listings = []
     seen_ids = set()
     page = 0
+    fetched_any_page = False
+    tried_one_based_fallback = False
 
     while True:
         log(f"  Fetching page {page}...")
@@ -42,12 +44,20 @@ def fetch_all_listings(log=print):
                 page=page,
             )
         except Exception as e:
-            if _is_terminal_page_error(e):
+            # Some backends use one-based page indexing; recover once if page 0 is rejected.
+            if page == 0 and _is_terminal_page_error(e) and not tried_one_based_fallback:
+                tried_one_based_fallback = True
+                page = 1
+                log("  Page 0 returned 400, retrying with one-based paging at page 1...")
+                continue
+
+            if fetched_any_page and _is_terminal_page_error(e):
                 log(f"  Reached last page at page {page - 1} (page {page} returned 400)")
                 break
             raise
         if not results:
             break
+        fetched_any_page = True
         for listing in results:
             gid = listing.get("global_id")
             if gid and gid not in seen_ids:
