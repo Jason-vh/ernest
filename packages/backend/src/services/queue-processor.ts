@@ -1,20 +1,47 @@
-import { claimJob, completeJob, skipJob, failJob } from "@/services/job-queue";
+import { claimJob, completeJob, skipJob, failJob, enqueueMany } from "@/services/job-queue";
 import { handleComputeRoutes } from "@/services/handlers/compute-routes";
 import { handleAiEnrich } from "@/services/handlers/ai-enrich";
+import { handleTelegramNotify } from "@/services/handlers/telegram-notify";
 import { invalidateFundaCache } from "@/routes/geodata";
+import { ANTHROPIC_API_KEY } from "@/config";
+import { db } from "@/db";
+import { listings } from "@/db/schema";
 import type { Job } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 type HandlerFn = (job: Job) => Promise<"completed" | "skipped">;
 
 const handlers: Record<string, HandlerFn> = {
   "compute-routes": handleComputeRoutes,
   "ai-enrich": handleAiEnrich,
+  "telegram-notify": handleTelegramNotify,
 };
 
 const RATE_LIMITS: Record<string, number> = {
   "compute-routes": 200,
   "ai-enrich": 500,
+  "telegram-notify": 200,
 };
+
+async function maybeEnqueueNotification(fundaId: string): Promise<void> {
+  const rows = await db
+    .select({
+      routeFareharbor: listings.routeFareharbor,
+      aiPositives: listings.aiPositives,
+    })
+    .from(listings)
+    .where(eq(listings.fundaId, fundaId));
+
+  if (rows.length === 0) return;
+  const listing = rows[0];
+
+  const routesReady = listing.routeFareharbor !== null;
+  const aiReady = listing.aiPositives !== null || ANTHROPIC_API_KEY === null;
+
+  if (routesReady && aiReady) {
+    await enqueueMany([{ type: "telegram-notify", fundaId, maxAttempts: 3 }]);
+  }
+}
 
 export function startQueueProcessor(): void {
   console.log("Queue processor started");
@@ -49,6 +76,11 @@ export function startQueueProcessor(): void {
             await completeJob(job.id); // eslint-disable-line no-await-in-loop
             completedSinceFlush++;
             console.log(`Job ${job.type}/${job.fundaId}: completed`);
+
+            // Trigger notification check after enrichment/route jobs complete
+            if (job.type === "ai-enrich" || job.type === "compute-routes") {
+              await maybeEnqueueNotification(job.fundaId); // eslint-disable-line no-await-in-loop
+            }
           } else {
             await skipJob(job.id, "Handler returned skipped"); // eslint-disable-line no-await-in-loop
             console.log(`Job ${job.type}/${job.fundaId}: skipped`);

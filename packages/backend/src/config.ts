@@ -14,3 +14,6 @@ export const RP_ID = required("RP_ID");
 export const REFRESH_SECRET = required("REFRESH_SECRET");
 
 export const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? null;
+
+export const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? null;
+export const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID ?? null;

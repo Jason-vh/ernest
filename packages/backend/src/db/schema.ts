@@ -128,7 +128,7 @@ export const listings = pgTable(
 export type Listing = InferSelectModel<typeof listings>;
 export type NewListing = InferInsertModel<typeof listings>;
 
-export type JobType = "compute-routes" | "ai-enrich";
+export type JobType = "compute-routes" | "ai-enrich" | "telegram-notify";
 export type JobStatus = "pending" | "running" | "completed" | "failed" | "skipped";
 
 export const jobs = pgTable(
