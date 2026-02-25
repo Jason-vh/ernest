@@ -3,7 +3,7 @@ import { watch } from "vue";
 import type maplibregl from "maplibre-gl";
 import { OFFICES, COLORS } from "@/geo/constants";
 import { getGeoJSONSource } from "@/geo/map-utils";
-import type { CyclingRoutes } from "@/api/client";
+import type { CyclingRoutes } from "@ernest/shared";
 
 const emptyFC: GeoJSON.FeatureCollection = {
   type: "FeatureCollection",

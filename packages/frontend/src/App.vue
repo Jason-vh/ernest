@@ -5,6 +5,7 @@
     <FundaFilters />
     <AuthButton @open-auth="showAuth = true" />
     <AuthModal :visible="showAuth" @close="showAuth = false" />
+    <ListingModal />
   </div>
 </template>
 
@@ -15,6 +16,7 @@ import Legend from "@/components/Legend.vue";
 import FundaFilters from "@/components/FundaFilters.vue";
 import AuthButton from "@/components/AuthButton.vue";
 import AuthModal from "@/components/AuthModal.vue";
+import ListingModal from "@/components/ListingModal.vue";
 
 const showAuth = ref(false);
 </script>

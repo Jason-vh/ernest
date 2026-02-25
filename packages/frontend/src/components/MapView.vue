@@ -3,9 +3,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { fetchIsochrone, fetchStations, fetchLines, fetchFunda } from "@/api/client";
 import { useZoneState } from "@/composables/useZoneState";
+import { useListingStore } from "@/composables/useListingStore";
 import { useCyclingRoutes } from "@/composables/useCyclingRoutes";
 import { useMap } from "@/composables/useMap";
 import { useOfficeMarkers } from "@/composables/useOfficeMarkers";
@@ -25,10 +26,10 @@ const {
   fundaViewedVisible,
   hoveredZone,
   hoveredTransit,
-  clickedFundaUrls,
   fundaCount,
-  markFundaClicked,
 } = useZoneState();
+
+const { listings, selectedListing, viewedFundaIds, selectListing, setListings } = useListingStore();
 
 const { activeRoutes, showRoutesForListing, clearRoutes } = useCyclingRoutes();
 const { initMap } = useMap(mapContainer);
@@ -38,19 +39,21 @@ onMounted(async () => {
   useOfficeMarkers(map);
 
   map.on("load", async () => {
-    const [isochrone, stations, lines, funda] = await Promise.all([
+    const [isochrone, stations, lines, fundaData] = await Promise.all([
       fetchIsochrone(),
       fetchStations(),
       fetchLines(),
       fetchFunda(),
     ]);
 
+    setListings(fundaData);
+
     useIsochroneLayers(map, isochrone, { zoneVisibility, hoveredZone });
     useTransitLayers(map, stations, lines, { transitVisibility, hoveredTransit });
     useRouteLayers(map, activeRoutes);
 
-    const { stampClickedState } = useFundaLayer(map, funda, {
-      clickedFundaUrls,
+    const { refreshFundaSource } = useFundaLayer(map, listings, {
+      viewedFundaIds,
       fundaCount,
       fundaNewVisible,
       fundaViewedVisible,
@@ -58,19 +61,39 @@ onMounted(async () => {
 
     const { updateBuildingHighlights, resetBuildingViewKey } = useBuildingHighlightLayer(
       map,
-      clickedFundaUrls,
+      viewedFundaIds,
     );
 
     useMapPopups({
       map,
-      funda,
-      markFundaClicked,
-      clickedFundaUrls,
-      stampClickedState,
+      listings,
+      selectListing,
+      refreshFundaSource,
       updateBuildingHighlights,
       resetBuildingViewKey,
       showRoutesForListing,
       clearRoutes,
+    });
+
+    // Show/clear cycling routes when modal opens/closes
+    watch(selectedListing, (listing) => {
+      if (listing) {
+        if (listing.routeFareharbor || listing.routeAirwallex) {
+          showRoutesForListing({
+            fareharbor: listing.routeFareharbor,
+            airwallex: listing.routeAirwallex,
+          });
+        }
+      } else {
+        clearRoutes();
+      }
+    });
+
+    // Re-derive GeoJSON when viewed state changes (e.g. after modal marks a listing viewed)
+    watch(viewedFundaIds, () => {
+      refreshFundaSource();
+      resetBuildingViewKey();
+      updateBuildingHighlights();
     });
   });
 });

@@ -8,7 +8,7 @@ const emptyData: GeoJSON.FeatureCollection = {
   features: [],
 };
 
-export function useBuildingHighlightLayer(map: maplibregl.Map, clickedFundaUrls: Ref<Set<string>>) {
+export function useBuildingHighlightLayer(map: maplibregl.Map, viewedFundaIds: Ref<Set<string>>) {
   let lastBuildingViewKey = "";
   let buildingDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -44,18 +44,18 @@ export function useBuildingHighlightLayer(map: maplibregl.Map, clickedFundaUrls:
       return;
     }
 
-    // Deduplicate by URL (queryRenderedFeatures can return duplicates across tiles)
+    // Deduplicate by fundaId (queryRenderedFeatures can return duplicates across tiles)
     const seen = new Set<string>();
     const unique: GeoJSON.Feature[] = [];
     for (const f of visibleFeatures) {
-      const url = f.properties?.url;
-      if (url && !seen.has(url)) {
-        seen.add(url);
+      const fundaId = f.properties?.fundaId;
+      if (fundaId && !seen.has(fundaId)) {
+        seen.add(fundaId);
         unique.push(f);
       }
     }
 
-    const { buildings } = matchBuildingsToFunda(map, unique, clickedFundaUrls.value);
+    const { buildings } = matchBuildingsToFunda(map, unique, viewedFundaIds.value);
     src.setData(buildings);
     // Hide dots when building highlights are active (same frame, no flash)
     const hideDots = buildings.features.length > 0;

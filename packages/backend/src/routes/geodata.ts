@@ -71,7 +71,30 @@ geodata.get("/buurten", (c) => {
 
 geodata.get("/funda", async (c) => {
   const rows = await db
-    .select()
+    .select({
+      fundaId: listings.fundaId,
+      url: listings.url,
+      address: listings.address,
+      postcode: listings.postcode,
+      neighbourhood: listings.neighbourhood,
+      price: listings.price,
+      bedrooms: listings.bedrooms,
+      livingArea: listings.livingArea,
+      energyLabel: listings.energyLabel,
+      objectType: listings.objectType,
+      constructionYear: listings.constructionYear,
+      description: listings.description,
+      hasGarden: listings.hasGarden,
+      hasBalcony: listings.hasBalcony,
+      hasRoofTerrace: listings.hasRoofTerrace,
+      latitude: listings.latitude,
+      longitude: listings.longitude,
+      photos: listings.photos,
+      status: listings.status,
+      offeredSince: listings.offeredSince,
+      routeFareharbor: listings.routeFareharbor,
+      routeAirwallex: listings.routeAirwallex,
+    })
     .from(listings)
     .where(
       and(
@@ -80,27 +103,7 @@ geodata.get("/funda", async (c) => {
       ),
     );
 
-  const features = rows.map((row) => ({
-    type: "Feature" as const,
-    geometry: {
-      type: "Point" as const,
-      coordinates: [row.longitude, row.latitude],
-    },
-    properties: {
-      fundaId: row.fundaId,
-      price: row.price,
-      address: row.address,
-      bedrooms: row.bedrooms,
-      livingArea: row.livingArea,
-      photo: Array.isArray(row.photos) && row.photos.length > 0 ? row.photos[0] : "",
-      photos: JSON.stringify(row.photos),
-      url: row.url,
-      routeFareharbor: row.routeFareharbor ? JSON.stringify(row.routeFareharbor) : null,
-      routeAirwallex: row.routeAirwallex ? JSON.stringify(row.routeAirwallex) : null,
-    },
-  }));
-
-  return c.json({ type: "FeatureCollection", features });
+  return c.json(rows);
 });
 
 geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 }), async (c) => {

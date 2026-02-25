@@ -7,6 +7,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ernest/shared": "workspace:*",
     "@simplewebauthn/browser": "^13.2.2",
     "maplibre-gl": "^5.1.0",
     "vue": "^3.5.0"

@@ -13,6 +13,7 @@
     "packages/backend": {
       "name": "backend",
       "dependencies": {
+        "@ernest/shared": "workspace:*",
         "@simplewebauthn/server": "^13.2.3",
         "@turf/boolean-point-in-polygon": "^7.2.0",
         "@turf/helpers": "^7.2.0",
@@ -28,6 +29,7 @@
     "packages/frontend": {
       "name": "frontend",
       "dependencies": {
+        "@ernest/shared": "workspace:*",
         "@simplewebauthn/browser": "^13.2.2",
         "maplibre-gl": "^5.1.0",
         "vue": "^3.5.0",
@@ -40,6 +42,9 @@
         "vite": "^6.1.0",
         "vue-tsc": "^2.2.0",
       },
+    },
+    "packages/shared": {
+      "name": "@ernest/shared",
     },
     "scripts": {
       "name": "scripts",
@@ -61,6 +66,8 @@
     "@babel/types": ["@babel/types@7.29.0", "", { "dependencies": { "@babel/helper-string-parser": "^7.27.1", "@babel/helper-validator-identifier": "^7.28.5" } }, "sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A=="],
 
     "@drizzle-team/brocli": ["@drizzle-team/brocli@0.10.2", "", {}, "sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w=="],
+
+    "@ernest/shared": ["@ernest/shared@workspace:packages/shared"],
 
     "@esbuild-kit/core-utils": ["@esbuild-kit/core-utils@3.3.2", "", { "dependencies": { "esbuild": "~0.18.20", "source-map-support": "^0.5.21" } }, "sha512-sPRAnw9CdSsRmEtnsl2WXWdyquogVpB3yZ3dgwJfe8zrOzTsV7cJvmwrKVa+0ma5BoiGJ+BoqkMvawbayKUsqQ=="],
 

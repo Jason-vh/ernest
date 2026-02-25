@@ -16,7 +16,7 @@ interface MatchResult {
 export function matchBuildingsToFunda(
   map: maplibregl.Map,
   fundaFeatures: GeoJSON.Feature[],
-  clickedUrls: Set<string>,
+  viewedIds: Set<string>,
 ): MatchResult {
   const matched: GeoJSON.Feature[] = [];
   const matchedUrls = new Set<string>();
@@ -50,8 +50,8 @@ export function matchBuildingsToFunda(
 
     // Deduplicate by geometry (same building matched by multiple listings)
     const geomKey = JSON.stringify(containingPoly.coordinates);
-    const url = feature.properties?.url ?? "";
-    const isClicked = clickedUrls.has(url);
+    const fundaId = feature.properties?.fundaId ?? "";
+    const isClicked = viewedIds.has(fundaId);
 
     if (!seenGeomKeys.has(geomKey)) {
       seenGeomKeys.add(geomKey);
@@ -65,7 +65,7 @@ export function matchBuildingsToFunda(
       });
     }
 
-    matchedUrls.add(url);
+    matchedUrls.add(fundaId);
   }
 
   return {

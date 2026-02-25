@@ -1,9 +1,11 @@
 import type { Ref } from "vue";
 import { watch } from "vue";
 import type maplibregl from "maplibre-gl";
+import type { Listing } from "@ernest/shared";
+import { getGeoJSONSource } from "@/geo/map-utils";
 
 interface FundaState {
-  clickedFundaUrls: Ref<Set<string>>;
+  viewedFundaIds: Ref<Set<string>>;
   fundaCount: Ref<number>;
   fundaNewVisible: Ref<boolean>;
   fundaViewedVisible: Ref<boolean>;
@@ -14,30 +16,51 @@ const emptyFC: GeoJSON.FeatureCollection = {
   features: [],
 };
 
+export function listingsToGeoJSON(
+  listings: Map<string, Listing>,
+  viewedIds: Set<string>,
+): GeoJSON.FeatureCollection {
+  const features: GeoJSON.Feature[] = [];
+  for (const listing of listings.values()) {
+    features.push({
+      type: "Feature",
+      geometry: {
+        type: "Point",
+        coordinates: [listing.longitude, listing.latitude],
+      },
+      properties: {
+        fundaId: listing.fundaId,
+        url: listing.url,
+        price: listing.price,
+        address: listing.address,
+        bedrooms: listing.bedrooms,
+        livingArea: listing.livingArea,
+        photo: listing.photos.length > 0 ? listing.photos[0] : "",
+        clicked: viewedIds.has(listing.fundaId),
+      },
+    });
+  }
+  return { type: "FeatureCollection", features };
+}
+
 export function useFundaLayer(
   map: maplibregl.Map,
-  funda: GeoJSON.FeatureCollection,
+  listings: Ref<Map<string, Listing>>,
   state: FundaState,
 ) {
-  const { clickedFundaUrls, fundaCount, fundaNewVisible, fundaViewedVisible } = state;
+  const { viewedFundaIds, fundaCount, fundaNewVisible, fundaViewedVisible } = state;
 
-  function stampClickedState(fc: GeoJSON.FeatureCollection): GeoJSON.FeatureCollection {
-    const clicked = clickedFundaUrls.value;
-    return {
-      ...fc,
-      features: fc.features.map((f) => ({
-        ...f,
-        properties: {
-          ...f.properties,
-          clicked: clicked.has(f.properties?.url ?? ""),
-        },
-      })),
-    };
+  function refreshFundaSource() {
+    const src = getGeoJSONSource(map, "funda");
+    if (!src) return;
+    const geojson = listingsToGeoJSON(listings.value, viewedFundaIds.value);
+    src.setData(geojson);
+    fundaCount.value = listings.value.size;
   }
 
-  const fundaStamped = stampClickedState(funda);
-  fundaCount.value = funda.features.length;
-  map.addSource("funda", { type: "geojson", data: fundaStamped });
+  const initialGeoJSON = listingsToGeoJSON(listings.value, viewedFundaIds.value);
+  fundaCount.value = listings.value.size;
+  map.addSource("funda", { type: "geojson", data: initialGeoJSON });
 
   // --- Funda building highlights (below dots) ---
   map.addSource("funda-buildings", { type: "geojson", data: emptyFC });
@@ -106,5 +129,5 @@ export function useFundaLayer(
   updateFundaLayer();
   watch([fundaNewVisible, fundaViewedVisible], updateFundaLayer);
 
-  return { stampClickedState };
+  return { refreshFundaSource };
 }

@@ -1,27 +1,25 @@
 import maplibregl from "maplibre-gl";
-import { getGeoJSONSource } from "@/geo/map-utils";
-import type { CyclingRoutes } from "@/api/client";
+import type { Listing, CyclingRoutes } from "@ernest/shared";
 
 const cell = (url: string) => `<div style="background-image:url(${url})"></div>`;
 
 interface PopupDeps {
   map: maplibregl.Map;
-  funda: GeoJSON.FeatureCollection;
-  markFundaClicked: (url: string) => void;
-  clickedFundaUrls: { value: Set<string> };
-  stampClickedState: (fc: GeoJSON.FeatureCollection) => GeoJSON.FeatureCollection;
+  listings: { value: Map<string, Listing> };
+  selectListing: (fundaId: string) => void;
+  refreshFundaSource: () => void;
   updateBuildingHighlights: () => void;
   resetBuildingViewKey: () => void;
-  showRoutesForListing: (precomputed: CyclingRoutes | null) => void;
+  showRoutesForListing: (routes: CyclingRoutes | null) => void;
   clearRoutes: () => void;
 }
 
 export function useMapPopups(deps: PopupDeps) {
   const {
     map,
-    funda,
-    markFundaClicked,
-    stampClickedState,
+    listings,
+    selectListing,
+    refreshFundaSource,
     updateBuildingHighlights,
     resetBuildingViewKey,
     showRoutesForListing,
@@ -54,12 +52,9 @@ export function useMapPopups(deps: PopupDeps) {
       .filter(Boolean)
       .join(" \u00B7 ");
 
-    let photos: string[] = [];
-    try {
-      photos = JSON.parse(p.photos || "[]");
-    } catch {
-      if (p.photo) photos = [p.photo];
-    }
+    // Get photos from the listing store (GeoJSON only has first photo)
+    const listing = listings.value.get(p.fundaId);
+    const photos: string[] = listing ? listing.photos : p.photo ? [p.photo] : [];
 
     let gridHtml = "";
     if (photos.length >= 3) {
@@ -85,7 +80,7 @@ export function useMapPopups(deps: PopupDeps) {
     })
       .setLngLat(coords)
       .setHTML(
-        `<a href="${p.url}" target="_blank" rel="noopener" class="funda-popup-link">` +
+        `<div class="funda-popup-inner">` +
           gridHtml +
           `<div class="funda-bar">` +
           `<div>` +
@@ -94,33 +89,23 @@ export function useMapPopups(deps: PopupDeps) {
           `</div>` +
           (details ? `<div class="funda-bar-details">${details}</div>` : "") +
           `</div>` +
-          `</a>` +
+          `</div>` +
           `<div class="funda-cycling-times"></div>`,
       )
       .addTo(map);
+  }
 
-    // Track click to mark listing as visited
-    const linkEl = fundaPopup.getElement()?.querySelector(".funda-popup-link");
-    if (linkEl) {
-      linkEl.addEventListener("click", () => {
-        markFundaClicked(p.url);
-        // Update source data so dot turns grey
-        const src = getGeoJSONSource(map, "funda");
-        if (src) src.setData(stampClickedState(funda));
-        // Refresh building highlights to update colors
-        resetBuildingViewKey();
-        updateBuildingHighlights();
-      });
+  function closeFundaPopup() {
+    if (fundaPopup) {
+      fundaPopup.remove();
+      fundaPopup = null;
     }
   }
 
   function scheduleFundaClose() {
     if (fundaCloseTimer) clearTimeout(fundaCloseTimer);
     fundaCloseTimer = setTimeout(() => {
-      if (fundaPopup) {
-        fundaPopup.remove();
-        fundaPopup = null;
-      }
+      closeFundaPopup();
       clearRoutes();
     }, 200);
   }
@@ -142,24 +127,32 @@ export function useMapPopups(deps: PopupDeps) {
 
   function triggerRoutesForFeature(feature: maplibregl.MapGeoJSONFeature | GeoJSON.Feature) {
     const p = feature.properties ?? {};
-    if (!p.url) return;
+    if (!p.fundaId) return;
 
-    let precomputed: CyclingRoutes | null = null;
-    try {
-      const fh =
-        typeof p.routeFareharbor === "string" ? JSON.parse(p.routeFareharbor) : p.routeFareharbor;
-      const aw =
-        typeof p.routeAirwallex === "string" ? JSON.parse(p.routeAirwallex) : p.routeAirwallex;
-      if (fh || aw) {
-        precomputed = { fareharbor: fh || null, airwallex: aw || null };
-      }
-    } catch {
-      // No routes available
+    const listing = listings.value.get(p.fundaId);
+    if (!listing) return;
+
+    if (listing.routeFareharbor || listing.routeAirwallex) {
+      showRoutesForListing({
+        fareharbor: listing.routeFareharbor,
+        airwallex: listing.routeAirwallex,
+      });
     }
-
-    showRoutesForListing(precomputed);
   }
 
+  function handleFeatureClick(feature: maplibregl.MapGeoJSONFeature | GeoJSON.Feature) {
+    const fundaId = feature.properties?.fundaId;
+    if (!fundaId) return;
+
+    closeFundaPopup();
+    cancelFundaClose();
+    selectListing(fundaId);
+    refreshFundaSource();
+    resetBuildingViewKey();
+    updateBuildingHighlights();
+  }
+
+  // Hover: show popup + routes (desktop only — mouseenter doesn't fire on touch)
   map.on("mouseenter", "funda-circles", (e) => {
     map.getCanvas().style.cursor = "pointer";
     cancelFundaClose();
@@ -174,12 +167,10 @@ export function useMapPopups(deps: PopupDeps) {
     scheduleFundaClose();
   });
 
-  // Touch fallback: tap to open, tap elsewhere to close
+  // Click: always open modal (both desktop and touch)
   map.on("click", "funda-circles", (e) => {
     if (e.features && e.features.length > 0) {
-      cancelFundaClose();
-      showFundaPopup(e.features[0]);
-      triggerRoutesForFeature(e.features[0]);
+      handleFeatureClick(e.features[0]);
     }
   });
 
@@ -200,10 +191,9 @@ export function useMapPopups(deps: PopupDeps) {
   });
   map.on("click", "funda-building-fill", (e) => {
     if (e.features && e.features.length > 0) {
-      cancelFundaClose();
-      const lngLat: [number, number] = [e.lngLat.lng, e.lngLat.lat];
-      showFundaPopup(e.features[0], lngLat);
-      triggerRoutesForFeature(e.features[0]);
+      handleFeatureClick(e.features[0]);
     }
   });
+
+  return { closeFundaPopup };
 }

@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import type { CyclingRoutes } from "@/api/client";
+import type { CyclingRoutes } from "@ernest/shared";
 
 const activeRoutes = ref<CyclingRoutes | null>(null);
 

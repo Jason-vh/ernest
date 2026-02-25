@@ -11,9 +11,7 @@
   width: 280px !important;
 }
 
-.funda-popup-link {
-  text-decoration: none;
-  color: inherit;
+.funda-popup-inner {
   display: block;
   position: relative;
   cursor: pointer;

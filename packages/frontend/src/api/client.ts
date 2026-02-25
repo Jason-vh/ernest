@@ -1,4 +1,5 @@
 import type { TransitStop } from "@/types/transit";
+import type { Listing } from "@ernest/shared";
 
 export async function fetchIsochrone(): Promise<GeoJSON.FeatureCollection> {
   const res = await fetch("/api/isochrone");
@@ -24,18 +25,8 @@ export async function fetchBuurten(): Promise<GeoJSON.FeatureCollection> {
   return res.json();
 }
 
-export async function fetchFunda(): Promise<GeoJSON.FeatureCollection> {
+export async function fetchFunda(): Promise<Listing[]> {
   const res = await fetch("/api/funda");
   if (!res.ok) throw new Error(`Failed to fetch funda: ${res.status}`);
   return res.json();
-}
-
-export interface CyclingRoute {
-  duration: number; // minutes
-  geometry: GeoJSON.LineString;
-}
-
-export interface CyclingRoutes {
-  fareharbor: CyclingRoute | null;
-  airwallex: CyclingRoute | null;
 }

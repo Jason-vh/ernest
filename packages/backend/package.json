@@ -2,6 +2,7 @@
   "name": "backend",
   "private": true,
   "dependencies": {
+    "@ernest/shared": "workspace:*",
     "@simplewebauthn/server": "^13.2.3",
     "@turf/boolean-point-in-polygon": "^7.2.0",
     "@turf/helpers": "^7.2.0",

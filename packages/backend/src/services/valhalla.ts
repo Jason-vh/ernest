@@ -1,14 +1,7 @@
 import { decodePolyline } from "../utils/polyline";
+import type { CyclingRoute } from "@ernest/shared";
 
-interface LineString {
-  type: "LineString";
-  coordinates: [number, number][];
-}
-
-export interface RouteResult {
-  duration: number;
-  geometry: LineString;
-}
+export type RouteResult = CyclingRoute;
 
 export const OFFICES = {
   fareharbor: { lat: 52.3599, lon: 4.8912 },

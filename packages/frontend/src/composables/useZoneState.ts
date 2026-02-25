@@ -54,23 +54,6 @@ function writeToURL(
   history.replaceState(null, "", url);
 }
 
-// Clicked funda listings (persisted in localStorage)
-const CLICKED_FUNDA_KEY = "ernest:clickedFunda";
-
-function loadClickedFunda(): Set<string> {
-  try {
-    const raw = localStorage.getItem(CLICKED_FUNDA_KEY);
-    if (raw) return new Set(JSON.parse(raw));
-  } catch {
-    /* ignore */
-  }
-  return new Set();
-}
-
-function saveClickedFunda(ids: Set<string>) {
-  localStorage.setItem(CLICKED_FUNDA_KEY, JSON.stringify([...ids]));
-}
-
 // Shared singleton state
 const zoneVisibility = ref(readVisibility("zones", ZONE_KEYS));
 const transitVisibility = ref(readVisibility("transit", TRANSIT_KEYS));
@@ -80,7 +63,6 @@ const fundaViewedVisible = ref(
 );
 const hoveredZone = ref<ZoneKey | null>(null);
 const hoveredTransit = ref<TransitKey | null>(null);
-const clickedFundaUrls = ref(loadClickedFunda());
 const fundaCount = ref(0);
 
 watch(
@@ -118,11 +100,6 @@ export function useZoneState() {
     fundaViewedVisible.value = !fundaViewedVisible.value;
   }
 
-  function markFundaClicked(url: string) {
-    clickedFundaUrls.value = new Set([...clickedFundaUrls.value, url]);
-    saveClickedFunda(clickedFundaUrls.value);
-  }
-
   return {
     zoneVisibility,
     transitVisibility,
@@ -130,12 +107,10 @@ export function useZoneState() {
     fundaViewedVisible,
     hoveredZone,
     hoveredTransit,
-    clickedFundaUrls,
     fundaCount,
     toggleZone,
     toggleTransit,
     toggleFundaNew,
     toggleFundaViewed,
-    markFundaClicked,
   };
 }
