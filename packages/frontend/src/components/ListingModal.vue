@@ -377,10 +377,9 @@
                   :href="listing.url"
                   target="_blank"
                   rel="noopener"
-                  class="flex w-full items-center justify-center gap-2 rounded-lg bg-black/5 py-2 text-[13px] font-semibold text-[#555] no-underline transition-colors hover:bg-black/10"
+                  class="flex w-full items-center justify-center rounded-lg bg-black/5 py-2.5 no-underline transition-colors hover:bg-black/10"
                 >
-                  <img :src="fundaLogo" alt="" class="h-[14px]" />
-                  View on Funda &rarr;
+                  <img :src="fundaLogo" alt="View on Funda" class="h-[16px]" />
                 </a>
               </div>
             </div>
