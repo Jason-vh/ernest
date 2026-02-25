@@ -6,73 +6,67 @@ export type ZoneKey = (typeof ZONE_KEYS)[number];
 export const TRANSIT_KEYS = ["train", "metro", "tram"] as const;
 export type TransitKey = (typeof TRANSIT_KEYS)[number];
 
-function readVisibility<T extends string>(
-  param: string,
-  allKeys: readonly T[],
-): Record<T, boolean> {
-  const params = new URLSearchParams(window.location.search);
-  const values = params.getAll(param);
-  if (values.length === 0) {
-    return Object.fromEntries(allKeys.map((k) => [k, true])) as Record<T, boolean>;
-  }
-  const enabled = new Set(values);
-  return Object.fromEntries(allKeys.map((k) => [k, enabled.has(k)])) as Record<T, boolean>;
+const STORAGE_KEY = "ernest:legend";
+
+interface LegendState {
+  zones: Record<ZoneKey, boolean>;
+  transit: Record<TransitKey, boolean>;
+  fundaFav: boolean;
+  fundaUnreviewed: boolean;
+  fundaDiscarded: boolean;
 }
 
-function writeToURL(
-  zones: Record<ZoneKey, boolean>,
-  transit: Record<TransitKey, boolean>,
-  fundaFav: boolean,
-  fundaUnreviewed: boolean,
-  fundaDiscarded: boolean,
-) {
-  const params = new URLSearchParams(window.location.search);
+function allTrue<T extends string>(keys: readonly T[]): Record<T, boolean> {
+  return Object.fromEntries(keys.map((k) => [k, true])) as Record<T, boolean>;
+}
 
-  params.delete("zones");
-  const enabledZones = ZONE_KEYS.filter((k) => zones[k]);
-  if (enabledZones.length < ZONE_KEYS.length) {
-    for (const z of enabledZones) params.append("zones", z);
+function readFromStorage(): LegendState {
+  const defaults: LegendState = {
+    zones: allTrue(ZONE_KEYS),
+    transit: allTrue(TRANSIT_KEYS),
+    fundaFav: true,
+    fundaUnreviewed: true,
+    fundaDiscarded: false,
+  };
+
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return defaults;
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<LegendState>;
+    return {
+      zones:
+        typeof parsed.zones === "object" && parsed.zones !== null ? parsed.zones : defaults.zones,
+      transit:
+        typeof parsed.transit === "object" && parsed.transit !== null
+          ? parsed.transit
+          : defaults.transit,
+      fundaFav: typeof parsed.fundaFav === "boolean" ? parsed.fundaFav : defaults.fundaFav,
+      fundaUnreviewed:
+        typeof parsed.fundaUnreviewed === "boolean"
+          ? parsed.fundaUnreviewed
+          : defaults.fundaUnreviewed,
+      fundaDiscarded:
+        typeof parsed.fundaDiscarded === "boolean"
+          ? parsed.fundaDiscarded
+          : defaults.fundaDiscarded,
+    };
+  } catch {
+    return defaults;
   }
+}
 
-  params.delete("transit");
-  const enabledTransit = TRANSIT_KEYS.filter((k) => transit[k]);
-  if (enabledTransit.length < TRANSIT_KEYS.length) {
-    for (const t of enabledTransit) params.append("transit", t);
-  }
-
-  // Only write non-default values
-  params.delete("funda-fav");
-  if (!fundaFav) {
-    params.set("funda-fav", "0");
-  }
-
-  params.delete("funda-unreviewed");
-  if (!fundaUnreviewed) {
-    params.set("funda-unreviewed", "0");
-  }
-
-  params.delete("funda-discarded");
-  if (fundaDiscarded) {
-    params.set("funda-discarded", "1");
-  }
-
-  // Clean up old params
-  params.delete("funda");
-  params.delete("funda-viewed");
-
-  const search = params.toString();
-  const url = search ? `${window.location.pathname}?${search}` : window.location.pathname;
-  history.replaceState(null, "", url);
+function writeToStorage(state: LegendState) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
 // Shared singleton state
-const zoneVisibility = ref(readVisibility("zones", ZONE_KEYS));
-const transitVisibility = ref(readVisibility("transit", TRANSIT_KEYS));
-
-const searchParams = new URLSearchParams(window.location.search);
-const fundaFavouriteVisible = ref(searchParams.get("funda-fav") !== "0");
-const fundaUnreviewedVisible = ref(searchParams.get("funda-unreviewed") !== "0");
-const fundaDiscardedVisible = ref(searchParams.get("funda-discarded") === "1");
+const saved = readFromStorage();
+const zoneVisibility = ref(saved.zones);
+const transitVisibility = ref(saved.transit);
+const fundaFavouriteVisible = ref(saved.fundaFav);
+const fundaUnreviewedVisible = ref(saved.fundaUnreviewed);
+const fundaDiscardedVisible = ref(saved.fundaDiscarded);
 
 const hoveredZone = ref<ZoneKey | null>(null);
 const hoveredTransit = ref<TransitKey | null>(null);
@@ -90,13 +84,13 @@ watch(
     fundaDiscardedVisible,
   ],
   () =>
-    writeToURL(
-      zoneVisibility.value,
-      transitVisibility.value,
-      fundaFavouriteVisible.value,
-      fundaUnreviewedVisible.value,
-      fundaDiscardedVisible.value,
-    ),
+    writeToStorage({
+      zones: zoneVisibility.value,
+      transit: transitVisibility.value,
+      fundaFav: fundaFavouriteVisible.value,
+      fundaUnreviewed: fundaUnreviewedVisible.value,
+      fundaDiscarded: fundaDiscardedVisible.value,
+    }),
   { deep: true },
 );
 
