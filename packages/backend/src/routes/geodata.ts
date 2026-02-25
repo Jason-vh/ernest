@@ -30,7 +30,28 @@ let isochroneData: unknown = null;
 let stationsData: unknown = null;
 let linesData: unknown = null;
 let buurtenData: unknown = null;
-let fundaCache: Listing[] | null = null;
+let fundaCacheJson: string | null = null;
+let rebuildPromise: Promise<number> | null = null;
+
+async function rebuildFundaCache(): Promise<number> {
+  const data = await queryFundaListings();
+  fundaCacheJson = JSON.stringify(data);
+  return data.length;
+}
+
+function triggerRebuild(): Promise<number> {
+  if (!rebuildPromise) {
+    rebuildPromise = rebuildFundaCache().finally(() => {
+      rebuildPromise = null;
+    });
+  }
+  return rebuildPromise;
+}
+
+async function ensureFundaCache(): Promise<void> {
+  if (fundaCacheJson) return;
+  await triggerRebuild();
+}
 
 async function queryFundaListings(): Promise<Listing[]> {
   // Alias for the user who set the reaction
@@ -114,8 +135,11 @@ async function queryFundaListings(): Promise<Listing[]> {
   );
 }
 
-export function invalidateFundaCache() {
-  fundaCache = null;
+export async function invalidateFundaCache() {
+  // Wait for any in-flight rebuild, then force a fresh one
+  if (rebuildPromise) await rebuildPromise.catch(() => {});
+  fundaCacheJson = null;
+  await triggerRebuild();
 }
 
 export async function loadData() {
@@ -140,8 +164,8 @@ export async function loadData() {
 
   // Pre-populate funda cache so first request is instant
   try {
-    fundaCache = await queryFundaListings();
-    console.log(`Funda cache populated: ${fundaCache.length} listings`);
+    const count = await rebuildFundaCache();
+    console.log(`Funda cache populated: ${count} listings`);
   } catch (err) {
     console.warn("Failed to pre-populate funda cache:", err);
   }
@@ -176,10 +200,9 @@ geodata.get("/buurten", (c) => {
 });
 
 geodata.get("/funda", async (c) => {
-  if (!fundaCache) {
-    fundaCache = await queryFundaListings();
-  }
-  return c.json(fundaCache);
+  await ensureFundaCache();
+  const json = fundaCacheJson ?? "[]";
+  return c.body(json, 200, { "Content-Type": "application/json" });
 });
 
 geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 }), async (c) => {
@@ -267,8 +290,8 @@ geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 })
     `Funda sync: ${stats.upserted} upserted, ${stats.disappeared} disappeared, ${stats.jobsEnqueued} jobs enqueued`,
   );
 
-  // Invalidate cache so next GET /funda picks up fresh data
-  invalidateFundaCache();
+  // Rebuild cache immediately so next GET /funda is instant
+  await invalidateFundaCache();
 
   return c.json({ ok: true, received: incoming.length, ...stats });
 });

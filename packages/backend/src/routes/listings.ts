@@ -56,7 +56,7 @@ listingsRouter.put("/:fundaId/reaction", requireAuth, async (c) => {
       });
   }
 
-  invalidateFundaCache();
+  await invalidateFundaCache();
   return c.json({ ok: true });
 });
 
@@ -102,7 +102,7 @@ listingsRouter.put("/:fundaId/note", requireAuth, async (c) => {
       });
   }
 
-  invalidateFundaCache();
+  await invalidateFundaCache();
   return c.json({ ok: true });
 });
 

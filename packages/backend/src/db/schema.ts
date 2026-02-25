@@ -67,59 +67,63 @@ export type NewCredential = InferInsertModel<typeof credentials>;
 export type Challenge = InferSelectModel<typeof challenges>;
 export type NewChallenge = InferInsertModel<typeof challenges>;
 
-export const listings = pgTable("listings", {
-  // Identity
-  fundaId: text("funda_id").primaryKey(),
-  url: text("url").notNull(),
+export const listings = pgTable(
+  "listings",
+  {
+    // Identity
+    fundaId: text("funda_id").primaryKey(),
+    url: text("url").notNull(),
 
-  // Core property data
-  address: text("address").notNull(),
-  postcode: text("postcode"),
-  neighbourhood: text("neighbourhood"),
-  price: integer("price").notNull(),
-  bedrooms: integer("bedrooms").notNull(),
-  livingArea: integer("living_area").notNull(),
-  energyLabel: text("energy_label"),
-  objectType: text("object_type"),
-  constructionYear: integer("construction_year"),
-  description: text("description"),
+    // Core property data
+    address: text("address").notNull(),
+    postcode: text("postcode"),
+    neighbourhood: text("neighbourhood"),
+    price: integer("price").notNull(),
+    bedrooms: integer("bedrooms").notNull(),
+    livingArea: integer("living_area").notNull(),
+    energyLabel: text("energy_label"),
+    objectType: text("object_type"),
+    constructionYear: integer("construction_year"),
+    description: text("description"),
 
-  // Amenities
-  hasGarden: boolean("has_garden"),
-  hasBalcony: boolean("has_balcony"),
-  hasRoofTerrace: boolean("has_roof_terrace"),
+    // Amenities
+    hasGarden: boolean("has_garden"),
+    hasBalcony: boolean("has_balcony"),
+    hasRoofTerrace: boolean("has_roof_terrace"),
 
-  // Location
-  latitude: doublePrecision("latitude").notNull(),
-  longitude: doublePrecision("longitude").notNull(),
+    // Location
+    latitude: doublePrecision("latitude").notNull(),
+    longitude: doublePrecision("longitude").notNull(),
 
-  // Neighbourhood stats (from buurten GeoJSON)
-  buurtWozValue: integer("buurt_woz_value"),
-  buurtSafetyRating: real("buurt_safety_rating"),
-  buurtCrimesPer1000: real("buurt_crimes_per_1000"),
-  buurtOwnerOccupiedPct: real("buurt_owner_occupied_pct"),
+    // Neighbourhood stats (from buurten GeoJSON)
+    buurtWozValue: integer("buurt_woz_value"),
+    buurtSafetyRating: real("buurt_safety_rating"),
+    buurtCrimesPer1000: real("buurt_crimes_per_1000"),
+    buurtOwnerOccupiedPct: real("buurt_owner_occupied_pct"),
 
-  // Media
-  photos: jsonb("photos").$type<string[]>().notNull().default([]),
+    // Media
+    photos: jsonb("photos").$type<string[]>().notNull().default([]),
 
-  // Funda status & lifecycle
-  status: text("status").notNull().default("Beschikbaar"),
-  offeredSince: text("offered_since"),
-  disappearedAt: timestamp("disappeared_at", { withTimezone: true }),
+    // Funda status & lifecycle
+    status: text("status").notNull().default("Beschikbaar"),
+    offeredSince: text("offered_since"),
+    disappearedAt: timestamp("disappeared_at", { withTimezone: true }),
 
-  // Pre-computed cycling routes
-  routeFareharbor: jsonb("route_fareharbor").$type<RouteResult>(),
-  routeAirwallex: jsonb("route_airwallex").$type<RouteResult>(),
+    // Pre-computed cycling routes
+    routeFareharbor: jsonb("route_fareharbor").$type<RouteResult>(),
+    routeAirwallex: jsonb("route_airwallex").$type<RouteResult>(),
 
-  // AI enrichment
-  aiPositives: jsonb("ai_positives").$type<string[]>(),
-  aiNegatives: jsonb("ai_negatives").$type<string[]>(),
-  aiDescription: text("ai_description"),
+    // AI enrichment
+    aiPositives: jsonb("ai_positives").$type<string[]>(),
+    aiNegatives: jsonb("ai_negatives").$type<string[]>(),
+    aiDescription: text("ai_description"),
 
-  // Timestamps
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+    // Timestamps
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("listings_active_idx").on(t.disappearedAt, t.status)],
+);
 
 export type Listing = InferSelectModel<typeof listings>;
 export type NewListing = InferInsertModel<typeof listings>;

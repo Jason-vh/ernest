@@ -30,7 +30,7 @@ export function startQueueProcessor(): void {
         if (!job) {
           // Idle: flush cache if any jobs completed
           if (completedSinceFlush > 0) {
-            invalidateFundaCache();
+            await invalidateFundaCache(); // eslint-disable-line no-await-in-loop
             completedSinceFlush = 0;
           }
           await new Promise((resolve) => setTimeout(resolve, 5000)); // eslint-disable-line no-await-in-loop
@@ -63,7 +63,7 @@ export function startQueueProcessor(): void {
 
         // Flush cache every 5 completed jobs
         if (completedSinceFlush >= 5) {
-          invalidateFundaCache();
+          await invalidateFundaCache(); // eslint-disable-line no-await-in-loop
           completedSinceFlush = 0;
         }
 

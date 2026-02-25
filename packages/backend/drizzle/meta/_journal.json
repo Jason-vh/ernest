@@ -43,6 +43,13 @@
       "when": 1772028871845,
       "tag": "0005_redundant_serpent_society",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772044060937,
+      "tag": "0006_smart_microbe",
+      "breakpoints": true
     }
   ]
 }

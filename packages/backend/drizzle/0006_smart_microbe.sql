@@ -1,0 +1,1 @@
+CREATE INDEX "listings_active_idx" ON "listings" USING btree ("disappeared_at","status");
