@@ -6,10 +6,22 @@ import { StopType, type TransitStop } from "@/types/transit";
 import { TRANSIT_KEYS, type TransitKey } from "@/composables/useZoneState";
 import { createLabel } from "@/composables/useOfficeMarkers";
 
+const LINE_LAYERS: Record<TransitKey, string[]> = {
+  train: ["train-lines-casing", "train-lines-fill"],
+  metro: ["metro-lines-casing", "metro-lines-fill"],
+  tram: ["tram-lines-fill"],
+};
+
+const STATION_LAYERS: Record<TransitKey, string[]> = {
+  train: ["train-circles-outer"],
+  metro: ["metro-circles"],
+  tram: ["tram-stops"],
+};
+
 export const TRANSIT_LAYERS: Record<TransitKey, string[]> = {
-  train: ["train-lines-casing", "train-lines-fill", "train-circles-outer", "train-circles-inner"],
-  metro: ["metro-lines-casing", "metro-lines-fill", "metro-circles"],
-  tram: ["tram-lines-fill", "tram-stops"],
+  train: [...LINE_LAYERS.train, ...STATION_LAYERS.train],
+  metro: [...LINE_LAYERS.metro, ...STATION_LAYERS.metro],
+  tram: [...LINE_LAYERS.tram, ...STATION_LAYERS.tram],
 };
 
 interface TransitState {
@@ -231,24 +243,27 @@ export function useTransitLayers(
       const visible = transitVisibility.value[key];
       const isHovered = hovered === key;
 
-      for (const layerId of TRANSIT_LAYERS[key]) {
+      // Line layers stay visible always, only opacity changes on hover
+      for (const layerId of LINE_LAYERS[key]) {
+        if (!map.getLayer(layerId)) continue;
+        const defaultOp = DEFAULT_LINE_OPACITY[key];
+        const op = someHovered ? (isHovered ? 1 : defaultOp * 0.3) : defaultOp;
+        map.setPaintProperty(layerId, "line-opacity", op);
+      }
+
+      // Station layers toggle with visibility
+      for (const layerId of STATION_LAYERS[key]) {
         if (!map.getLayer(layerId)) continue;
         map.setLayoutProperty(layerId, "visibility", visible ? "visible" : "none");
 
         if (visible) {
-          const isLine = layerId.includes("line");
-          const defaultOp = isLine ? DEFAULT_LINE_OPACITY[key] : DEFAULT_CIRCLE_OPACITY[key];
+          const defaultOp = DEFAULT_CIRCLE_OPACITY[key];
           const op = someHovered ? (isHovered ? 1 : defaultOp * 0.3) : defaultOp;
-
-          if (isLine) {
-            map.setPaintProperty(layerId, "line-opacity", op);
-          } else {
-            map.setPaintProperty(layerId, "circle-opacity", op);
-          }
+          map.setPaintProperty(layerId, "circle-opacity", op);
         }
       }
 
-      // HTML label markers
+      // HTML label markers toggle with visibility
       for (const marker of transitMarkers[key]) {
         const el = marker.getElement();
         if (!visible) {

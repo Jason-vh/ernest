@@ -12,6 +12,15 @@
         @mouseenter="hoveredZone = item.key"
         @mouseleave="hoveredZone = null"
         @click="toggleZone(item.key)"
+        @touchstart="
+          startPress(
+            () => (hoveredZone = item.key),
+            () => (hoveredZone = null),
+          )
+        "
+        @touchend="endPress"
+        @touchmove="cancelPress"
+        @touchcancel="cancelPress"
       >
         <span
           class="h-2.5 w-4 shrink-0 rounded-sm transition-opacity"
@@ -36,6 +45,15 @@
         @mouseenter="hoveredTransit = item.key"
         @mouseleave="hoveredTransit = null"
         @click="toggleTransit(item.key)"
+        @touchstart="
+          startPress(
+            () => (hoveredTransit = item.key),
+            () => (hoveredTransit = null),
+          )
+        "
+        @touchend="endPress"
+        @touchmove="cancelPress"
+        @touchcancel="cancelPress"
       >
         <span
           class="h-2.5 w-2.5 shrink-0 rounded-full border-[1.5px] border-white/90 shadow-sm transition-opacity"
@@ -85,6 +103,45 @@
 import { computed } from "vue";
 import { useZoneState, type ZoneKey, type TransitKey } from "@/composables/useZoneState";
 import { COLORS } from "@/geo/constants";
+
+// Long-press highlight for touch devices
+let pressTimer: ReturnType<typeof setTimeout> | null = null;
+let longPressed = false;
+let deactivateFn: (() => void) | null = null;
+
+function startPress(activate: () => void, deactivate: () => void) {
+  longPressed = false;
+  deactivateFn = deactivate;
+  pressTimer = setTimeout(() => {
+    activate();
+    longPressed = true;
+  }, 400);
+}
+
+function endPress(e: Event) {
+  if (pressTimer) {
+    clearTimeout(pressTimer);
+    pressTimer = null;
+  }
+  if (longPressed) {
+    e.preventDefault();
+    deactivateFn?.();
+    longPressed = false;
+  }
+  deactivateFn = null;
+}
+
+function cancelPress() {
+  if (pressTimer) {
+    clearTimeout(pressTimer);
+    pressTimer = null;
+  }
+  if (longPressed) {
+    deactivateFn?.();
+  }
+  longPressed = false;
+  deactivateFn = null;
+}
 
 const {
   zoneVisibility,
