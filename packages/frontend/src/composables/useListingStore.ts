@@ -66,6 +66,17 @@ function closeModal() {
   pushedState = false;
 }
 
+function dismissModal() {
+  if (!selectedFundaId.value) return;
+  const params = new URLSearchParams(window.location.search);
+  params.delete("listing");
+  const search = params.toString();
+  const url = search ? `${window.location.pathname}?${search}` : window.location.pathname;
+  history.replaceState(null, "", url);
+  selectedFundaId.value = null;
+  pushedState = false;
+}
+
 // Sync state on browser Back/Forward
 window.addEventListener("popstate", () => {
   const params = new URLSearchParams(window.location.search);
@@ -171,6 +182,7 @@ export function useListingStore() {
     discardedIds,
     selectListing,
     closeModal,
+    dismissModal,
     setListings,
     setReaction,
     saveNote,

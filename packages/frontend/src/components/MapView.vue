@@ -8,6 +8,7 @@ import { fetchIsochrone, fetchStations, fetchLines, fetchFunda } from "@/api/cli
 import { useZoneState } from "@/composables/useZoneState";
 import { useListingStore } from "@/composables/useListingStore";
 import { useMap } from "@/composables/useMap";
+import { setMap } from "@/composables/useMapPosition";
 import { useOfficeMarkers } from "@/composables/useOfficeMarkers";
 import { useIsochroneLayers } from "@/composables/useIsochroneLayers";
 import { useTransitLayers } from "@/composables/useTransitLayers";
@@ -36,6 +37,7 @@ const { initMap } = useMap(mapContainer);
 
 onMounted(async () => {
   const map = await initMap();
+  setMap(map);
   useOfficeMarkers(map);
 
   map.on("load", async () => {

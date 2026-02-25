@@ -20,6 +20,23 @@
             <div v-if="listing.photos.length > 0" class="relative">
               <PhotoGallery :photos="listing.photos" />
               <button
+                class="absolute top-2.5 right-12 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
+                title="Show on map"
+                @click="showOnMap"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+                </svg>
+              </button>
+              <button
                 class="absolute top-2.5 right-2.5 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
                 @click="close"
               >
@@ -37,7 +54,24 @@
             </div>
 
             <!-- No-photo fallback header -->
-            <div v-else class="flex items-center justify-end px-4 pt-3">
+            <div v-else class="flex items-center justify-end gap-1.5 px-4 pt-3">
+              <button
+                class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none bg-black/8 text-[#666] transition-colors hover:bg-black/15"
+                title="Show on map"
+                @click="showOnMap"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+                </svg>
+              </button>
               <button
                 class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none bg-black/8 text-[#666] transition-colors hover:bg-black/15"
                 @click="close"
@@ -317,10 +351,11 @@ import { ref, computed, watch, nextTick } from "vue";
 import type { ReactionType } from "@ernest/shared";
 import { useListingStore } from "@/composables/useListingStore";
 import { useAuth } from "@/composables/useAuth";
+import { flyTo } from "@/composables/useMapPosition";
 import { OFFICES } from "@/geo/constants";
 import PhotoGallery from "@/components/PhotoGallery.vue";
 
-const { selectedListing, closeModal, setReaction, saveNote } = useListingStore();
+const { selectedListing, closeModal, dismissModal, setReaction, saveNote } = useListingStore();
 const { user } = useAuth();
 
 const listing = selectedListing;
@@ -384,6 +419,22 @@ function close() {
     });
   }
   closeModal();
+}
+
+function showOnMap() {
+  if (!listing.value) return;
+  // Flush any pending auto-save
+  if (saveDebounceTimer && user.value && ownNoteChanged.value) {
+    clearTimeout(saveDebounceTimer);
+    saveDebounceTimer = null;
+    saveNote(listing.value.fundaId, ownNoteText.value.trim(), {
+      id: user.value.id,
+      username: user.value.username,
+    });
+  }
+  const { longitude, latitude } = listing.value;
+  dismissModal();
+  flyTo(longitude, latitude);
 }
 
 // Find own note and track if it changed
