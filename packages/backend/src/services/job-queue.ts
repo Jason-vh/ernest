@@ -43,7 +43,17 @@ export async function enqueueMany(items: EnqueueItem[]): Promise<number> {
   const result = await db
     .insert(jobs)
     .values(values)
-    .onConflictDoNothing({ target: [jobs.type, jobs.fundaId] })
+    .onConflictDoUpdate({
+      target: [jobs.type, jobs.fundaId],
+      set: {
+        status: sql`'pending'`,
+        attempts: sql`0`,
+        lastError: sql`NULL`,
+        runAfter: sql`now()`,
+        updatedAt: sql`now()`,
+      },
+      setWhere: sql`${jobs.status} IN ('completed', 'skipped', 'failed')`,
+    })
     .returning({ id: jobs.id });
 
   return result.length;
