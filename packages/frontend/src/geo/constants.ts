@@ -22,7 +22,5 @@ export const COLORS = {
   zone20: "#f59e0b",
   zone30: "#ef4444",
   routeFareharbor: "#14b8a6",
-  routeFareharborCasing: "#0d7377",
   routeAirwallex: "#818cf8",
-  routeAirwallexCasing: "#4338ca",
 } as const;
