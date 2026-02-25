@@ -1,5 +1,6 @@
 import type { MiddlewareHandler } from "hono";
 import type { AppEnv } from "@/types";
+import { ORIGIN } from "@/config";
 import { getTokenFromCookie, verifyToken } from "./jwt";
 
 /**
@@ -52,7 +53,7 @@ export const csrfCheck: MiddlewareHandler = async (c, next) => {
     return c.json({ error: "Missing Origin header" }, 403);
   }
 
-  const allowedOrigin = process.env.ORIGIN || "http://localhost:5173";
+  const allowedOrigin = ORIGIN;
   if (origin !== allowedOrigin) {
     // In dev, also allow the backend origin
     const devBackend = "http://localhost:3000";

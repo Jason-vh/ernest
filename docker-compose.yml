@@ -22,7 +22,7 @@ services:
         condition: service_healthy
     environment:
       REFRESH_URL: http://host.docker.internal:3000/api/internal/refresh-funda
-      REFRESH_SECRET: dev-secret-not-for-production
+      REFRESH_SECRET: ${REFRESH_SECRET:-dev-secret-not-for-production}
     profiles: ["seed"]
 
 volumes:

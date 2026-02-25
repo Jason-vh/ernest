@@ -12,7 +12,12 @@ export function createLabel(name: string, color: string, opacity: number): HTMLD
   const el = document.createElement("div");
   el.style.pointerEvents = "none";
   el.style.opacity = String(opacity);
-  el.innerHTML = `<span style="font-family:'Architects Daughter',cursive;font-size:13px;color:${color};white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff">${name}</span>`;
+  const span = document.createElement("span");
+  span.style.cssText =
+    "font-family:'Architects Daughter',cursive;font-size:13px;white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff";
+  span.style.color = color;
+  span.textContent = name;
+  el.appendChild(span);
   return el;
 }
 

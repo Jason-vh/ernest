@@ -2,7 +2,11 @@ import maplibregl from "maplibre-gl";
 import type { Listing } from "@ernest/shared";
 import { OFFICES, COLORS } from "@/geo/constants";
 
-const cell = (url: string) => `<div style="background-image:url(${url})"></div>`;
+function createCell(url: string): HTMLDivElement {
+  const el = document.createElement("div");
+  el.style.backgroundImage = `url("${url.replace(/["\\]/g, "")}")`;
+  return el;
+}
 
 interface PopupDeps {
   map: maplibregl.Map;
@@ -13,19 +17,37 @@ interface PopupDeps {
   resetBuildingViewKey: () => void;
 }
 
-function buildCyclingTimesHtml(listing: Listing): string {
-  const parts: string[] = [];
+function buildCyclingRow(minutes: number, color: string, officeName: string): HTMLSpanElement {
+  const row = document.createElement("span");
+  row.className = "funda-cycling-row";
+
+  const dot = document.createElement("span");
+  dot.className = "funda-cycling-dot";
+  dot.style.background = color;
+  row.appendChild(dot);
+
+  const time = document.createElement("span");
+  time.style.color = color;
+  time.textContent = `${minutes} min`;
+  row.appendChild(time);
+
+  row.appendChild(document.createTextNode(` to ${officeName}`));
+  return row;
+}
+
+function buildCyclingTimesDom(listing: Listing): DocumentFragment {
+  const frag = document.createDocumentFragment();
   if (listing.routeFareharbor) {
-    parts.push(
-      `<span class="funda-cycling-row"><span class="funda-cycling-dot" style="background:${COLORS.routeFareharbor}"></span><span style="color:${COLORS.routeFareharbor}">${listing.routeFareharbor} min</span> to ${OFFICES.fareharbor.name}</span>`,
+    frag.appendChild(
+      buildCyclingRow(listing.routeFareharbor, COLORS.routeFareharbor, OFFICES.fareharbor.name),
     );
   }
   if (listing.routeAirwallex) {
-    parts.push(
-      `<span class="funda-cycling-row"><span class="funda-cycling-dot" style="background:${COLORS.routeAirwallex}"></span><span style="color:${COLORS.routeAirwallex}">${listing.routeAirwallex} min</span> to ${OFFICES.airwallex.name}</span>`,
+    frag.appendChild(
+      buildCyclingRow(listing.routeAirwallex, COLORS.routeAirwallex, OFFICES.airwallex.name),
     );
   }
-  return parts.join("");
+  return frag;
 }
 
 export function useMapPopups(deps: PopupDeps) {
@@ -69,23 +91,54 @@ export function useMapPopups(deps: PopupDeps) {
     const listing = listings.value.get(p.fundaId);
     const photos: string[] = listing ? listing.photos : p.photo ? [p.photo] : [];
 
-    let gridHtml = "";
-    if (photos.length >= 3) {
-      gridHtml =
-        `<div class="funda-grid funda-grid--3">` +
-        cell(photos[0]) +
-        cell(photos[1]) +
-        cell(photos[2]) +
-        `</div>`;
-    } else if (photos.length === 2) {
-      gridHtml =
-        `<div class="funda-grid funda-grid--2">` + cell(photos[0]) + cell(photos[1]) + `</div>`;
-    } else if (photos.length === 1) {
-      gridHtml = `<div class="funda-grid funda-grid--1">` + cell(photos[0]) + `</div>`;
+    // Build popup DOM
+    const container = document.createElement("div");
+
+    const inner = document.createElement("div");
+    inner.className = "funda-popup-inner";
+
+    // Photo grid
+    const gridCount = Math.min(photos.length, 3);
+    if (gridCount > 0) {
+      const grid = document.createElement("div");
+      grid.className = `funda-grid funda-grid--${gridCount}`;
+      for (let i = 0; i < gridCount; i++) {
+        grid.appendChild(createCell(photos[i]));
+      }
+      inner.appendChild(grid);
     }
 
-    // Build cycling times inline from listing store data
-    const cyclingHtml = listing ? buildCyclingTimesHtml(listing) : "";
+    // Price bar
+    const bar = document.createElement("div");
+    bar.className = "funda-bar";
+
+    const priceGroup = document.createElement("div");
+    const priceEl = document.createElement("div");
+    priceEl.className = "funda-bar-price";
+    priceEl.textContent = fmtOverbid;
+    priceGroup.appendChild(priceEl);
+    const askingEl = document.createElement("div");
+    askingEl.className = "funda-bar-asking";
+    askingEl.textContent = `asking ${fmtList}`;
+    priceGroup.appendChild(askingEl);
+    bar.appendChild(priceGroup);
+
+    if (details) {
+      const detailsEl = document.createElement("div");
+      detailsEl.className = "funda-bar-details";
+      detailsEl.textContent = details;
+      bar.appendChild(detailsEl);
+    }
+    inner.appendChild(bar);
+    container.appendChild(inner);
+
+    // Cycling times
+    if (listing) {
+      const cyclingEl = document.createElement("div");
+      cyclingEl.className = "funda-cycling-times";
+      cyclingEl.appendChild(buildCyclingTimesDom(listing));
+      container.appendChild(cyclingEl);
+    }
 
     if (fundaPopup) fundaPopup.remove();
     fundaPopup = new maplibregl.Popup({
@@ -95,19 +148,7 @@ export function useMapPopups(deps: PopupDeps) {
       className: "funda-popup",
     })
       .setLngLat(coords)
-      .setHTML(
-        `<div class="funda-popup-inner">` +
-          gridHtml +
-          `<div class="funda-bar">` +
-          `<div>` +
-          `<div class="funda-bar-price">${fmtOverbid}</div>` +
-          `<div class="funda-bar-asking">asking ${fmtList}</div>` +
-          `</div>` +
-          (details ? `<div class="funda-bar-details">${details}</div>` : "") +
-          `</div>` +
-          `</div>` +
-          `<div class="funda-cycling-times">${cyclingHtml}</div>`,
-      )
+      .setDOMContent(container)
       .addTo(map);
   }
 

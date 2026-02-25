@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { compress } from "hono/compress";
+import { secureHeaders } from "hono/secure-headers";
 import { serveStatic } from "hono/bun";
 import path from "path";
 import health from "@/routes/health";
@@ -12,6 +13,15 @@ const app = new Hono();
 
 // Compress API responses
 app.use("/api/*", compress());
+
+// Security headers
+app.use(
+  "*",
+  secureHeaders({
+    xFrameOptions: "DENY",
+    referrerPolicy: "strict-origin-when-cross-origin",
+  }),
+);
 
 // CORS in development only
 if (process.env.NODE_ENV !== "production") {

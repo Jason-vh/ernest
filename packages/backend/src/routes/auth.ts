@@ -55,12 +55,16 @@ setInterval(async () => {
     .catch(() => {});
 }, 60_000);
 
+function getClientIp(c: { req: { header: (name: string) => string | undefined } }): string {
+  return c.req.header("X-Forwarded-For")?.split(",").at(-1)?.trim() || "unknown";
+}
+
 // CSRF on all mutating auth endpoints
 auth.use("/*", csrfCheck);
 
 // POST /auth/register/options
 auth.post("/register/options", async (c) => {
-  const ip = c.req.header("X-Forwarded-For")?.split(",")[0]?.trim() || "unknown";
+  const ip = getClientIp(c);
   if (!checkRateLimit(ip)) {
     return c.json({ error: "Too many requests" }, 429);
   }
@@ -114,6 +118,11 @@ auth.post("/register/options", async (c) => {
 
 // POST /auth/register/verify
 auth.post("/register/verify", async (c) => {
+  const ip = getClientIp(c);
+  if (!checkRateLimit(ip)) {
+    return c.json({ error: "Too many requests" }, 429);
+  }
+
   const challengeId = getChallengeIdFromCookie(c);
   if (!challengeId) {
     return c.json({ error: "No challenge cookie" }, 400);
@@ -219,7 +228,7 @@ auth.post("/register/verify", async (c) => {
 
 // POST /auth/login/options
 auth.post("/login/options", async (c) => {
-  const ip = c.req.header("X-Forwarded-For")?.split(",")[0]?.trim() || "unknown";
+  const ip = getClientIp(c);
   if (!checkRateLimit(ip)) {
     return c.json({ error: "Too many requests" }, 429);
   }
@@ -241,6 +250,11 @@ auth.post("/login/options", async (c) => {
 
 // POST /auth/login/verify
 auth.post("/login/verify", async (c) => {
+  const ip = getClientIp(c);
+  if (!checkRateLimit(ip)) {
+    return c.json({ error: "Too many requests" }, 429);
+  }
+
   const challengeId = getChallengeIdFromCookie(c);
   if (!challengeId) {
     return c.json({ error: "No challenge cookie" }, 400);
@@ -354,8 +368,7 @@ auth.get("/me", async (c) => {
 });
 
 function bufferToBase64url(buf: Uint8Array): string {
-  const base64 = btoa(String.fromCharCode(...buf));
-  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return Buffer.from(buf).toString("base64url");
 }
 
 export default auth;

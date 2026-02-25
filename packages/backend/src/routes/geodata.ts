@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
+import { timingSafeEqual } from "node:crypto";
 import path from "path";
 import { REFRESH_SECRET } from "@/config";
 import { db } from "@/db";
@@ -7,6 +8,13 @@ import { listings, type NewListing } from "@/db/schema";
 import { isNull, and, or, eq, sql } from "drizzle-orm";
 import { syncListings } from "@/services/listing-sync";
 import type { Listing } from "@ernest/shared";
+
+function safeCompare(a: string, b: string): boolean {
+  const ba = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ba.length !== bb.length) return false;
+  return timingSafeEqual(ba, bb);
+}
 
 const geodata = new Hono();
 
@@ -125,7 +133,7 @@ geodata.get("/funda", async (c) => {
 
 geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 }), async (c) => {
   const auth = c.req.header("Authorization");
-  if (auth !== `Bearer ${REFRESH_SECRET}`) {
+  if (!auth || !safeCompare(auth, `Bearer ${REFRESH_SECRET}`)) {
     return c.json({ error: "Unauthorized" }, 401);
   }
 

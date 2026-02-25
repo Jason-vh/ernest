@@ -1,2 +1,2 @@
-pyfunda
-requests
+pyfunda==2.5.0
+requests>=2.31,<3
