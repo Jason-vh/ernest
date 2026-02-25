@@ -114,12 +114,17 @@
                 </div>
               </div>
 
-              <!-- Key facts (inline) with status badge -->
-              <div v-if="keyFacts" class="mt-2.5 text-[13px] text-[#666]">
+              <!-- Key facts (inline) with status + energy badges -->
+              <div v-if="keyFacts || energyLabelBadge" class="mt-2.5 text-[13px] text-[#666]">
                 <span
                   v-if="listing.status === 'Beschikbaar'"
                   class="mr-1.5 inline-block rounded bg-emerald-500/10 px-1.5 py-[1px] text-[11px] font-semibold text-emerald-700"
                   >Available</span
+                ><span
+                  v-if="energyLabelBadge"
+                  class="mr-1.5 inline-block rounded px-1.5 py-[1px] text-[11px] font-semibold"
+                  :class="energyLabelBadge.cls"
+                  >{{ energyLabelBadge.text }}</span
                 >{{ keyFacts }}
               </div>
 
@@ -195,65 +200,51 @@
               </div>
 
               <!-- Actions row -->
-              <div class="mt-4 flex items-center gap-2">
-                <template v-if="user">
-                  <button
-                    class="reaction-btn"
-                    :class="{
-                      'reaction-btn--active reaction-btn--fav': listing.reaction === 'favourite',
-                    }"
-                    @click="toggleReaction('favourite')"
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                        :fill="listing.reaction === 'favourite' ? 'currentColor' : 'none'"
-                      />
-                    </svg>
-                    Favourite
-                  </button>
-                  <button
-                    class="reaction-btn"
-                    :class="{
-                      'reaction-btn--active reaction-btn--discard':
-                        listing.reaction === 'discarded',
-                    }"
-                    @click="toggleReaction('discarded')"
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
-                    Discard
-                  </button>
-                  <span
-                    v-if="listing.reactionBy"
-                    class="ml-auto self-center text-[11px] text-[#bbb]"
-                  >
-                    by {{ listing.reactionBy }}
-                  </span>
-                </template>
-                <a
-                  :href="listing.url"
-                  target="_blank"
-                  rel="noopener"
-                  class="ml-auto flex-shrink-0 rounded-full bg-black/5 px-3 py-1.5 text-[11px] font-semibold text-[#666] no-underline transition-colors hover:bg-black/10"
-                  :class="{ 'ml-0': !user }"
-                  >View on Funda &rarr;</a
+              <div v-if="user" class="mt-4 flex items-center gap-2">
+                <button
+                  class="reaction-btn"
+                  :class="{
+                    'reaction-btn--active reaction-btn--fav': listing.reaction === 'favourite',
+                  }"
+                  @click="toggleReaction('favourite')"
                 >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                      :fill="listing.reaction === 'favourite' ? 'currentColor' : 'none'"
+                    />
+                  </svg>
+                  Favourite
+                </button>
+                <button
+                  class="reaction-btn"
+                  :class="{
+                    'reaction-btn--active reaction-btn--discard': listing.reaction === 'discarded',
+                  }"
+                  @click="toggleReaction('discarded')"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                  Discard
+                </button>
+                <span v-if="listing.reactionBy" class="ml-auto self-center text-[11px] text-[#bbb]">
+                  by {{ listing.reactionBy }}
+                </span>
               </div>
 
               <!-- Divider before deep-dive sections -->
@@ -380,6 +371,16 @@
                   ></textarea>
                 </div>
               </div>
+              <!-- View on Funda -->
+              <div class="mt-4 border-t border-black/6 pt-4">
+                <a
+                  :href="listing.url"
+                  target="_blank"
+                  rel="noopener"
+                  class="flex w-full items-center justify-center rounded-lg bg-black/5 py-2 text-[13px] font-semibold text-[#555] no-underline transition-colors hover:bg-black/10"
+                  >View on Funda &rarr;</a
+                >
+              </div>
             </div>
           </div>
         </div>
@@ -430,12 +431,20 @@ const keyFacts = computed(() => {
   const parts: string[] = [];
   if (listing.value.bedrooms) parts.push(`${listing.value.bedrooms} bed`);
   if (listing.value.livingArea) parts.push(`${listing.value.livingArea} m\u00B2`);
-  if (listing.value.energyLabel) parts.push(`Label ${listing.value.energyLabel}`);
   if (listing.value.constructionYear) parts.push(`${listing.value.constructionYear}`);
   if (listing.value.hasGarden) parts.push("Garden");
   if (listing.value.hasBalcony) parts.push("Balcony");
   if (listing.value.hasRoofTerrace) parts.push("Roof terrace");
   return parts.join(" \u00B7 ");
+});
+
+const energyLabelBadge = computed(() => {
+  if (!listing.value) return null;
+  const label = listing.value.energyLabel;
+  if (!label) return { text: "No energy label", cls: "bg-red-500/10 text-red-700" };
+  if (label === "D") return { text: `Label ${label}`, cls: "bg-amber-500/10 text-amber-700" };
+  if (label === "C") return { text: `Label ${label}`, cls: "bg-black/5 text-[#666]" };
+  return { text: `Label ${label}`, cls: "bg-emerald-500/10 text-emerald-700" };
 });
 
 const hasBuurtStats = computed(() => {
