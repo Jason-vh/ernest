@@ -4,8 +4,9 @@ import path from "path";
 import { REFRESH_SECRET } from "@/config";
 import { db } from "@/db";
 import { listings, type NewListing } from "@/db/schema";
-import { isNull, and, or, eq } from "drizzle-orm";
+import { isNull, and, or, eq, sql } from "drizzle-orm";
 import { syncListings } from "@/services/listing-sync";
+import type { Listing } from "@ernest/shared";
 
 const geodata = new Hono();
 
@@ -20,6 +21,44 @@ let isochroneData: unknown = null;
 let stationsData: unknown = null;
 let linesData: unknown = null;
 let buurtenData: unknown = null;
+let fundaCache: Listing[] | null = null;
+
+async function queryFundaListings(): Promise<Listing[]> {
+  const rows = await db
+    .select({
+      fundaId: listings.fundaId,
+      url: listings.url,
+      address: listings.address,
+      postcode: listings.postcode,
+      neighbourhood: listings.neighbourhood,
+      price: listings.price,
+      bedrooms: listings.bedrooms,
+      livingArea: listings.livingArea,
+      energyLabel: listings.energyLabel,
+      objectType: listings.objectType,
+      constructionYear: listings.constructionYear,
+      description: listings.description,
+      hasGarden: listings.hasGarden,
+      hasBalcony: listings.hasBalcony,
+      hasRoofTerrace: listings.hasRoofTerrace,
+      latitude: listings.latitude,
+      longitude: listings.longitude,
+      photos: listings.photos,
+      status: listings.status,
+      offeredSince: listings.offeredSince,
+      routeFareharbor: sql<number | null>`(${listings.routeFareharbor}->>'duration')::int`,
+      routeAirwallex: sql<number | null>`(${listings.routeAirwallex}->>'duration')::int`,
+    })
+    .from(listings)
+    .where(
+      and(
+        isNull(listings.disappearedAt),
+        or(eq(listings.status, "Beschikbaar"), eq(listings.status, "")),
+      ),
+    );
+
+  return rows;
+}
 
 export async function loadData() {
   const isoFile = Bun.file(isochronePath);
@@ -38,6 +77,14 @@ export async function loadData() {
   }
   if (await buurtenFile.exists()) {
     buurtenData = await buurtenFile.json();
+  }
+
+  // Pre-populate funda cache so first request is instant
+  try {
+    fundaCache = await queryFundaListings();
+    console.log(`Funda cache populated: ${fundaCache.length} listings`);
+  } catch (err) {
+    console.warn("Failed to pre-populate funda cache:", err);
   }
 }
 
@@ -70,40 +117,10 @@ geodata.get("/buurten", (c) => {
 });
 
 geodata.get("/funda", async (c) => {
-  const rows = await db
-    .select({
-      fundaId: listings.fundaId,
-      url: listings.url,
-      address: listings.address,
-      postcode: listings.postcode,
-      neighbourhood: listings.neighbourhood,
-      price: listings.price,
-      bedrooms: listings.bedrooms,
-      livingArea: listings.livingArea,
-      energyLabel: listings.energyLabel,
-      objectType: listings.objectType,
-      constructionYear: listings.constructionYear,
-      description: listings.description,
-      hasGarden: listings.hasGarden,
-      hasBalcony: listings.hasBalcony,
-      hasRoofTerrace: listings.hasRoofTerrace,
-      latitude: listings.latitude,
-      longitude: listings.longitude,
-      photos: listings.photos,
-      status: listings.status,
-      offeredSince: listings.offeredSince,
-      routeFareharbor: listings.routeFareharbor,
-      routeAirwallex: listings.routeAirwallex,
-    })
-    .from(listings)
-    .where(
-      and(
-        isNull(listings.disappearedAt),
-        or(eq(listings.status, "Beschikbaar"), eq(listings.status, "")),
-      ),
-    );
-
-  return c.json(rows);
+  if (!fundaCache) {
+    fundaCache = await queryFundaListings();
+  }
+  return c.json(fundaCache);
 });
 
 geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 }), async (c) => {
@@ -190,6 +207,9 @@ geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 })
   console.log(
     `Funda sync: ${stats.upserted} upserted, ${stats.disappeared} disappeared, ${stats.routesComputed} routes computed`,
   );
+
+  // Invalidate cache so next GET /funda picks up fresh data
+  fundaCache = null;
 
   return c.json({ ok: true, received: incoming.length, ...stats });
 });

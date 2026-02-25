@@ -120,7 +120,7 @@
                     <span
                       :style="{ color: COLORS.routeFareharbor }"
                       class="font-semibold tabular-nums"
-                      >{{ listing.routeFareharbor.duration }} min</span
+                      >{{ listing.routeFareharbor }} min</span
                     >
                     <span class="text-[#888]">to {{ OFFICES.fareharbor.name }}</span>
                   </div>
@@ -132,7 +132,7 @@
                     <span
                       :style="{ color: COLORS.routeAirwallex }"
                       class="font-semibold tabular-nums"
-                      >{{ listing.routeAirwallex.duration }} min</span
+                      >{{ listing.routeAirwallex }} min</span
                     >
                     <span class="text-[#888]">to {{ OFFICES.airwallex.name }}</span>
                   </div>

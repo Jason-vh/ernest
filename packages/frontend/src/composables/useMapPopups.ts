@@ -1,5 +1,6 @@
 import maplibregl from "maplibre-gl";
-import type { Listing, CyclingRoutes } from "@ernest/shared";
+import type { Listing } from "@ernest/shared";
+import { OFFICES, COLORS } from "@/geo/constants";
 
 const cell = (url: string) => `<div style="background-image:url(${url})"></div>`;
 
@@ -10,8 +11,21 @@ interface PopupDeps {
   refreshFundaSource: () => void;
   updateBuildingHighlights: () => void;
   resetBuildingViewKey: () => void;
-  showRoutesForListing: (routes: CyclingRoutes | null) => void;
-  clearRoutes: () => void;
+}
+
+function buildCyclingTimesHtml(listing: Listing): string {
+  const parts: string[] = [];
+  if (listing.routeFareharbor) {
+    parts.push(
+      `<span class="funda-cycling-row"><span class="funda-cycling-dot" style="background:${COLORS.routeFareharbor}"></span><span style="color:${COLORS.routeFareharbor}">${listing.routeFareharbor} min</span> to ${OFFICES.fareharbor.name}</span>`,
+    );
+  }
+  if (listing.routeAirwallex) {
+    parts.push(
+      `<span class="funda-cycling-row"><span class="funda-cycling-dot" style="background:${COLORS.routeAirwallex}"></span><span style="color:${COLORS.routeAirwallex}">${listing.routeAirwallex} min</span> to ${OFFICES.airwallex.name}</span>`,
+    );
+  }
+  return parts.join("");
 }
 
 export function useMapPopups(deps: PopupDeps) {
@@ -22,8 +36,6 @@ export function useMapPopups(deps: PopupDeps) {
     refreshFundaSource,
     updateBuildingHighlights,
     resetBuildingViewKey,
-    showRoutesForListing,
-    clearRoutes,
   } = deps;
 
   let fundaPopup: maplibregl.Popup | null = null;
@@ -71,6 +83,9 @@ export function useMapPopups(deps: PopupDeps) {
       gridHtml = `<div class="funda-grid funda-grid--1">` + cell(photos[0]) + `</div>`;
     }
 
+    // Build cycling times inline from listing store data
+    const cyclingHtml = listing ? buildCyclingTimesHtml(listing) : "";
+
     if (fundaPopup) fundaPopup.remove();
     fundaPopup = new maplibregl.Popup({
       offset: 12,
@@ -90,7 +105,7 @@ export function useMapPopups(deps: PopupDeps) {
           (details ? `<div class="funda-bar-details">${details}</div>` : "") +
           `</div>` +
           `</div>` +
-          `<div class="funda-cycling-times"></div>`,
+          `<div class="funda-cycling-times">${cyclingHtml}</div>`,
       )
       .addTo(map);
   }
@@ -106,7 +121,6 @@ export function useMapPopups(deps: PopupDeps) {
     if (fundaCloseTimer) clearTimeout(fundaCloseTimer);
     fundaCloseTimer = setTimeout(() => {
       closeFundaPopup();
-      clearRoutes();
     }, 200);
   }
 
@@ -125,21 +139,6 @@ export function useMapPopups(deps: PopupDeps) {
     }
   }
 
-  function triggerRoutesForFeature(feature: maplibregl.MapGeoJSONFeature | GeoJSON.Feature) {
-    const p = feature.properties ?? {};
-    if (!p.fundaId) return;
-
-    const listing = listings.value.get(p.fundaId);
-    if (!listing) return;
-
-    if (listing.routeFareharbor || listing.routeAirwallex) {
-      showRoutesForListing({
-        fareharbor: listing.routeFareharbor,
-        airwallex: listing.routeAirwallex,
-      });
-    }
-  }
-
   function handleFeatureClick(feature: maplibregl.MapGeoJSONFeature | GeoJSON.Feature) {
     const fundaId = feature.properties?.fundaId;
     if (!fundaId) return;
@@ -152,14 +151,13 @@ export function useMapPopups(deps: PopupDeps) {
     updateBuildingHighlights();
   }
 
-  // Hover: show popup + routes (desktop only — mouseenter doesn't fire on touch)
+  // Hover: show popup (desktop only — mouseenter doesn't fire on touch)
   map.on("mouseenter", "funda-circles", (e) => {
     map.getCanvas().style.cursor = "pointer";
     cancelFundaClose();
     if (e.features && e.features.length > 0) {
       showFundaPopup(e.features[0]);
       attachPopupHover();
-      triggerRoutesForFeature(e.features[0]);
     }
   });
   map.on("mouseleave", "funda-circles", () => {
@@ -182,7 +180,6 @@ export function useMapPopups(deps: PopupDeps) {
       const lngLat: [number, number] = [e.lngLat.lng, e.lngLat.lat];
       showFundaPopup(e.features[0], lngLat);
       attachPopupHover();
-      triggerRoutesForFeature(e.features[0]);
     }
   });
   map.on("mouseleave", "funda-building-fill", () => {

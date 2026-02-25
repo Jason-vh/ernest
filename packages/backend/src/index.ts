@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { compress } from "hono/compress";
 import { serveStatic } from "hono/bun";
 import path from "path";
 import health from "@/routes/health";
@@ -8,6 +9,9 @@ import auth from "@/routes/auth";
 import { initDb } from "@/db";
 
 const app = new Hono();
+
+// Compress API responses
+app.use("/api/*", compress());
 
 // CORS in development only
 if (process.env.NODE_ENV !== "production") {

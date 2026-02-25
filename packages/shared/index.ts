@@ -33,6 +33,8 @@ export interface Listing {
   photos: string[];
   status: string;
   offeredSince: string | null;
-  routeFareharbor: CyclingRoute | null;
-  routeAirwallex: CyclingRoute | null;
+
+  /** Cycling duration (in minutes) */
+  routeFareharbor: number | null;
+  routeAirwallex: number | null;
 }
