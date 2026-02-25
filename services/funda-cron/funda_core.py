@@ -120,25 +120,16 @@ def to_geojson(listings, coords, details):
         lat, lng = coords[gid]
         detail = details.get(gid)
 
-        price_formatted = ""
         url = ""
-        photo = ""
-        photos = []
+        photo_urls = []
         status = ""
         if detail:
-            try:
-                price_formatted = detail.get("price_formatted") or ""
-            except Exception:
-                pass
             try:
                 url = detail.get("url") or ""
             except Exception:
                 pass
             try:
                 photo_urls = detail.get("photo_urls") or []
-                if photo_urls:
-                    photo = photo_urls[0]
-                    photos = photo_urls[:3]
             except Exception:
                 pass
             try:
@@ -152,21 +143,28 @@ def to_geojson(listings, coords, details):
             if detail_url:
                 url = f"https://www.funda.nl{detail_url}"
 
-        if status and status != "Beschikbaar":
-            continue
-
         features.append(
             {
                 "type": "Feature",
                 "geometry": {"type": "Point", "coordinates": [lng, lat]},
                 "properties": {
+                    "fundaId": gid,
                     "price": listing.get("price"),
-                    "priceFormatted": price_formatted,
                     "address": listing.get("title") or "",
                     "bedrooms": listing.get("bedrooms"),
                     "livingArea": listing.get("living_area"),
-                    "photo": photo,
-                    "photos": json.dumps(photos),
+                    "energyLabel": listing.get("energy_label") or None,
+                    "objectType": listing.get("object_type") or None,
+                    "constructionYear": listing.get("construction_year"),
+                    "postcode": listing.get("postcode") or None,
+                    "neighbourhood": listing.get("neighbourhood") or None,
+                    "description": (detail.get("description") or "") if detail else "",
+                    "offeredSince": listing.get("offered_since") or None,
+                    "hasGarden": listing.get("has_garden"),
+                    "hasBalcony": listing.get("has_balcony"),
+                    "hasRoofTerrace": listing.get("has_roof_terrace"),
+                    "status": status,
+                    "photos": json.dumps(photo_urls),
                     "url": url,
                 },
             }

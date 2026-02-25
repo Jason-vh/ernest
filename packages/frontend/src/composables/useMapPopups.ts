@@ -1,5 +1,6 @@
 import maplibregl from "maplibre-gl";
 import { getGeoJSONSource } from "@/geo/map-utils";
+import type { CyclingRoutes } from "@/api/client";
 
 const cell = (url: string) => `<div style="background-image:url(${url})"></div>`;
 
@@ -11,7 +12,7 @@ interface PopupDeps {
   stampClickedState: (fc: GeoJSON.FeatureCollection) => GeoJSON.FeatureCollection;
   updateBuildingHighlights: () => void;
   resetBuildingViewKey: () => void;
-  showRoutesForListing: (lat: number, lon: number, listingUrl: string) => void;
+  showRoutesForListing: (precomputed: CyclingRoutes | null) => void;
   clearRoutes: () => void;
 }
 
@@ -141,11 +142,22 @@ export function useMapPopups(deps: PopupDeps) {
 
   function triggerRoutesForFeature(feature: maplibregl.MapGeoJSONFeature | GeoJSON.Feature) {
     const p = feature.properties ?? {};
-    const geom = feature.geometry;
-    if (p.url && geom.type === "Point") {
-      const coords = geom.coordinates;
-      showRoutesForListing(coords[1], coords[0], p.url);
+    if (!p.url) return;
+
+    let precomputed: CyclingRoutes | null = null;
+    try {
+      const fh =
+        typeof p.routeFareharbor === "string" ? JSON.parse(p.routeFareharbor) : p.routeFareharbor;
+      const aw =
+        typeof p.routeAirwallex === "string" ? JSON.parse(p.routeAirwallex) : p.routeAirwallex;
+      if (fh || aw) {
+        precomputed = { fareharbor: fh || null, airwallex: aw || null };
+      }
+    } catch {
+      // No routes available
     }
+
+    showRoutesForListing(precomputed);
   }
 
   map.on("mouseenter", "funda-circles", (e) => {

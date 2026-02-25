@@ -1,5 +1,15 @@
-import { pgTable, text, integer, boolean, timestamp, jsonb, customType } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  integer,
+  boolean,
+  timestamp,
+  jsonb,
+  doublePrecision,
+  customType,
+} from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
+import type { RouteResult } from "../services/valhalla";
 import type { AuthenticatorTransportFuture } from "@simplewebauthn/server";
 
 const bytea = customType<{ data: Uint8Array; driverValue: Buffer }>({
@@ -53,3 +63,49 @@ export type Credential = InferSelectModel<typeof credentials>;
 export type NewCredential = InferInsertModel<typeof credentials>;
 export type Challenge = InferSelectModel<typeof challenges>;
 export type NewChallenge = InferInsertModel<typeof challenges>;
+
+export const listings = pgTable("listings", {
+  // Identity
+  fundaId: text("funda_id").primaryKey(),
+  url: text("url").notNull(),
+
+  // Core property data
+  address: text("address").notNull(),
+  postcode: text("postcode"),
+  neighbourhood: text("neighbourhood"),
+  price: integer("price").notNull(),
+  bedrooms: integer("bedrooms").notNull(),
+  livingArea: integer("living_area").notNull(),
+  energyLabel: text("energy_label"),
+  objectType: text("object_type"),
+  constructionYear: integer("construction_year"),
+  description: text("description"),
+
+  // Amenities
+  hasGarden: boolean("has_garden"),
+  hasBalcony: boolean("has_balcony"),
+  hasRoofTerrace: boolean("has_roof_terrace"),
+
+  // Location
+  latitude: doublePrecision("latitude").notNull(),
+  longitude: doublePrecision("longitude").notNull(),
+
+  // Media
+  photos: jsonb("photos").$type<string[]>().notNull().default([]),
+
+  // Funda status & lifecycle
+  status: text("status").notNull().default("Beschikbaar"),
+  offeredSince: text("offered_since"),
+  disappearedAt: timestamp("disappeared_at", { withTimezone: true }),
+
+  // Pre-computed cycling routes
+  routeFareharbor: jsonb("route_fareharbor").$type<RouteResult>(),
+  routeAirwallex: jsonb("route_airwallex").$type<RouteResult>(),
+
+  // Timestamps
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type Listing = InferSelectModel<typeof listings>;
+export type NewListing = InferInsertModel<typeof listings>;

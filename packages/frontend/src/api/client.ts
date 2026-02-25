@@ -39,21 +39,3 @@ export interface CyclingRoutes {
   fareharbor: CyclingRoute | null;
   airwallex: CyclingRoute | null;
 }
-
-export async function fetchCyclingRoutes(
-  from: { lat: number; lon: number },
-  signal?: AbortSignal,
-): Promise<CyclingRoutes | null> {
-  try {
-    const res = await fetch("/api/routes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ from }),
-      signal,
-    });
-    if (!res.ok) return null;
-    return res.json();
-  } catch {
-    return null;
-  }
-}

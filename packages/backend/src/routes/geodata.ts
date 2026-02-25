@@ -2,36 +2,24 @@ import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import path from "path";
 import { REFRESH_SECRET } from "../config";
+import { db } from "../db";
+import { listings, type NewListing } from "../db/schema";
+import { isNull, and, or, eq } from "drizzle-orm";
+import { syncListings } from "../services/listing-sync";
 
 const geodata = new Hono();
 
 const dataDir = path.resolve(import.meta.dir, "../../data");
-const volumePath = process.env.VOLUME_PATH || "/data";
 
 const isochronePath = path.join(dataDir, "isochrone.geojson");
 const stationsPath = path.join(dataDir, "stations.json");
 const linesPath = path.join(dataDir, "lines.geojson");
 const buurtenPath = path.join(dataDir, "buurten.geojson");
-const bundledFundaPath = path.join(dataDir, "funda.geojson");
-const volumeFundaPath = path.join(volumePath, "funda.geojson");
 
 let isochroneData: unknown = null;
 let stationsData: unknown = null;
 let linesData: unknown = null;
 let buurtenData: unknown = null;
-let fundaData: unknown = null;
-
-function featureCount(data: unknown): number {
-  if (
-    typeof data === "object" &&
-    data !== null &&
-    "features" in data &&
-    Array.isArray(data.features)
-  ) {
-    return data.features.length;
-  }
-  return 0;
-}
 
 export async function loadData() {
   const isoFile = Bun.file(isochronePath);
@@ -50,23 +38,6 @@ export async function loadData() {
   }
   if (await buurtenFile.exists()) {
     buurtenData = await buurtenFile.json();
-  }
-
-  // Funda: prefer volume data (persisted from cron), fall back to bundled
-  try {
-    const volFile = Bun.file(volumeFundaPath);
-    if (await volFile.exists()) {
-      fundaData = await volFile.json();
-      console.log(`Loaded funda data from volume: ${featureCount(fundaData)} listings`);
-      return;
-    }
-  } catch (e) {
-    console.warn("Failed to load funda data from volume, falling back to bundled:", e);
-  }
-
-  const fundaFile = Bun.file(bundledFundaPath);
-  if (await fundaFile.exists()) {
-    fundaData = await fundaFile.json();
   }
 }
 
@@ -98,11 +69,38 @@ geodata.get("/buurten", (c) => {
   return c.json(buurtenData);
 });
 
-geodata.get("/funda", (c) => {
-  if (!fundaData) {
-    return c.json({ error: "Funda data not available. Run: bun run fetch-data" }, 503);
-  }
-  return c.json(fundaData);
+geodata.get("/funda", async (c) => {
+  const rows = await db
+    .select()
+    .from(listings)
+    .where(
+      and(
+        isNull(listings.disappearedAt),
+        or(eq(listings.status, "Beschikbaar"), eq(listings.status, "")),
+      ),
+    );
+
+  const features = rows.map((row) => ({
+    type: "Feature" as const,
+    geometry: {
+      type: "Point" as const,
+      coordinates: [row.longitude, row.latitude],
+    },
+    properties: {
+      fundaId: row.fundaId,
+      price: row.price,
+      address: row.address,
+      bedrooms: row.bedrooms,
+      livingArea: row.livingArea,
+      photo: Array.isArray(row.photos) && row.photos.length > 0 ? row.photos[0] : "",
+      photos: JSON.stringify(row.photos),
+      url: row.url,
+      routeFareharbor: row.routeFareharbor ? JSON.stringify(row.routeFareharbor) : null,
+      routeAirwallex: row.routeAirwallex ? JSON.stringify(row.routeAirwallex) : null,
+    },
+  }));
+
+  return c.json({ type: "FeatureCollection", features });
 });
 
 geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 }), async (c) => {
@@ -129,21 +127,68 @@ geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 })
     return c.json({ error: "Expected a GeoJSON FeatureCollection" }, 400);
   }
 
-  const received = body.features.length;
+  const incoming: NewListing[] = [];
+  for (const feature of body.features) {
+    if (
+      typeof feature !== "object" ||
+      feature === null ||
+      !("properties" in feature) ||
+      !("geometry" in feature)
+    ) {
+      continue;
+    }
+    const p = feature.properties;
+    const geom = feature.geometry;
+    if (!p || !geom || geom.type !== "Point" || !Array.isArray(geom.coordinates)) continue;
 
-  // Update in-memory data (immediately live)
-  fundaData = body;
-  console.log(`Funda data refreshed: ${received} listings`);
+    const fundaId = p.fundaId;
+    if (!fundaId) continue;
 
-  // Persist to volume
-  try {
-    await Bun.write(volumeFundaPath, JSON.stringify(body));
-    console.log(`Funda data persisted to ${volumeFundaPath}`);
-  } catch (e) {
-    console.warn("Failed to persist funda data to volume:", e);
+    let photos: string[] = [];
+    if (typeof p.photos === "string") {
+      try {
+        photos = JSON.parse(p.photos);
+      } catch {
+        photos = [];
+      }
+    } else if (Array.isArray(p.photos)) {
+      photos = p.photos;
+    }
+
+    incoming.push({
+      fundaId: String(fundaId),
+      url: p.url || "",
+      address: p.address || "",
+      postcode: p.postcode || null,
+      neighbourhood: p.neighbourhood || null,
+      price: Number(p.price) || 0,
+      bedrooms: Number(p.bedrooms) || 0,
+      livingArea: Number(p.livingArea) || 0,
+      energyLabel: p.energyLabel || null,
+      objectType: p.objectType || null,
+      constructionYear: p.constructionYear ? Number(p.constructionYear) : null,
+      description: p.description || null,
+      hasGarden: p.hasGarden ?? null,
+      hasBalcony: p.hasBalcony ?? null,
+      hasRoofTerrace: p.hasRoofTerrace ?? null,
+      latitude: geom.coordinates[1],
+      longitude: geom.coordinates[0],
+      photos,
+      status: p.status || "Beschikbaar",
+      offeredSince: p.offeredSince || null,
+    });
   }
 
-  return c.json({ ok: true, received });
+  console.log(
+    `Funda refresh: ${incoming.length} listings received from ${body.features.length} features`,
+  );
+
+  const stats = await syncListings(incoming);
+  console.log(
+    `Funda sync: ${stats.upserted} upserted, ${stats.disappeared} disappeared, ${stats.routesComputed} routes computed`,
+  );
+
+  return c.json({ ok: true, received: incoming.length, ...stats });
 });
 
 export default geodata;

@@ -4,7 +4,6 @@ import { serveStatic } from "hono/bun";
 import path from "path";
 import health from "./routes/health";
 import geodata, { loadData } from "./routes/geodata";
-import route from "./routes/route";
 import auth from "./routes/auth";
 import { initDb } from "./db";
 
@@ -34,7 +33,6 @@ app.onError((err, c) => {
 // API routes
 app.route("/api", health);
 app.route("/api", geodata);
-app.route("/api", route);
 app.route("/api/auth", auth);
 
 // Serve frontend static files in production

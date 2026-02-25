@@ -17,11 +17,7 @@ function routeToFeature(geometry: GeoJSON.LineString): GeoJSON.FeatureCollection
   };
 }
 
-export function useRouteLayers(
-  map: maplibregl.Map,
-  activeRoutes: Ref<CyclingRoutes | null>,
-  routesLoading: Ref<boolean>,
-) {
+export function useRouteLayers(map: maplibregl.Map, activeRoutes: Ref<CyclingRoutes | null>) {
   map.addSource("cycling-route-fareharbor", {
     type: "geojson",
     data: emptyFC,
@@ -120,13 +116,5 @@ export function useRouteLayers(
       );
     }
     timesEl.innerHTML = parts.join("");
-  });
-
-  watch(routesLoading, (loading) => {
-    const timesEl = document.querySelector(".funda-cycling-times");
-    if (!timesEl) return;
-    if (loading) {
-      timesEl.innerHTML = `<span class="funda-cycling-loading"><span></span><span></span></span>`;
-    }
   });
 }

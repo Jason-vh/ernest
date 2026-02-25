@@ -1,19 +1,16 @@
-import { Hono } from "hono";
 import { decodePolyline } from "../utils/polyline";
-
-const route = new Hono();
 
 interface LineString {
   type: "LineString";
   coordinates: [number, number][];
 }
 
-interface RouteResult {
+export interface RouteResult {
   duration: number;
   geometry: LineString;
 }
 
-const OFFICES = {
+export const OFFICES = {
   fareharbor: { lat: 52.3599, lon: 4.8912 },
   airwallex: { lat: 52.37, lon: 4.8878 },
 };
@@ -39,13 +36,15 @@ function cacheGet(key: string): RouteResult | undefined {
 
 function cachePut(key: string, value: RouteResult) {
   if (cache.size >= CACHE_MAX) {
-    const firstKey = cache.keys().next().value!;
-    cache.delete(firstKey);
+    const firstKey = cache.keys().next().value;
+    if (firstKey !== undefined) {
+      cache.delete(firstKey);
+    }
   }
   cache.set(key, value);
 }
 
-async function fetchValhallaRoute(
+export async function fetchValhallaRoute(
   from: { lat: number; lon: number },
   to: { lat: number; lon: number },
 ): Promise<RouteResult | null> {
@@ -96,30 +95,3 @@ async function fetchValhallaRoute(
   cachePut(key, result);
   return result;
 }
-
-// Batch endpoint: fetches routes from a point to both offices sequentially
-route.post("/routes", async (c) => {
-  let body: { from: { lat: number; lon: number } };
-  try {
-    body = await c.req.json();
-  } catch {
-    return c.json({ error: "Invalid JSON body" }, 400);
-  }
-
-  if (body.from?.lat == null || body.from?.lon == null) {
-    return c.json({ error: "Missing from coordinates" }, 400);
-  }
-
-  try {
-    // Sequential to avoid Valhalla rate limiting
-    const fareharbor = await fetchValhallaRoute(body.from, OFFICES.fareharbor);
-    const airwallex = await fetchValhallaRoute(body.from, OFFICES.airwallex);
-
-    return c.json({ fareharbor, airwallex });
-  } catch (err) {
-    console.warn("Route fetch failed:", err);
-    return c.json({ error: "Routing service unavailable" }, 502);
-  }
-});
-
-export default route;

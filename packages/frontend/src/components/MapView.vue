@@ -30,7 +30,7 @@ const {
   markFundaClicked,
 } = useZoneState();
 
-const { activeRoutes, routesLoading, showRoutesForListing, clearRoutes } = useCyclingRoutes();
+const { activeRoutes, showRoutesForListing, clearRoutes } = useCyclingRoutes();
 const { initMap } = useMap(mapContainer);
 
 onMounted(async () => {
@@ -47,7 +47,7 @@ onMounted(async () => {
 
     useIsochroneLayers(map, isochrone, { zoneVisibility, hoveredZone });
     useTransitLayers(map, stations, lines, { transitVisibility, hoveredTransit });
-    useRouteLayers(map, activeRoutes, routesLoading);
+    useRouteLayers(map, activeRoutes);
 
     const { stampClickedState } = useFundaLayer(map, funda, {
       clickedFundaUrls,
