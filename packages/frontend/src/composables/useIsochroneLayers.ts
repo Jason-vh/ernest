@@ -30,9 +30,9 @@ export function useIsochroneLayers(
       filter: ["==", ["get", "zone"], "30min"],
       paint: {
         "line-color": COLORS.zone30,
-        "line-width": 2,
-        "line-opacity": 0.5,
-        "line-dasharray": [4, 3],
+        "line-width": 3,
+        "line-opacity": 0.6,
+        "line-opacity-transition": { duration: 200, delay: 0 },
       },
     },
     waterLayerId,
@@ -47,9 +47,9 @@ export function useIsochroneLayers(
       filter: ["==", ["get", "zone"], "20min"],
       paint: {
         "line-color": COLORS.zone20,
-        "line-width": 1.5,
-        "line-opacity": 0.5,
-        "line-dasharray": [4, 3],
+        "line-width": 2.5,
+        "line-opacity": 0.6,
+        "line-opacity-transition": { duration: 200, delay: 0 },
       },
     },
     waterLayerId,
@@ -64,9 +64,9 @@ export function useIsochroneLayers(
       filter: ["==", ["get", "zone"], "10min"],
       paint: {
         "line-color": COLORS.zone10,
-        "line-width": 1.5,
-        "line-opacity": 0.5,
-        "line-dasharray": [4, 3],
+        "line-width": 2.5,
+        "line-opacity": 0.6,
+        "line-opacity-transition": { duration: 200, delay: 0 },
       },
     },
     waterLayerId,
@@ -79,19 +79,19 @@ export function useIsochroneLayers(
       if (!map.getLayer(borderId)) continue;
 
       const visible = zoneVisibility.value[key];
-      map.setLayoutProperty(borderId, "visibility", visible ? "visible" : "none");
+      let borderOpacity = 0;
 
       if (visible) {
+        borderOpacity = 0.6;
         const someHovered = hoveredZone.value !== null;
         const isHovered = hoveredZone.value === key;
-        let borderOpacity = 0.5;
 
         if (someHovered) {
           borderOpacity = isHovered ? 0.9 : 0.2;
         }
-
-        map.setPaintProperty(borderId, "line-opacity", borderOpacity);
       }
+
+      map.setPaintProperty(borderId, "line-opacity", borderOpacity);
     }
   }
 

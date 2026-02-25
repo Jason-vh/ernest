@@ -12,8 +12,8 @@ bun run dev:backend      # Start Hono server on :3000
 bun run dev:frontend     # Start Vite dev server on :5173 (proxies /api -> :3000)
 bun run build            # Build Vue frontend to packages/frontend/dist/
 bun run start            # Production: Hono serves API + frontend on :3000
+bun run check            # Check formatting (oxfmt) + lint (oxlint) in one command
 bun run fmt              # Format all source files with oxfmt
-bun run fmt:check        # Check formatting without writing
 bun run lint             # Lint with oxlint
 bun run typecheck        # Type-check both frontend and backend (see note below)
 bun run db:generate      # Generate Drizzle migration from schema changes
@@ -23,7 +23,7 @@ bun run fetch-data       # Refetch isochrones + stations + buurten + funda from 
 bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 ```
 
-**Verification tips**: `fmt:check` and `lint` are fast (<1s) — run them as separate parallel commands, not chained. `bun run typecheck` uses `bunx` which can be flaky; if it fails with a GitHub 404, run each package directly instead: `cd packages/backend && bun x tsc --noEmit` and `cd packages/frontend && ./node_modules/.bin/vue-tsc --noEmit`.
+**Verification tips**: `bun run check` runs both format check and lint in one command (<1s). `bun run typecheck` uses `bunx` which can be flaky; if it fails with a GitHub 404, run each package directly instead: `cd packages/backend && bun x tsc --noEmit` and `cd packages/frontend && ./node_modules/.bin/vue-tsc --noEmit`.
 
 ## Architecture
 

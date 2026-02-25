@@ -53,6 +53,15 @@ bun run dev:backend    # Hono server on :3000
 bun run dev:frontend   # Vite dev server on :5173 (proxies /api to :3000)
 ```
 
+### Code quality
+
+```sh
+bun run check          # Format check (oxfmt) + lint (oxlint)
+bun run fmt            # Auto-format all source files
+bun run lint           # Lint only
+bun run typecheck      # Type-check both frontend and backend
+```
+
 ### Production
 
 ```sh

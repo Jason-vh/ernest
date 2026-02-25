@@ -146,6 +146,7 @@ export function useTransitLayers(
       "circle-radius": 2,
       "circle-color": COLORS.tram,
       "circle-opacity": 0.5,
+      "circle-opacity-transition": { duration: 200, delay: 0 },
     },
   });
 
@@ -160,8 +161,10 @@ export function useTransitLayers(
       "circle-radius": 4,
       "circle-color": COLORS.metro,
       "circle-opacity": 0.6,
+      "circle-opacity-transition": { duration: 200, delay: 0 },
       "circle-stroke-width": 1,
       "circle-stroke-color": "#fff",
+      "circle-stroke-opacity-transition": { duration: 200, delay: 0 },
     },
   });
 
@@ -197,8 +200,10 @@ export function useTransitLayers(
       "circle-radius": 4,
       "circle-color": COLORS.train,
       "circle-opacity": 0.6,
+      "circle-opacity-transition": { duration: 200, delay: 0 },
       "circle-stroke-width": 1,
       "circle-stroke-color": "#fff",
+      "circle-stroke-opacity-transition": { duration: 200, delay: 0 },
     },
   });
 
@@ -251,27 +256,30 @@ export function useTransitLayers(
         map.setPaintProperty(layerId, "line-opacity", op);
       }
 
-      // Station layers toggle with visibility
+      // Station layers — use opacity for animated transitions
       for (const layerId of STATION_LAYERS[key]) {
         if (!map.getLayer(layerId)) continue;
-        map.setLayoutProperty(layerId, "visibility", visible ? "visible" : "none");
-
-        if (visible) {
-          const defaultOp = DEFAULT_CIRCLE_OPACITY[key];
-          const op = someHovered ? (isHovered ? 1 : defaultOp * 0.3) : defaultOp;
-          map.setPaintProperty(layerId, "circle-opacity", op);
-        }
+        const defaultOp = DEFAULT_CIRCLE_OPACITY[key];
+        const op = visible ? (someHovered ? (isHovered ? 1 : defaultOp * 0.3) : defaultOp) : 0;
+        map.setPaintProperty(layerId, "circle-opacity", op);
+        map.setPaintProperty(
+          layerId,
+          "circle-stroke-opacity",
+          visible ? (someHovered ? (isHovered ? 1 : 0.3) : 1) : 0,
+        );
       }
 
-      // HTML label markers toggle with visibility
+      // HTML label markers — CSS opacity transition
       for (const marker of transitMarkers[key]) {
         const el = marker.getElement();
-        if (!visible) {
-          el.style.display = "none";
-        } else {
-          el.style.display = "";
+        el.style.transition = "opacity 200ms";
+        if (visible) {
           const defaultOp = DEFAULT_LABEL_OPACITY[key];
           el.style.opacity = String(someHovered ? (isHovered ? 1 : defaultOp * 0.3) : defaultOp);
+          el.style.pointerEvents = "";
+        } else {
+          el.style.opacity = "0";
+          el.style.pointerEvents = "none";
         }
       }
     }

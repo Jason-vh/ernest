@@ -1,147 +1,116 @@
 <template>
-  <div
-    class="glass absolute bottom-3 left-3 z-1 flex min-w-40 flex-col gap-2 p-3 px-4 font-sans text-[13px]"
-  >
-    <div class="text-[11px] font-semibold uppercase tracking-wide text-[#999]">cycle distance</div>
-    <div class="flex flex-col gap-[5px]">
-      <button
-        v-for="item in zones"
-        :key="item.key"
-        :aria-pressed="zoneVisibility[item.key]"
-        class="flex cursor-pointer items-center gap-2.5 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 transition-colors hover:bg-black/5"
-        @mouseenter="hoveredZone = item.key"
-        @mouseleave="hoveredZone = null"
-        @click="toggleZone(item.key)"
-        @touchstart="
-          startPress(
-            () => (hoveredZone = item.key),
-            () => (hoveredZone = null),
-          )
-        "
-        @touchend="endPress"
-        @touchmove="cancelPress"
-        @touchcancel="cancelPress"
+  <div class="glass absolute bottom-3 left-3 z-1 min-w-40 font-sans text-[13px]">
+    <button
+      class="flex w-full cursor-pointer items-center justify-between px-4 py-2.5"
+      :class="collapsed ? '' : 'pb-1'"
+      @click="collapsed = !collapsed"
+    >
+      <span class="text-[11px] font-semibold uppercase tracking-wide text-[#999]">Legend</span>
+      <svg
+        class="h-3 w-3 text-[#999] transition-transform duration-200"
+        :class="collapsed ? '' : 'rotate-180'"
+        viewBox="0 0 12 12"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
       >
-        <span
-          class="h-2.5 w-4 shrink-0 rounded-sm transition-opacity"
-          :class="zoneVisibility[item.key] ? 'opacity-35' : 'opacity-12'"
-          :style="{ backgroundColor: item.color }"
-        ></span>
-        <span
-          class="font-[450] transition-opacity"
-          :class="zoneVisibility[item.key] ? 'text-[#444]' : 'text-[#444] opacity-35 line-through'"
-          >{{ item.label }}</span
+        <path d="M3 4.5l3 3 3-3" />
+      </svg>
+    </button>
+
+    <div v-show="!collapsed" class="flex flex-col gap-[5px] px-4 pb-3">
+      <div class="flex flex-col gap-[5px]">
+        <button
+          v-for="item in zones"
+          :key="item.key"
+          :aria-pressed="zoneVisibility[item.key]"
+          class="flex cursor-pointer items-center gap-2.5 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 transition-colors hover:bg-black/5"
+          @click="toggleZone(item.key)"
         >
-      </button>
-    </div>
-    <div class="h-px bg-[#e5e5e5]"></div>
-    <div class="text-[11px] font-semibold uppercase tracking-wide text-[#999]">transit</div>
-    <div class="flex flex-col gap-[5px]">
-      <button
-        v-for="item in transit"
-        :key="item.key"
-        :aria-pressed="transitVisibility[item.key]"
-        class="flex cursor-pointer items-center gap-2.5 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 transition-colors hover:bg-black/5"
-        @mouseenter="hoveredTransit = item.key"
-        @mouseleave="hoveredTransit = null"
-        @click="toggleTransit(item.key)"
-        @touchstart="
-          startPress(
-            () => (hoveredTransit = item.key),
-            () => (hoveredTransit = null),
-          )
-        "
-        @touchend="endPress"
-        @touchmove="cancelPress"
-        @touchcancel="cancelPress"
-      >
-        <span
-          class="h-2.5 w-2.5 shrink-0 rounded-full border-[1.5px] border-white/90 shadow-sm transition-opacity"
-          :class="transitVisibility[item.key] ? '' : 'opacity-12'"
-          :style="{ backgroundColor: item.color }"
-        ></span>
-        <span
-          class="font-[450] transition-opacity"
-          :class="
-            transitVisibility[item.key] ? 'text-[#444]' : 'text-[#444] opacity-35 line-through'
-          "
-          >{{ item.label }}</span
+          <span
+            class="h-3 w-5 shrink-0 rounded-sm border-[1.5px] transition-all duration-200"
+            :class="zoneVisibility[item.key] ? '' : 'scale-75 opacity-25'"
+            :style="{
+              backgroundColor: item.color + '40',
+              borderColor: item.color + '99',
+            }"
+          ></span>
+          <span
+            class="font-[450] transition-opacity"
+            :class="
+              zoneVisibility[item.key] ? 'text-[#444]' : 'text-[#444] opacity-35 line-through'
+            "
+            >{{ item.label }}</span
+          >
+        </button>
+      </div>
+      <div class="my-0.5 h-px bg-[#e5e5e5]"></div>
+      <div class="flex flex-col gap-[5px]">
+        <button
+          v-for="item in transit"
+          :key="item.key"
+          :aria-pressed="transitVisibility[item.key]"
+          class="flex cursor-pointer items-center gap-2.5 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 transition-colors hover:bg-black/5"
+          @click="toggleTransit(item.key)"
         >
-      </button>
-    </div>
-    <div class="h-px bg-[#e5e5e5]"></div>
-    <div class="text-[11px] font-semibold uppercase tracking-wide text-[#999]">funda</div>
-    <div class="flex flex-col gap-[5px]">
-      <button
-        v-for="item in fundaItems"
-        :key="item.key"
-        :aria-pressed="item.visible"
-        class="flex cursor-pointer items-center gap-2.5 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 transition-colors hover:bg-black/5"
-        @click="item.toggle()"
-      >
-        <span
-          class="h-2.5 w-2.5 shrink-0 rounded-full border-[1.5px] border-white/90 shadow-sm transition-opacity"
-          :class="item.visible ? '' : 'opacity-12'"
-          :style="{ backgroundColor: item.color }"
-        ></span>
-        <span
-          class="font-[450] transition-opacity"
-          :class="item.visible ? 'text-[#444]' : 'text-[#444] opacity-35 line-through'"
-          >{{ item.label }}</span
+          <span
+            class="h-2.5 w-2.5 shrink-0 rounded-full border-[1.5px] border-white/90 shadow-sm transition-all duration-200"
+            :class="transitVisibility[item.key] ? '' : 'scale-75 opacity-12'"
+            :style="{ backgroundColor: item.color }"
+          ></span>
+          <span
+            class="font-[450] transition-opacity"
+            :class="
+              transitVisibility[item.key] ? 'text-[#444]' : 'text-[#444] opacity-35 line-through'
+            "
+            >{{ item.label }}</span
+          >
+        </button>
+      </div>
+      <div class="my-0.5 h-px bg-[#e5e5e5]"></div>
+      <div class="flex flex-col gap-[5px]">
+        <button
+          v-for="item in fundaItems"
+          :key="item.key"
+          :aria-pressed="item.visible"
+          class="flex cursor-pointer items-center gap-2.5 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 transition-colors hover:bg-black/5"
+          @click="item.toggle()"
         >
-        <span
-          class="ml-auto text-[11px] tabular-nums transition-opacity"
-          :class="item.visible ? 'text-[#aaa]' : 'text-[#aaa] opacity-35'"
-          >{{ item.count }}</span
-        >
-      </button>
+          <span
+            class="h-2.5 w-2.5 shrink-0 rounded-full border-[1.5px] border-white/90 shadow-sm transition-all duration-200"
+            :class="item.visible ? '' : 'scale-75 opacity-12'"
+            :style="{ backgroundColor: item.color }"
+          ></span>
+          <span
+            class="font-[450] transition-opacity"
+            :class="item.visible ? 'text-[#444]' : 'text-[#444] opacity-35 line-through'"
+            >{{ item.label }}</span
+          >
+          <span
+            class="ml-auto text-[11px] tabular-nums transition-opacity"
+            :class="item.visible ? 'text-[#aaa]' : 'text-[#aaa] opacity-35'"
+            >{{ item.count }}</span
+          >
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { ref, watch, computed } from "vue";
 import { useZoneState, type ZoneKey, type TransitKey } from "@/composables/useZoneState";
 import { COLORS } from "@/geo/constants";
 
-// Long-press highlight for touch devices
-let pressTimer: ReturnType<typeof setTimeout> | null = null;
-let longPressed = false;
-let deactivateFn: (() => void) | null = null;
+// Collapsed state: default collapsed on small screens, expanded on desktop
+const STORAGE_KEY = "ernest:legend-collapsed";
+const stored = localStorage.getItem(STORAGE_KEY);
+const isSmallScreen = window.matchMedia("(max-width: 640px)").matches;
+const collapsed = ref(stored !== null ? stored === "true" : isSmallScreen);
 
-function startPress(activate: () => void, deactivate: () => void) {
-  longPressed = false;
-  deactivateFn = deactivate;
-  pressTimer = setTimeout(() => {
-    activate();
-    longPressed = true;
-  }, 400);
-}
-
-function endPress(e: Event) {
-  if (pressTimer) {
-    clearTimeout(pressTimer);
-    pressTimer = null;
-  }
-  if (longPressed) {
-    e.preventDefault();
-    deactivateFn?.();
-    longPressed = false;
-  }
-  deactivateFn = null;
-}
-
-function cancelPress() {
-  if (pressTimer) {
-    clearTimeout(pressTimer);
-    pressTimer = null;
-  }
-  if (longPressed) {
-    deactivateFn?.();
-  }
-  longPressed = false;
-  deactivateFn = null;
-}
+watch(collapsed, (v) => localStorage.setItem(STORAGE_KEY, String(v)));
 
 const {
   zoneVisibility,
@@ -149,8 +118,6 @@ const {
   fundaFavouriteVisible,
   fundaUnreviewedVisible,
   fundaDiscardedVisible,
-  hoveredZone,
-  hoveredTransit,
   fundaFavouriteCount,
   fundaUnreviewedCount,
   fundaDiscardedCount,
@@ -162,21 +129,21 @@ const {
 } = useZoneState();
 
 const zones: { key: ZoneKey; label: string; color: string }[] = [
-  { key: "10", label: "in 10 mins", color: "#22c55e" },
-  { key: "20", label: "in 20 mins", color: "#f59e0b" },
-  { key: "30", label: "in 30 mins", color: "#ef4444" },
+  { key: "10", label: "10 mins cycle", color: "#22c55e" },
+  { key: "20", label: "20 mins cycle", color: "#f59e0b" },
+  { key: "30", label: "30 mins cycle", color: "#ef4444" },
 ];
 
 const transit: { key: TransitKey; label: string; color: string }[] = [
-  { key: "train", label: "train", color: "#003DA5" },
-  { key: "metro", label: "metro", color: "#E4003A" },
-  { key: "tram", label: "tram", color: "#7B2D8E" },
+  { key: "train", label: "train stations", color: "#003DA5" },
+  { key: "metro", label: "metro stations", color: "#E4003A" },
+  { key: "tram", label: "tram stops", color: "#7B2D8E" },
 ];
 
 const fundaItems = computed(() => [
   {
     key: "favourite",
-    label: "favourites",
+    label: "favourite listings",
     color: COLORS.fundaFavourite,
     visible: fundaFavouriteVisible.value,
     count: fundaFavouriteCount.value,
@@ -184,7 +151,7 @@ const fundaItems = computed(() => [
   },
   {
     key: "unreviewed",
-    label: "unreviewed",
+    label: "unreviewed listings",
     color: COLORS.fundaUnreviewed,
     visible: fundaUnreviewedVisible.value,
     count: fundaUnreviewedCount.value,
@@ -192,7 +159,7 @@ const fundaItems = computed(() => [
   },
   {
     key: "discarded",
-    label: "discarded",
+    label: "discarded listings",
     color: COLORS.fundaDiscarded,
     visible: fundaDiscardedVisible.value,
     count: fundaDiscardedCount.value,
