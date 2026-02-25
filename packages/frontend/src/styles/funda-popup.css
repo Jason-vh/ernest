@@ -1,0 +1,143 @@
+.maplibregl-popup-content {
+  border-radius: 8px !important;
+  padding: 10px 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+  overflow: hidden;
+}
+
+.funda-popup .maplibregl-popup-content {
+  padding: 0 !important;
+  border-radius: 10px !important;
+  width: 280px !important;
+}
+
+.funda-popup-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  position: relative;
+  cursor: pointer;
+}
+
+.funda-grid {
+  width: 280px;
+  height: 180px;
+  display: grid;
+  gap: 2px;
+  background: #e5e5e5;
+  overflow: hidden;
+}
+
+.funda-grid > div {
+  background-size: cover;
+  background-position: center;
+}
+
+.funda-grid--3 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.funda-grid--3 > div:first-child {
+  grid-row: 1 / -1;
+}
+
+.funda-grid--2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.funda-grid--1 {
+  grid-template-columns: 1fr;
+}
+
+.funda-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.85) 100%);
+  padding: 32px 10px 8px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  color: #fff;
+  font-family: system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.funda-bar-price {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.funda-bar-asking {
+  font-size: 10px;
+  opacity: 0.85;
+}
+
+.funda-bar-details {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.funda-cycling-times:empty {
+  display: none;
+}
+
+.funda-cycling-times {
+  padding: 6px 10px;
+  font-family: system-ui, sans-serif;
+  font-size: 11px;
+  color: #555;
+  border-top: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.funda-cycling-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.funda-cycling-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.funda-cycling-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.funda-cycling-loading > span {
+  height: 10px;
+  border-radius: 4px;
+  background: #e5e5e5;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.funda-cycling-loading > span:first-child {
+  width: 120px;
+}
+
+.funda-cycling-loading > span:last-child {
+  width: 100px;
+  animation-delay: 0.15s;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}

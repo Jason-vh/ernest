@@ -1,5 +1,5 @@
 <template>
-  <div class="app">
+  <div class="w-full h-full relative">
     <MapView />
     <Legend />
     <FundaFilters />
@@ -10,19 +10,11 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import MapView from "./components/MapView.vue";
-import Legend from "./components/Legend.vue";
-import FundaFilters from "./components/FundaFilters.vue";
-import AuthButton from "./components/AuthButton.vue";
-import AuthModal from "./components/AuthModal.vue";
+import MapView from "@/components/MapView.vue";
+import Legend from "@/components/Legend.vue";
+import FundaFilters from "@/components/FundaFilters.vue";
+import AuthButton from "@/components/AuthButton.vue";
+import AuthModal from "@/components/AuthModal.vue";
 
 const showAuth = ref(false);
 </script>
-
-<style>
-.app {
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
-</style>

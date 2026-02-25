@@ -1,12 +1,12 @@
 import { ref } from "vue";
-import type { User } from "../api/auth";
+import type { User } from "@/api/auth";
 import {
   getMe,
   login as apiLogin,
   logout as apiLogout,
   register as apiRegister,
   PasskeyCancelledError,
-} from "../api/auth";
+} from "@/api/auth";
 
 // Module-level singleton state
 const user = ref<User | null>(null);

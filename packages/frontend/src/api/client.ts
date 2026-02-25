@@ -1,4 +1,4 @@
-import type { TransitStop } from "../types/transit";
+import type { TransitStop } from "@/types/transit";
 
 export async function fetchIsochrone(): Promise<GeoJSON.FeatureCollection> {
   const res = await fetch("/api/isochrone");

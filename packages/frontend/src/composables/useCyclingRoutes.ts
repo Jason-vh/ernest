@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { fetchCyclingRoutes, type CyclingRoutes } from "../api/client";
+import { fetchCyclingRoutes, type CyclingRoutes } from "@/api/client";
 
 const activeRoutes = ref<CyclingRoutes | null>(null);
 const routesLoading = ref(false);

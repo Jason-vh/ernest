@@ -1,32 +1,57 @@
 <template>
   <Teleport to="body">
     <Transition name="modal">
-      <div v-if="visible" class="auth-overlay" @click.self="$emit('close')">
-        <div class="auth-modal">
+      <div
+        v-if="visible"
+        class="fixed inset-0 z-100 flex items-center justify-center bg-black/20 backdrop-blur-[2px]"
+        @click.self="$emit('close')"
+        @keydown.escape="$emit('close')"
+      >
+        <div
+          ref="modalRef"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="auth-modal-title"
+          class="modal-panel w-[340px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[14px] bg-glass-strong font-sans shadow-[0_8px_40px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.06)] backdrop-blur-[24px]"
+          @keydown="trapFocus"
+        >
           <!-- Header tabs -->
-          <div class="auth-tabs">
+          <div class="flex border-b border-black/6">
             <button
-              class="auth-tab"
-              :class="{ 'auth-tab--active': mode === 'login' }"
+              id="auth-modal-title"
+              class="relative flex-1 cursor-pointer border-none bg-transparent py-3.5 font-inherit text-[11px] font-semibold uppercase tracking-wide transition-colors"
+              :class="mode === 'login' ? 'text-[#666]' : 'text-[#bbb] hover:text-[#888]'"
               @click="mode = 'login'"
             >
               Sign in
+              <span
+                v-if="mode === 'login'"
+                class="absolute bottom-[-1px] left-1/5 right-1/5 h-0.5 rounded-sm bg-[#999]"
+              ></span>
             </button>
             <button
-              class="auth-tab"
-              :class="{ 'auth-tab--active': mode === 'register' }"
+              class="relative flex-1 cursor-pointer border-none bg-transparent py-3.5 font-inherit text-[11px] font-semibold uppercase tracking-wide transition-colors"
+              :class="mode === 'register' ? 'text-[#666]' : 'text-[#bbb] hover:text-[#888]'"
               @click="mode = 'register'"
             >
               Create account
+              <span
+                v-if="mode === 'register'"
+                class="absolute bottom-[-1px] left-1/5 right-1/5 h-0.5 rounded-sm bg-[#999]"
+              ></span>
             </button>
           </div>
 
           <!-- Login mode -->
-          <div v-if="mode === 'login'" class="auth-body">
-            <p class="auth-hint">Use your passkey to sign in.</p>
-            <button class="auth-action" @click="handleLogin" :disabled="busy">
+          <div v-if="mode === 'login'" class="flex flex-col gap-3.5 p-5">
+            <p class="m-0 text-[13px] leading-[1.4] text-[#888]">Use your passkey to sign in.</p>
+            <button
+              class="flex items-center justify-center gap-2 rounded-[10px] border-none bg-black/6 px-4 py-3 font-inherit text-[13px] font-semibold text-[#555] transition-colors hover:not-disabled:bg-black/10 hover:not-disabled:text-[#333] disabled:cursor-default disabled:opacity-50"
+              @click="handleLogin"
+              :disabled="busy"
+            >
               <svg
-                class="auth-action-icon"
+                class="shrink-0 opacity-60"
                 width="16"
                 height="16"
                 viewBox="0 0 24 24"
@@ -45,13 +70,17 @@
           </div>
 
           <!-- Register mode -->
-          <div v-if="mode === 'register'" class="auth-body">
-            <div class="auth-field">
-              <label class="auth-field-label" for="auth-username">Username</label>
+          <div v-if="mode === 'register'" class="flex flex-col gap-3.5 p-5">
+            <div class="flex flex-col gap-1">
+              <label
+                class="text-[11px] font-semibold uppercase tracking-wide text-[#999]"
+                for="auth-username"
+                >Username</label
+              >
               <input
                 id="auth-username"
                 v-model="username"
-                class="auth-input"
+                class="rounded-lg border border-black/8 bg-white/50 px-3 py-2.5 font-inherit text-sm text-[#333] outline-none transition-[border-color,box-shadow] placeholder:text-[#ccc] focus:border-black/15 focus:shadow-[0_0_0_3px_rgba(0,0,0,0.04)]"
                 type="text"
                 placeholder="janssen"
                 autocomplete="username"
@@ -61,12 +90,12 @@
               />
             </div>
             <button
-              class="auth-action"
+              class="flex items-center justify-center gap-2 rounded-[10px] border-none bg-black/6 px-4 py-3 font-inherit text-[13px] font-semibold text-[#555] transition-colors hover:not-disabled:bg-black/10 hover:not-disabled:text-[#333] disabled:cursor-default disabled:opacity-50"
               @click="handleRegister"
               :disabled="busy || !username.trim()"
             >
               <svg
-                class="auth-action-icon"
+                class="shrink-0 opacity-60"
                 width="16"
                 height="16"
                 viewBox="0 0 24 24"
@@ -86,7 +115,7 @@
 
           <!-- Error message -->
           <Transition name="error">
-            <div v-if="errorMsg" class="auth-error">
+            <div v-if="errorMsg" class="px-5 pb-4 text-xs leading-[1.4] text-[#c0392b]">
               {{ errorMsg }}
             </div>
           </Transition>
@@ -97,9 +126,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
-import { useAuth } from "../composables/useAuth";
-import { PasskeyCancelledError } from "../api/auth";
+import { ref, watch, nextTick } from "vue";
+import { useAuth } from "@/composables/useAuth";
+import { PasskeyCancelledError } from "@/api/auth";
 
 const props = defineProps<{ visible: boolean }>();
 const emit = defineEmits<{ close: [] }>();
@@ -110,19 +139,27 @@ const mode = ref<"login" | "register">("login");
 const username = ref("");
 const busy = ref(false);
 const errorMsg = ref<string | null>(null);
+const modalRef = ref<HTMLDivElement>();
 
 // Clear error when switching modes
 watch(mode, () => {
   errorMsg.value = null;
 });
 
-// Clear state when modal closes
+// Clear state when modal closes; focus trap on open
 watch(
   () => props.visible,
   (v) => {
     if (!v) {
       errorMsg.value = null;
       busy.value = false;
+    } else {
+      nextTick(() => {
+        const first = modalRef.value?.querySelector<HTMLElement>(
+          "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
+        );
+        first?.focus();
+      });
     }
   },
 );
@@ -131,6 +168,23 @@ watch(
 watch(authError, (val) => {
   if (val) errorMsg.value = val;
 });
+
+function trapFocus(e: KeyboardEvent) {
+  if (e.key !== "Tab" || !modalRef.value) return;
+  const focusable = modalRef.value.querySelectorAll<HTMLElement>(
+    "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
+  );
+  if (focusable.length === 0) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
+}
 
 async function handleLogin() {
   errorMsg.value = null;
@@ -163,175 +217,14 @@ async function handleRegister() {
 </script>
 
 <style scoped>
-.auth-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-}
-
-.auth-modal {
-  width: 340px;
-  max-width: calc(100vw - 32px);
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-radius: 14px;
-  box-shadow:
-    0 8px 40px rgba(0, 0, 0, 0.12),
-    0 1px 3px rgba(0, 0, 0, 0.06);
-  font-family:
-    system-ui,
-    -apple-system,
-    sans-serif;
-  overflow: hidden;
-}
-
-.auth-tabs {
-  display: flex;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.auth-tab {
-  flex: 1;
-  padding: 14px 0;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #bbb;
-  transition: color 0.15s;
-  position: relative;
-}
-
-.auth-tab:hover {
-  color: #888;
-}
-
-.auth-tab--active {
-  color: #666;
-}
-
-.auth-tab--active::after {
-  content: "";
-  position: absolute;
-  bottom: -1px;
-  left: 20%;
-  right: 20%;
-  height: 2px;
-  background: #999;
-  border-radius: 1px;
-}
-
-.auth-body {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.auth-hint {
-  font-size: 13px;
-  color: #888;
-  margin: 0;
-  line-height: 1.4;
-}
-
-.auth-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.auth-field-label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #999;
-}
-
-.auth-input {
-  padding: 10px 12px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.5);
-  font-family: inherit;
-  font-size: 14px;
-  color: #333;
-  outline: none;
-  transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
-}
-
-.auth-input::placeholder {
-  color: #ccc;
-}
-
-.auth-input:focus {
-  border-color: rgba(0, 0, 0, 0.15);
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.04);
-}
-
-.auth-action {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border: none;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.06);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  color: #555;
-  cursor: pointer;
-  transition:
-    background-color 0.15s,
-    color 0.15s;
-}
-
-.auth-action:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.1);
-  color: #333;
-}
-
-.auth-action:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-.auth-action-icon {
-  flex-shrink: 0;
-  opacity: 0.6;
-}
-
-.auth-error {
-  padding: 0 20px 16px;
-  font-size: 12px;
-  color: #c0392b;
-  line-height: 1.4;
-}
-
 /* Modal transition */
 .modal-enter-active,
 .modal-leave-active {
   transition: opacity 0.2s ease;
 }
 
-.modal-enter-active .auth-modal,
-.modal-leave-active .auth-modal {
+.modal-enter-active .modal-panel,
+.modal-leave-active .modal-panel {
   transition:
     transform 0.2s ease,
     opacity 0.2s ease;
@@ -342,8 +235,8 @@ async function handleRegister() {
   opacity: 0;
 }
 
-.modal-enter-from .auth-modal,
-.modal-leave-to .auth-modal {
+.modal-enter-from .modal-panel,
+.modal-leave-to .modal-panel {
   transform: scale(0.96) translateY(8px);
   opacity: 0;
 }

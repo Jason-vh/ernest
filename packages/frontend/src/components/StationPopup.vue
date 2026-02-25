@@ -1,7 +1,7 @@
 <template>
-  <div class="station-popup">
+  <div class="flex flex-col gap-0.5 font-sans text-[13px]">
     <strong>{{ name }}</strong>
-    <span class="station-type">{{ type }}</span>
+    <span class="capitalize text-[#666]">{{ type }}</span>
   </div>
 </template>
 
@@ -11,18 +11,3 @@ defineProps<{
   type: string;
 }>();
 </script>
-
-<style scoped>
-.station-popup {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-family: system-ui, sans-serif;
-  font-size: 13px;
-}
-
-.station-type {
-  color: #666;
-  text-transform: capitalize;
-}
-</style>

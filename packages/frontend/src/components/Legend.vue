@@ -1,61 +1,97 @@
 <template>
-  <div class="legend">
-    <div class="legend-title">cycle distance</div>
-    <div class="legend-items">
-      <div
-        class="legend-item legend-item--toggle"
-        :class="{ 'legend-item--disabled': !zoneVisibility[item.key] }"
+  <div
+    class="glass absolute bottom-3 left-3 z-1 flex min-w-40 flex-col gap-2 p-3 px-4 font-sans text-[13px]"
+  >
+    <div class="text-[11px] font-semibold uppercase tracking-wide text-[#999]">cycle distance</div>
+    <div class="flex flex-col gap-[5px]">
+      <button
         v-for="item in zones"
         :key="item.key"
+        :aria-pressed="zoneVisibility[item.key]"
+        class="flex cursor-pointer items-center gap-2.5 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 transition-colors hover:bg-black/5"
         @mouseenter="hoveredZone = item.key"
         @mouseleave="hoveredZone = null"
         @click="toggleZone(item.key)"
       >
-        <span class="legend-swatch" :style="{ backgroundColor: item.color }"></span>
-        <span class="legend-label">{{ item.label }}</span>
-      </div>
+        <span
+          class="h-2.5 w-4 shrink-0 rounded-sm transition-opacity"
+          :class="zoneVisibility[item.key] ? 'opacity-35' : 'opacity-12'"
+          :style="{ backgroundColor: item.color }"
+        ></span>
+        <span
+          class="font-[450] transition-opacity"
+          :class="zoneVisibility[item.key] ? 'text-[#444]' : 'text-[#444] opacity-35 line-through'"
+          >{{ item.label }}</span
+        >
+      </button>
     </div>
-    <div class="legend-divider"></div>
-    <div class="legend-title">transit</div>
-    <div class="legend-items">
-      <div
-        class="legend-item legend-item--toggle"
-        :class="{ 'legend-item--disabled': !transitVisibility[item.key] }"
+    <div class="h-px bg-[#e5e5e5]"></div>
+    <div class="text-[11px] font-semibold uppercase tracking-wide text-[#999]">transit</div>
+    <div class="flex flex-col gap-[5px]">
+      <button
         v-for="item in transit"
         :key="item.key"
+        :aria-pressed="transitVisibility[item.key]"
+        class="flex cursor-pointer items-center gap-2.5 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 transition-colors hover:bg-black/5"
         @mouseenter="hoveredTransit = item.key"
         @mouseleave="hoveredTransit = null"
         @click="toggleTransit(item.key)"
       >
-        <span class="legend-dot" :style="{ backgroundColor: item.color }"></span>
-        <span class="legend-label">{{ item.label }}</span>
-      </div>
+        <span
+          class="h-2.5 w-2.5 shrink-0 rounded-full border-[1.5px] border-white/90 shadow-sm transition-opacity"
+          :class="transitVisibility[item.key] ? '' : 'opacity-12'"
+          :style="{ backgroundColor: item.color }"
+        ></span>
+        <span
+          class="font-[450] transition-opacity"
+          :class="
+            transitVisibility[item.key] ? 'text-[#444]' : 'text-[#444] opacity-35 line-through'
+          "
+          >{{ item.label }}</span
+        >
+      </button>
     </div>
-    <div class="legend-divider"></div>
-    <div class="legend-title">funda</div>
-    <div class="legend-items">
-      <div
-        class="legend-item legend-item--toggle"
-        :class="{ 'legend-item--disabled': !fundaNewVisible }"
+    <div class="h-px bg-[#e5e5e5]"></div>
+    <div class="text-[11px] font-semibold uppercase tracking-wide text-[#999]">funda</div>
+    <div class="flex flex-col gap-[5px]">
+      <button
+        :aria-pressed="fundaNewVisible"
+        class="flex cursor-pointer items-center gap-2.5 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 transition-colors hover:bg-black/5"
         @click="toggleFundaNew()"
       >
-        <span class="legend-dot" style="background-color: #e8950f"></span>
-        <span class="legend-label">unseen listings</span>
-      </div>
-      <div
-        class="legend-item legend-item--toggle"
-        :class="{ 'legend-item--disabled': !fundaViewedVisible }"
+        <span
+          class="h-2.5 w-2.5 shrink-0 rounded-full border-[1.5px] border-white/90 shadow-sm transition-opacity"
+          :class="fundaNewVisible ? '' : 'opacity-12'"
+          style="background-color: #e8950f"
+        ></span>
+        <span
+          class="font-[450] transition-opacity"
+          :class="fundaNewVisible ? 'text-[#444]' : 'text-[#444] opacity-35 line-through'"
+          >unseen listings</span
+        >
+      </button>
+      <button
+        :aria-pressed="fundaViewedVisible"
+        class="flex cursor-pointer items-center gap-2.5 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 transition-colors hover:bg-black/5"
         @click="toggleFundaViewed()"
       >
-        <span class="legend-dot" style="background-color: #aaa"></span>
-        <span class="legend-label">viewed listings</span>
-      </div>
+        <span
+          class="h-2.5 w-2.5 shrink-0 rounded-full border-[1.5px] border-white/90 shadow-sm transition-opacity"
+          :class="fundaViewedVisible ? '' : 'opacity-12'"
+          style="background-color: #aaa"
+        ></span>
+        <span
+          class="font-[450] transition-opacity"
+          :class="fundaViewedVisible ? 'text-[#444]' : 'text-[#444] opacity-35 line-through'"
+          >viewed listings</span
+        >
+      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useZoneState, type ZoneKey, type TransitKey } from "../composables/useZoneState";
+import { useZoneState, type ZoneKey, type TransitKey } from "@/composables/useZoneState";
 
 const {
   zoneVisibility,
@@ -82,99 +118,3 @@ const transit: { key: TransitKey; label: string; color: string }[] = [
   { key: "tram", label: "tram", color: "#7B2D8E" },
 ];
 </script>
-
-<style scoped>
-.legend {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  background: rgba(255, 255, 255, 0.35);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-radius: 10px;
-  padding: 12px 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  font-family:
-    system-ui,
-    -apple-system,
-    sans-serif;
-  font-size: 13px;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 160px;
-}
-
-.legend-title {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #999;
-}
-
-.legend-items {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.legend-item--toggle {
-  cursor: pointer;
-  border-radius: 4px;
-  padding: 2px 4px;
-  margin: -2px -4px;
-  transition: background-color 0.15s;
-}
-
-.legend-item--toggle:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.legend-item--disabled .legend-swatch,
-.legend-item--disabled .legend-dot {
-  opacity: 0.12 !important;
-}
-
-.legend-item--disabled .legend-label {
-  opacity: 0.35;
-  text-decoration: line-through;
-}
-
-.legend-swatch {
-  width: 16px;
-  height: 10px;
-  border-radius: 2px;
-  opacity: 0.35;
-  flex-shrink: 0;
-  transition: opacity 0.15s;
-}
-
-.legend-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-  flex-shrink: 0;
-  transition: opacity 0.15s;
-}
-
-.legend-label {
-  color: #444;
-  font-weight: 450;
-  transition: opacity 0.15s;
-}
-
-.legend-divider {
-  height: 1px;
-  background: #e5e5e5;
-}
-</style>
