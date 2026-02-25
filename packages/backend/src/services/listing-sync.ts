@@ -1,8 +1,14 @@
 import { db } from "@/db";
 import { listings, type NewListing } from "@/db/schema";
-import { isNull, notInArray, and, sql } from "drizzle-orm";
+import { isNull, notInArray, and, or, eq, sql } from "drizzle-orm";
 import { enqueueMany } from "@/services/job-queue";
 import { matchBuurt, type BuurtStats } from "@/services/buurt-matcher";
+
+/** Listing is active: not disappeared and status is available */
+const isActiveListing = and(
+  isNull(listings.disappearedAt),
+  or(eq(listings.status, "Beschikbaar"), eq(listings.status, "")),
+);
 
 interface SyncResult {
   upserted: number;
@@ -69,17 +75,17 @@ export async function syncListings(incoming: NewListing[]): Promise<SyncResult> 
     disappeared = result.length;
   }
 
-  // Enqueue jobs for listings needing routes
+  // Enqueue jobs for active listings needing routes
   const needRoutes = await db
     .select({ fundaId: listings.fundaId })
     .from(listings)
-    .where(and(isNull(listings.disappearedAt), isNull(listings.routeFareharbor)));
+    .where(and(isActiveListing, isNull(listings.routeFareharbor)));
 
-  // Enqueue jobs for listings needing AI enrichment
+  // Enqueue jobs for active listings needing AI enrichment
   const needAi = await db
     .select({ fundaId: listings.fundaId })
     .from(listings)
-    .where(and(isNull(listings.disappearedAt), isNull(listings.aiPositives)));
+    .where(and(isActiveListing, isNull(listings.aiPositives)));
 
   const routeJobs = needRoutes.map((r) => ({
     type: "compute-routes" as const,

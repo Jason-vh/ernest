@@ -13,7 +13,7 @@ import { resetStaleJobs, enqueueMany } from "@/services/job-queue";
 import { startQueueProcessor } from "@/services/queue-processor";
 import { db } from "@/db";
 import { listings } from "@/db/schema";
-import { isNull, and } from "drizzle-orm";
+import { isNull, and, or, eq } from "drizzle-orm";
 
 const app = new Hono();
 
@@ -47,11 +47,17 @@ await loadData();
 // Recover any stale running jobs from previous crash
 await resetStaleJobs();
 
-// Enqueue AI enrichment for existing un-enriched listings (idempotent)
+// Enqueue AI enrichment for existing un-enriched active listings (idempotent)
 const unenriched = await db
   .select({ fundaId: listings.fundaId })
   .from(listings)
-  .where(and(isNull(listings.aiPositives), isNull(listings.disappearedAt)));
+  .where(
+    and(
+      isNull(listings.aiPositives),
+      isNull(listings.disappearedAt),
+      or(eq(listings.status, "Beschikbaar"), eq(listings.status, "")),
+    ),
+  );
 if (unenriched.length > 0) {
   const enqueued = await enqueueMany(
     unenriched.map((r) => ({ type: "ai-enrich" as const, fundaId: r.fundaId, maxAttempts: 2 })),

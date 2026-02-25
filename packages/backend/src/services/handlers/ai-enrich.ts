@@ -31,6 +31,7 @@ export async function handleAiEnrich(job: Job): Promise<"completed" | "skipped">
       constructionYear: listings.constructionYear,
       description: listings.description,
       photos: listings.photos,
+      status: listings.status,
       aiPositives: listings.aiPositives,
       buurtWozValue: listings.buurtWozValue,
       buurtSafetyRating: listings.buurtSafetyRating,
@@ -45,6 +46,9 @@ export async function handleAiEnrich(job: Job): Promise<"completed" | "skipped">
 
   // Already enriched
   if (listing.aiPositives !== null) return "skipped";
+
+  // Skip non-available listings (sold, under offer, etc.)
+  if (listing.status !== "Beschikbaar" && listing.status !== "") return "skipped";
 
   // Build message content
   const content: Anthropic.MessageCreateParams["messages"][number]["content"] = [];
