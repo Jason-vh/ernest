@@ -31,8 +31,16 @@ const {
   fundaDiscardedCount,
 } = useZoneState();
 
-const { listings, favouriteIds, discardedIds, selectListing, consumeDeepLink, setListings } =
-  useListingStore();
+const {
+  listings,
+  favouriteIds,
+  discardedIds,
+  clusterListingIds,
+  selectListing,
+  consumeDeepLink,
+  setListings,
+  findColocatedIds,
+} = useListingStore();
 
 const { initMap } = useMap(mapContainer);
 
@@ -63,6 +71,7 @@ onMounted(async () => {
       const listing = listings.value.get(deepLinkedId);
       if (listing) {
         flyTo(listing.longitude, listing.latitude);
+        clusterListingIds.value = findColocatedIds(deepLinkedId);
       }
     }
 

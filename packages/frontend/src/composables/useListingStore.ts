@@ -214,6 +214,19 @@ async function saveNote(fundaId: string, text: string, user: { id: string; usern
   }
 }
 
+function findColocatedIds(fundaId: string): string[] {
+  const target = listings.value.get(fundaId);
+  if (!target) return [];
+  const key = `${target.longitude},${target.latitude}`;
+  const ids: string[] = [];
+  for (const [id, listing] of listings.value) {
+    if (`${listing.longitude},${listing.latitude}` === key) {
+      ids.push(id);
+    }
+  }
+  return ids.length > 1 ? ids : [];
+}
+
 export function useListingStore() {
   return {
     listings,
@@ -231,5 +244,6 @@ export function useListingStore() {
     setListings,
     setReaction,
     saveNote,
+    findColocatedIds,
   };
 }
