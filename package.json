@@ -1,7 +1,11 @@
 {
   "name": "ernest",
+  "devDependencies": {
+    "lefthook": "^2.1.1",
+    "oxfmt": "^0.35.0",
+    "oxlint": "^1.50.0"
+  },
   "private": true,
-  "workspaces": ["packages/*", "scripts"],
   "scripts": {
     "dev:backend": "bun run --env-file=../../.env --cwd packages/backend src/index.ts",
     "dev:frontend": "bun run --cwd packages/frontend dev",
@@ -17,9 +21,5 @@
     "fetch-data": "bun scripts/fetch-data.ts",
     "fetch-funda": "python3.13 scripts/fetch_funda.py"
   },
-  "devDependencies": {
-    "lefthook": "^2.1.1",
-    "oxfmt": "^0.35.0",
-    "oxlint": "^1.50.0"
-  }
+  "workspaces": ["packages/*", "scripts"]
 }

@@ -9,6 +9,7 @@
   "dependencies": {
     "@ernest/shared": "workspace:*",
     "@simplewebauthn/browser": "^13.2.2",
+    "embla-carousel": "^8.6.0",
     "maplibre-gl": "^5.1.0",
     "vue": "^3.5.0"
   },
