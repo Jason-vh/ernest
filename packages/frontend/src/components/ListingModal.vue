@@ -130,22 +130,12 @@
               </div>
 
               <!-- Cycling commute -->
-              <div
-                v-if="listing.routeFareharbor || listing.routeAirwallex"
-                class="mt-1.5 text-[12px] text-[#aaa]"
-              >
-                <span class="mr-1">Cycling</span>
-                <template v-if="listing.routeFareharbor">
-                  <span class="tabular-nums text-[#888]">{{ listing.routeFareharbor }} min</span>
-                  {{ OFFICES.fareharbor.name }}</template
-                >
-                <template v-if="listing.routeFareharbor && listing.routeAirwallex">
-                  &middot;
+              <div v-if="commuteEntries.length" class="mt-1.5 text-[12px] text-[#aaa]">
+                <template v-for="(entry, i) in commuteEntries" :key="entry.label">
+                  <template v-if="i > 0"> &middot; </template>
+                  <span class="tabular-nums text-[#888]">{{ entry.mins }} min</span>
+                  {{ entry.first ? "cycle to" : "to" }} {{ entry.label }}
                 </template>
-                <template v-if="listing.routeAirwallex">
-                  <span class="tabular-nums text-[#888]">{{ listing.routeAirwallex }} min</span>
-                  {{ OFFICES.airwallex.name }}</template
-                >
               </div>
 
               <!-- Actions row -->
@@ -419,12 +409,14 @@ const overbidPrice = computed(() => {
   return Math.round(listing.value.price * 1.15);
 });
 
-const listingAgeDays = computed(() => {
+const listingAgeText = computed(() => {
   if (!listing.value?.offeredSince) return null;
   const offered = new Date(listing.value.offeredSince);
   if (Number.isNaN(offered.getTime())) return null;
-  const diff = Date.now() - offered.getTime();
-  return Math.floor(diff / (1000 * 60 * 60 * 24));
+  const days = Math.floor((Date.now() - offered.getTime()) / (1000 * 60 * 60 * 24));
+  if (days < 14) return `listed ${days} day${days === 1 ? "" : "s"} ago`;
+  if (days < 60) return `listed ${Math.round(days / 7)} weeks ago`;
+  return `listed ${Math.round(days / 30)} months ago`;
 });
 
 const keyFacts = computed(() => {
@@ -436,8 +428,28 @@ const keyFacts = computed(() => {
   if (listing.value.hasGarden) parts.push("Garden");
   if (listing.value.hasBalcony) parts.push("Balcony");
   if (listing.value.hasRoofTerrace) parts.push("Roof terrace");
-  if (listingAgeDays.value != null) parts.push(`${listingAgeDays.value} days on market`);
+  if (listingAgeText.value) parts.push(listingAgeText.value);
   return parts.join(" \u00B7 ");
+});
+
+const commuteEntries = computed(() => {
+  if (!listing.value) return [];
+  const entries: { mins: number; label: string; first: boolean }[] = [];
+  if (listing.value.routeFareharbor)
+    entries.push({
+      mins: listing.value.routeFareharbor,
+      label: OFFICES.fareharbor.name,
+      first: false,
+    });
+  if (listing.value.routeAirwallex)
+    entries.push({
+      mins: listing.value.routeAirwallex,
+      label: OFFICES.airwallex.name,
+      first: false,
+    });
+  if (entries.length === 2 && parseInt(listing.value.fundaId, 10) % 2 === 1) entries.reverse();
+  if (entries.length > 0) entries[0].first = true;
+  return entries;
 });
 
 const energyLabelBadge = computed(() => {

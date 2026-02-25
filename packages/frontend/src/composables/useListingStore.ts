@@ -4,6 +4,7 @@ import { putReaction, putNote } from "@/api/client";
 
 const listings = ref<Map<string, Listing>>(new Map());
 const selectedFundaId = ref<string | null>(null);
+const clusterListingIds = ref<string[]>([]);
 let pushedState = false;
 
 // One-time cleanup of old localStorage viewed tracking
@@ -45,7 +46,14 @@ const discardedIds = computed(() => {
   return ids;
 });
 
-function selectListing(fundaId: string) {
+const currentClusterIndex = computed(() => {
+  if (!selectedFundaId.value || clusterListingIds.value.length === 0) return -1;
+  return clusterListingIds.value.indexOf(selectedFundaId.value);
+});
+
+function selectListing(fundaId: string, opts?: { clusterIds?: string[] }) {
+  clusterListingIds.value = opts?.clusterIds ?? [];
+
   if (selectedFundaId.value === fundaId) return;
 
   // Push a history entry so Back button closes the modal
@@ -59,8 +67,26 @@ function selectListing(fundaId: string) {
   selectedFundaId.value = fundaId;
 }
 
+function navigateCluster(dir: 1 | -1) {
+  const ids = clusterListingIds.value;
+  if (ids.length < 2) return;
+  const idx = currentClusterIndex.value;
+  if (idx < 0) return;
+  const next = (idx + dir + ids.length) % ids.length;
+  const nextId = ids[next];
+
+  // Replace URL (don't push new history for cluster navigation)
+  const params = new URLSearchParams(window.location.search);
+  params.set("listing", nextId);
+  params.delete("photo");
+  const url = `${window.location.pathname}?${params.toString()}`;
+  history.replaceState({ listing: nextId }, "", url);
+  selectedFundaId.value = nextId;
+}
+
 function closeModal() {
   if (!selectedFundaId.value) return;
+  clusterListingIds.value = [];
 
   if (pushedState) {
     history.back();
@@ -80,6 +106,7 @@ function closeModal() {
 
 function dismissModal() {
   if (!selectedFundaId.value) return;
+  clusterListingIds.value = [];
   const params = new URLSearchParams(window.location.search);
   params.delete("listing");
   params.delete("photo");
@@ -194,9 +221,12 @@ export function useListingStore() {
     selectedListing,
     favouriteIds,
     discardedIds,
+    clusterListingIds,
+    currentClusterIndex,
     selectListing,
     closeModal,
     dismissModal,
+    navigateCluster,
     consumeDeepLink,
     setListings,
     setReaction,
