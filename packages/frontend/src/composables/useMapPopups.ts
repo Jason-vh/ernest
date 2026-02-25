@@ -40,6 +40,7 @@ export function useMapPopups(deps: PopupDeps) {
 
   let fundaPopup: maplibregl.Popup | null = null;
   let fundaCloseTimer: ReturnType<typeof setTimeout> | null = null;
+  const hasHover = window.matchMedia("(hover: hover)").matches;
 
   function showFundaPopup(
     feature: maplibregl.MapGeoJSONFeature | GeoJSON.Feature,
@@ -151,40 +152,46 @@ export function useMapPopups(deps: PopupDeps) {
     updateBuildingHighlights();
   }
 
-  // Hover: show popup (desktop only — mouseenter doesn't fire on touch)
-  map.on("mouseenter", "funda-circles", (e) => {
-    map.getCanvas().style.cursor = "pointer";
-    cancelFundaClose();
-    if (e.features && e.features.length > 0) {
-      showFundaPopup(e.features[0]);
-      attachPopupHover();
-    }
-  });
-  map.on("mouseleave", "funda-circles", () => {
-    map.getCanvas().style.cursor = "";
-    scheduleFundaClose();
-  });
+  // Hover popups: desktop only (devices with a fine pointer)
+  if (hasHover) {
+    map.on("mouseenter", "funda-circles", (e) => {
+      map.getCanvas().style.cursor = "pointer";
+      cancelFundaClose();
+      if (e.features && e.features.length > 0) {
+        showFundaPopup(e.features[0]);
+        attachPopupHover();
+      }
+    });
+    map.on("mouseleave", "funda-circles", () => {
+      map.getCanvas().style.cursor = "";
+      scheduleFundaClose();
+    });
 
-  // Click: always open modal (both desktop and touch)
+    map.on("mouseenter", "funda-building-fill", (e) => {
+      map.getCanvas().style.cursor = "pointer";
+      cancelFundaClose();
+      if (e.features && e.features.length > 0) {
+        const lngLat: [number, number] = [e.lngLat.lng, e.lngLat.lat];
+        showFundaPopup(e.features[0], lngLat);
+        attachPopupHover();
+      }
+    });
+    map.on("mouseleave", "funda-building-fill", () => {
+      map.getCanvas().style.cursor = "";
+      scheduleFundaClose();
+    });
+  }
+
+  // Click: open modal (both desktop and touch, via visible dots + hit-area layer)
   map.on("click", "funda-circles", (e) => {
     if (e.features && e.features.length > 0) {
       handleFeatureClick(e.features[0]);
     }
   });
-
-  // --- Building highlight interaction handlers ---
-  map.on("mouseenter", "funda-building-fill", (e) => {
-    map.getCanvas().style.cursor = "pointer";
-    cancelFundaClose();
+  map.on("click", "funda-circles-hitarea", (e) => {
     if (e.features && e.features.length > 0) {
-      const lngLat: [number, number] = [e.lngLat.lng, e.lngLat.lat];
-      showFundaPopup(e.features[0], lngLat);
-      attachPopupHover();
+      handleFeatureClick(e.features[0]);
     }
-  });
-  map.on("mouseleave", "funda-building-fill", () => {
-    map.getCanvas().style.cursor = "";
-    scheduleFundaClose();
   });
   map.on("click", "funda-building-fill", (e) => {
     if (e.features && e.features.length > 0) {

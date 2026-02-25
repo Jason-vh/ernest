@@ -98,8 +98,25 @@ export function useFundaLayer(
     },
   });
 
+  // Invisible larger hit area for easier tapping on touch devices
+  map.addLayer({
+    id: "funda-circles-hitarea",
+    type: "circle",
+    source: "funda",
+    paint: {
+      "circle-radius": 20,
+      "circle-color": "transparent",
+      "circle-opacity": 0,
+    },
+  });
+
   // --- Funda visibility (new + viewed as independent toggles) ---
-  const FUNDA_LAYERS = ["funda-circles", "funda-building-fill", "funda-building-outline"];
+  const FUNDA_LAYERS = [
+    "funda-circles",
+    "funda-circles-hitarea",
+    "funda-building-fill",
+    "funda-building-outline",
+  ];
 
   function updateFundaLayer() {
     if (!map.getLayer("funda-circles")) return;
