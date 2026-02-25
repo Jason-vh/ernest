@@ -2,10 +2,10 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { serveStatic } from "hono/bun";
 import path from "path";
-import health from "./routes/health";
-import geodata, { loadData } from "./routes/geodata";
-import auth from "./routes/auth";
-import { initDb } from "./db";
+import health from "@/routes/health";
+import geodata, { loadData } from "@/routes/geodata";
+import auth from "@/routes/auth";
+import { initDb } from "@/db";
 
 const app = new Hono();
 

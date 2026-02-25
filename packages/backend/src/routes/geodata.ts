@@ -1,11 +1,11 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import path from "path";
-import { REFRESH_SECRET } from "../config";
-import { db } from "../db";
-import { listings, type NewListing } from "../db/schema";
+import { REFRESH_SECRET } from "@/config";
+import { db } from "@/db";
+import { listings, type NewListing } from "@/db/schema";
 import { isNull, and, or, eq } from "drizzle-orm";
-import { syncListings } from "../services/listing-sync";
+import { syncListings } from "@/services/listing-sync";
 
 const geodata = new Hono();
 

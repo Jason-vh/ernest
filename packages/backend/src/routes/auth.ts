@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { eq, and, lt, sql } from "drizzle-orm";
-import type { AppEnv } from "../types";
-import { db } from "../db";
-import { users, credentials, challenges } from "../db/schema";
+import type { AppEnv } from "@/types";
+import { db } from "@/db";
+import { users, credentials, challenges } from "@/db/schema";
 import {
   signToken,
   setTokenCookie,
@@ -12,14 +12,14 @@ import {
   getTokenFromCookie,
   getChallengeIdFromCookie,
   verifyToken,
-} from "../auth/jwt";
+} from "@/auth/jwt";
 import {
   generateRegOptions,
   verifyRegResponse,
   generateAuthOptions,
   verifyAuthResponse,
-} from "../auth/webauthn";
-import { csrfCheck } from "../auth/middleware";
+} from "@/auth/webauthn";
+import { csrfCheck } from "@/auth/middleware";
 
 const auth = new Hono<AppEnv>();
 

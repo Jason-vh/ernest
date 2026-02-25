@@ -9,6 +9,21 @@ services:
       POSTGRES_PASSWORD: ernest
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ernest"]
+      interval: 2s
+      timeout: 3s
+      retries: 5
+
+  funda-seed:
+    build: services/funda-cron
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      REFRESH_URL: http://host.docker.internal:3000/api/internal/refresh-funda
+      REFRESH_SECRET: dev-secret-not-for-production
+    profiles: ["seed"]
 
 volumes:
   pgdata:

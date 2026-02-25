@@ -10,7 +10,10 @@
     "lib": ["ESNext"],
     "types": ["bun-types"],
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src/**/*.ts", "drizzle.config.ts"]
 }

@@ -9,7 +9,7 @@ import {
   customType,
 } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
-import type { RouteResult } from "../services/valhalla";
+import type { RouteResult } from "@/services/valhalla";
 import type { AuthenticatorTransportFuture } from "@simplewebauthn/server";
 
 const bytea = customType<{ data: Uint8Array; driverValue: Buffer }>({

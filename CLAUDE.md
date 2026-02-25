@@ -15,13 +15,15 @@ bun run start            # Production: Hono serves API + frontend on :3000
 bun run fmt              # Format all source files with oxfmt
 bun run fmt:check        # Check formatting without writing
 bun run lint             # Lint with oxlint
-bun run typecheck        # Type-check both frontend and backend
+bun run typecheck        # Type-check both frontend and backend (see note below)
 bun run db:generate      # Generate Drizzle migration from schema changes
 bun run db:push          # Push schema directly to DB (dev shortcut)
 bun run db:studio        # Open Drizzle Studio (DB browser)
 bun run fetch-data       # Refetch isochrones + stations + buurten + funda from APIs
 bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 ```
+
+**Verification tips**: `fmt:check` and `lint` are fast (<1s) — run them as separate parallel commands, not chained. `bun run typecheck` uses `bunx` which can be flaky; if it fails with a GitHub 404, run each package directly instead: `cd packages/backend && bun x tsc --noEmit` and `cd packages/frontend && ./node_modules/.bin/vue-tsc --noEmit`.
 
 ## Architecture
 

@@ -27,7 +27,7 @@ def push_to_server(geojson):
             "Authorization": f"Bearer {refresh_secret}",
             "Content-Type": "application/json",
         },
-        timeout=60,
+        timeout=600,
     )
 
     if resp.status_code != 200:

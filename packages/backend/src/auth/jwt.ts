@@ -2,7 +2,7 @@ import { sign, verify } from "hono/jwt";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import type { JWTPayload } from "hono/utils/jwt/types";
 import type { Context } from "hono";
-import { JWT_SECRET } from "../config";
+import { JWT_SECRET } from "@/config";
 
 const TOKEN_COOKIE = "ernest_token";
 const CHALLENGE_COOKIE = "ernest_challenge";

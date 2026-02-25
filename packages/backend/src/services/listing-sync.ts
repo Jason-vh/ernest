@@ -1,5 +1,5 @@
-import { db } from "../db";
-import { listings, type NewListing } from "../db/schema";
+import { db } from "@/db";
+import { listings, type NewListing } from "@/db/schema";
 import { eq, isNull, notInArray, and, sql } from "drizzle-orm";
 import { fetchValhallaRoute, OFFICES } from "./valhalla";
 

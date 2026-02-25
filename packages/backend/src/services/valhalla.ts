@@ -1,4 +1,4 @@
-import { decodePolyline } from "../utils/polyline";
+import { decodePolyline } from "@/utils/polyline";
 import type { CyclingRoute } from "@ernest/shared";
 
 export type RouteResult = CyclingRoute;

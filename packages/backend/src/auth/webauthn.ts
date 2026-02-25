@@ -10,7 +10,7 @@ import type {
   AuthenticatorTransportFuture,
 } from "@simplewebauthn/server";
 
-import { RP_ID, ORIGIN } from "../config";
+import { RP_ID, ORIGIN } from "@/config";
 
 const RP_NAME = "Ernest";
 

@@ -2,7 +2,7 @@ import path from "path";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
-import { DATABASE_URL } from "../config";
+import { DATABASE_URL } from "@/config";
 import * as schema from "./schema";
 
 const client = postgres(DATABASE_URL);
