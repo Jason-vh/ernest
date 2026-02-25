@@ -6,6 +6,7 @@ import {
   timestamp,
   jsonb,
   doublePrecision,
+  real,
   index,
   uniqueIndex,
   customType,
@@ -91,6 +92,12 @@ export const listings = pgTable("listings", {
   // Location
   latitude: doublePrecision("latitude").notNull(),
   longitude: doublePrecision("longitude").notNull(),
+
+  // Neighbourhood stats (from buurten GeoJSON)
+  buurtWozValue: integer("buurt_woz_value"),
+  buurtSafetyRating: real("buurt_safety_rating"),
+  buurtCrimesPer1000: real("buurt_crimes_per_1000"),
+  buurtOwnerOccupiedPct: real("buurt_owner_occupied_pct"),
 
   // Media
   photos: jsonb("photos").$type<string[]>().notNull().default([]),

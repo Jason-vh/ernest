@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { listings, type NewListing } from "@/db/schema";
 import { isNull, notInArray, and, sql } from "drizzle-orm";
 import { enqueueMany } from "@/services/job-queue";
+import { matchBuurt, type BuurtStats } from "@/services/buurt-matcher";
 
 interface SyncResult {
   upserted: number;
@@ -9,10 +10,17 @@ interface SyncResult {
   jobsEnqueued: number;
 }
 
-async function upsertListing(listing: NewListing) {
+async function upsertListing(listing: NewListing, buurt: BuurtStats | null) {
+  const buurtFields = {
+    buurtWozValue: buurt?.buurtWozValue ?? null,
+    buurtSafetyRating: buurt?.buurtSafetyRating ?? null,
+    buurtCrimesPer1000: buurt?.buurtCrimesPer1000 ?? null,
+    buurtOwnerOccupiedPct: buurt?.buurtOwnerOccupiedPct ?? null,
+  };
+
   return db
     .insert(listings)
-    .values(listing)
+    .values({ ...listing, ...buurtFields })
     .onConflictDoUpdate({
       target: listings.fundaId,
       set: {
@@ -37,6 +45,7 @@ async function upsertListing(listing: NewListing) {
         offeredSince: listing.offeredSince,
         disappearedAt: null,
         updatedAt: sql`now()`,
+        ...buurtFields,
       },
     });
 }
@@ -44,7 +53,8 @@ async function upsertListing(listing: NewListing) {
 export async function syncListings(incoming: NewListing[]): Promise<SyncResult> {
   // Upsert all listings sequentially (DB operations, fine to serialize)
   for (const listing of incoming) {
-    await upsertListing(listing); // eslint-disable-line no-await-in-loop
+    const buurt = matchBuurt(listing.latitude, listing.longitude);
+    await upsertListing(listing, buurt); // eslint-disable-line no-await-in-loop
   }
 
   // Mark disappeared: only if incoming set is non-empty (guards against API failures)

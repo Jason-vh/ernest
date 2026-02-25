@@ -261,7 +261,7 @@
 
               <!-- Notes (read-only display) -->
               <div v-if="listing.notes.length > 0">
-                <div class="text-[11px] font-semibold uppercase tracking-wide text-[#aaa]">
+                <div class="text-[11px] font-semibold uppercase tracking-wide text-[#888]">
                   Notes
                 </div>
                 <div v-for="note in listing.notes" :key="note.userId" class="mt-2">
@@ -275,7 +275,7 @@
               <!-- Description -->
               <div v-if="activeDescription" class="mt-4">
                 <div class="flex items-center justify-between">
-                  <div class="text-[11px] font-semibold uppercase tracking-wide text-[#aaa]">
+                  <div class="text-[11px] font-semibold uppercase tracking-wide text-[#888]">
                     Description
                   </div>
                   <button
@@ -301,10 +301,52 @@
                 </button>
               </div>
 
+              <!-- Neighbourhood stats card -->
+              <div
+                v-if="hasBuurtStats"
+                class="mt-4 rounded-xl border border-black/6 bg-[#f0f0ee] px-4 py-3"
+              >
+                <div class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#888]">
+                  Neighbourhood<template v-if="listing.neighbourhood">
+                    &middot; {{ listing.neighbourhood }}</template
+                  >
+                </div>
+                <div class="flex flex-col gap-1.5 text-[13px]">
+                  <div
+                    v-if="listing.buurtWozValue != null"
+                    class="flex justify-between text-[#555]"
+                  >
+                    <span class="text-[#999]">Avg. WOZ value</span>
+                    <span>{{ formatPrice(listing.buurtWozValue) }}</span>
+                  </div>
+                  <div
+                    v-if="listing.buurtOwnerOccupiedPct != null"
+                    class="flex justify-between text-[#555]"
+                  >
+                    <span class="text-[#999]">Owner-occupied</span>
+                    <span>{{ listing.buurtOwnerOccupiedPct }}%</span>
+                  </div>
+                  <div
+                    v-if="listing.buurtSafetyRating != null"
+                    class="flex justify-between text-[#555]"
+                  >
+                    <span class="text-[#999]">Safety rating</span>
+                    <span>{{ listing.buurtSafetyRating }} / 10</span>
+                  </div>
+                  <div
+                    v-if="listing.buurtCrimesPer1000 != null"
+                    class="flex justify-between text-[#555]"
+                  >
+                    <span class="text-[#999]">Crimes per 1,000</span>
+                    <span>{{ listing.buurtCrimesPer1000 }}</span>
+                  </div>
+                </div>
+              </div>
+
               <!-- Collapsible note editor (at bottom) -->
               <div v-if="user" class="mt-4 border-t border-black/6 pt-4">
                 <button
-                  class="flex w-full cursor-pointer items-center gap-1.5 border-none bg-transparent p-0 font-inherit text-[11px] font-semibold uppercase tracking-wide text-[#aaa] transition-colors hover:text-[#888]"
+                  class="flex w-full cursor-pointer items-center gap-1.5 border-none bg-transparent p-0 font-inherit text-[11px] font-semibold uppercase tracking-wide text-[#888] transition-colors hover:text-[#888]"
                   @click="noteEditorOpen = !noteEditorOpen"
                 >
                   <svg
@@ -394,6 +436,17 @@ const keyFacts = computed(() => {
   if (listing.value.hasBalcony) parts.push("Balcony");
   if (listing.value.hasRoofTerrace) parts.push("Roof terrace");
   return parts.join(" \u00B7 ");
+});
+
+const hasBuurtStats = computed(() => {
+  if (!listing.value) return false;
+  const l = listing.value;
+  return (
+    l.buurtWozValue != null ||
+    l.buurtSafetyRating != null ||
+    l.buurtCrimesPer1000 != null ||
+    l.buurtOwnerOccupiedPct != null
+  );
 });
 
 const activeDescription = computed(() => {

@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { listings, listingReactions, listingNotes, users, type NewListing } from "@/db/schema";
 import { isNull, and, or, eq, sql } from "drizzle-orm";
 import { syncListings } from "@/services/listing-sync";
+import { setBuurtenData } from "@/services/buurt-matcher";
 import type { Listing, ListingNote } from "@ernest/shared";
 
 function safeCompare(a: string, b: string): boolean {
@@ -54,6 +55,10 @@ async function queryFundaListings(): Promise<Listing[]> {
       hasRoofTerrace: listings.hasRoofTerrace,
       latitude: listings.latitude,
       longitude: listings.longitude,
+      buurtWozValue: listings.buurtWozValue,
+      buurtSafetyRating: listings.buurtSafetyRating,
+      buurtCrimesPer1000: listings.buurtCrimesPer1000,
+      buurtOwnerOccupiedPct: listings.buurtOwnerOccupiedPct,
       photos: listings.photos,
       status: listings.status,
       offeredSince: listings.offeredSince,
@@ -130,6 +135,7 @@ export async function loadData() {
   }
   if (await buurtenFile.exists()) {
     buurtenData = await buurtenFile.json();
+    setBuurtenData(buurtenData);
   }
 
   // Pre-populate funda cache so first request is instant

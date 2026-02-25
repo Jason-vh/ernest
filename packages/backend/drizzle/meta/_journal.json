@@ -36,6 +36,13 @@
       "when": 1772026441068,
       "tag": "0004_wet_payback",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1772028871845,
+      "tag": "0005_redundant_serpent_society",
+      "breakpoints": true
     }
   ]
 }

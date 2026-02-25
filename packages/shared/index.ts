@@ -39,6 +39,10 @@ export interface Listing {
   hasRoofTerrace: boolean | null;
   latitude: number;
   longitude: number;
+  buurtWozValue: number | null;
+  buurtSafetyRating: number | null;
+  buurtCrimesPer1000: number | null;
+  buurtOwnerOccupiedPct: number | null;
   photos: string[];
   status: string;
   offeredSince: string | null;
