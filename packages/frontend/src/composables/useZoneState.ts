@@ -22,8 +22,9 @@ function readVisibility<T extends string>(
 function writeToURL(
   zones: Record<ZoneKey, boolean>,
   transit: Record<TransitKey, boolean>,
-  fundaNew: boolean,
-  fundaViewed: boolean,
+  fundaFav: boolean,
+  fundaUnreviewed: boolean,
+  fundaDiscarded: boolean,
 ) {
   const params = new URLSearchParams(window.location.search);
 
@@ -39,15 +40,25 @@ function writeToURL(
     for (const t of enabledTransit) params.append("transit", t);
   }
 
-  params.delete("funda");
-  if (!fundaNew) {
-    params.set("funda", "0");
+  // Only write non-default values
+  params.delete("funda-fav");
+  if (!fundaFav) {
+    params.set("funda-fav", "0");
   }
 
-  params.delete("funda-viewed");
-  if (!fundaViewed) {
-    params.set("funda-viewed", "0");
+  params.delete("funda-unreviewed");
+  if (!fundaUnreviewed) {
+    params.set("funda-unreviewed", "0");
   }
+
+  params.delete("funda-discarded");
+  if (fundaDiscarded) {
+    params.set("funda-discarded", "1");
+  }
+
+  // Clean up old params
+  params.delete("funda");
+  params.delete("funda-viewed");
 
   const search = params.toString();
   const url = search ? `${window.location.pathname}?${search}` : window.location.pathname;
@@ -57,22 +68,34 @@ function writeToURL(
 // Shared singleton state
 const zoneVisibility = ref(readVisibility("zones", ZONE_KEYS));
 const transitVisibility = ref(readVisibility("transit", TRANSIT_KEYS));
-const fundaNewVisible = ref(new URLSearchParams(window.location.search).get("funda") !== "0");
-const fundaViewedVisible = ref(
-  new URLSearchParams(window.location.search).get("funda-viewed") !== "0",
-);
+
+const searchParams = new URLSearchParams(window.location.search);
+const fundaFavouriteVisible = ref(searchParams.get("funda-fav") !== "0");
+const fundaUnreviewedVisible = ref(searchParams.get("funda-unreviewed") !== "0");
+const fundaDiscardedVisible = ref(searchParams.get("funda-discarded") === "1");
+
 const hoveredZone = ref<ZoneKey | null>(null);
 const hoveredTransit = ref<TransitKey | null>(null);
-const fundaCount = ref(0);
+
+const fundaFavouriteCount = ref(0);
+const fundaUnreviewedCount = ref(0);
+const fundaDiscardedCount = ref(0);
 
 watch(
-  [zoneVisibility, transitVisibility, fundaNewVisible, fundaViewedVisible],
+  [
+    zoneVisibility,
+    transitVisibility,
+    fundaFavouriteVisible,
+    fundaUnreviewedVisible,
+    fundaDiscardedVisible,
+  ],
   () =>
     writeToURL(
       zoneVisibility.value,
       transitVisibility.value,
-      fundaNewVisible.value,
-      fundaViewedVisible.value,
+      fundaFavouriteVisible.value,
+      fundaUnreviewedVisible.value,
+      fundaDiscardedVisible.value,
     ),
   { deep: true },
 );
@@ -92,25 +115,33 @@ export function useZoneState() {
     };
   }
 
-  function toggleFundaNew() {
-    fundaNewVisible.value = !fundaNewVisible.value;
+  function toggleFundaFavourite() {
+    fundaFavouriteVisible.value = !fundaFavouriteVisible.value;
   }
 
-  function toggleFundaViewed() {
-    fundaViewedVisible.value = !fundaViewedVisible.value;
+  function toggleFundaUnreviewed() {
+    fundaUnreviewedVisible.value = !fundaUnreviewedVisible.value;
+  }
+
+  function toggleFundaDiscarded() {
+    fundaDiscardedVisible.value = !fundaDiscardedVisible.value;
   }
 
   return {
     zoneVisibility,
     transitVisibility,
-    fundaNewVisible,
-    fundaViewedVisible,
+    fundaFavouriteVisible,
+    fundaUnreviewedVisible,
+    fundaDiscardedVisible,
     hoveredZone,
     hoveredTransit,
-    fundaCount,
+    fundaFavouriteCount,
+    fundaUnreviewedCount,
+    fundaDiscardedCount,
     toggleZone,
     toggleTransit,
-    toggleFundaNew,
-    toggleFundaViewed,
+    toggleFundaFavourite,
+    toggleFundaUnreviewed,
+    toggleFundaDiscarded,
   };
 }

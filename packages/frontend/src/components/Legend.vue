@@ -55,35 +55,26 @@
     <div class="text-[11px] font-semibold uppercase tracking-wide text-[#999]">funda</div>
     <div class="flex flex-col gap-[5px]">
       <button
-        :aria-pressed="fundaNewVisible"
+        v-for="item in fundaItems"
+        :key="item.key"
+        :aria-pressed="item.visible"
         class="flex cursor-pointer items-center gap-2.5 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 transition-colors hover:bg-black/5"
-        @click="toggleFundaNew()"
+        @click="item.toggle()"
       >
         <span
           class="h-2.5 w-2.5 shrink-0 rounded-full border-[1.5px] border-white/90 shadow-sm transition-opacity"
-          :class="fundaNewVisible ? '' : 'opacity-12'"
-          style="background-color: #e8950f"
+          :class="item.visible ? '' : 'opacity-12'"
+          :style="{ backgroundColor: item.color }"
         ></span>
         <span
           class="font-[450] transition-opacity"
-          :class="fundaNewVisible ? 'text-[#444]' : 'text-[#444] opacity-35 line-through'"
-          >unseen listings</span
+          :class="item.visible ? 'text-[#444]' : 'text-[#444] opacity-35 line-through'"
+          >{{ item.label }}</span
         >
-      </button>
-      <button
-        :aria-pressed="fundaViewedVisible"
-        class="flex cursor-pointer items-center gap-2.5 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 transition-colors hover:bg-black/5"
-        @click="toggleFundaViewed()"
-      >
         <span
-          class="h-2.5 w-2.5 shrink-0 rounded-full border-[1.5px] border-white/90 shadow-sm transition-opacity"
-          :class="fundaViewedVisible ? '' : 'opacity-12'"
-          style="background-color: #aaa"
-        ></span>
-        <span
-          class="font-[450] transition-opacity"
-          :class="fundaViewedVisible ? 'text-[#444]' : 'text-[#444] opacity-35 line-through'"
-          >viewed listings</span
+          class="ml-auto text-[11px] tabular-nums transition-opacity"
+          :class="item.visible ? 'text-[#aaa]' : 'text-[#aaa] opacity-35'"
+          >{{ item.count }}</span
         >
       </button>
     </div>
@@ -91,19 +82,26 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { useZoneState, type ZoneKey, type TransitKey } from "@/composables/useZoneState";
+import { COLORS } from "@/geo/constants";
 
 const {
   zoneVisibility,
   transitVisibility,
-  fundaNewVisible,
-  fundaViewedVisible,
+  fundaFavouriteVisible,
+  fundaUnreviewedVisible,
+  fundaDiscardedVisible,
   hoveredZone,
   hoveredTransit,
+  fundaFavouriteCount,
+  fundaUnreviewedCount,
+  fundaDiscardedCount,
   toggleZone,
   toggleTransit,
-  toggleFundaNew,
-  toggleFundaViewed,
+  toggleFundaFavourite,
+  toggleFundaUnreviewed,
+  toggleFundaDiscarded,
 } = useZoneState();
 
 const zones: { key: ZoneKey; label: string; color: string }[] = [
@@ -117,4 +115,31 @@ const transit: { key: TransitKey; label: string; color: string }[] = [
   { key: "metro", label: "metro", color: "#E4003A" },
   { key: "tram", label: "tram", color: "#7B2D8E" },
 ];
+
+const fundaItems = computed(() => [
+  {
+    key: "favourite",
+    label: "favourites",
+    color: COLORS.fundaFavourite,
+    visible: fundaFavouriteVisible.value,
+    count: fundaFavouriteCount.value,
+    toggle: toggleFundaFavourite,
+  },
+  {
+    key: "unreviewed",
+    label: "unreviewed",
+    color: COLORS.fundaUnreviewed,
+    visible: fundaUnreviewedVisible.value,
+    count: fundaUnreviewedCount.value,
+    toggle: toggleFundaUnreviewed,
+  },
+  {
+    key: "discarded",
+    label: "discarded",
+    color: COLORS.fundaDiscarded,
+    visible: fundaDiscardedVisible.value,
+    count: fundaDiscardedCount.value,
+    toggle: toggleFundaDiscarded,
+  },
+]);
 </script>

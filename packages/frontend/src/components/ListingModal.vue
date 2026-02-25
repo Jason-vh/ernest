@@ -77,6 +77,59 @@
                 </p>
               </div>
 
+              <!-- AI summary -->
+              <p v-if="listing.aiSummary" class="mt-3 text-[13px] leading-[1.5] text-[#555] italic">
+                {{ listing.aiSummary }}
+              </p>
+
+              <!-- Reaction buttons (only when logged in) -->
+              <div v-if="user" class="mt-3 flex gap-2">
+                <button
+                  class="reaction-btn"
+                  :class="{
+                    'reaction-btn--active reaction-btn--fav': listing.reaction === 'favourite',
+                  }"
+                  @click="toggleReaction('favourite')"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                      :fill="listing.reaction === 'favourite' ? 'currentColor' : 'none'"
+                    />
+                  </svg>
+                  Favourite
+                </button>
+                <button
+                  class="reaction-btn"
+                  :class="{
+                    'reaction-btn--active reaction-btn--discard': listing.reaction === 'discarded',
+                  }"
+                  @click="toggleReaction('discarded')"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                  Discard
+                </button>
+                <span v-if="listing.reactionBy" class="ml-auto self-center text-[11px] text-[#bbb]">
+                  by {{ listing.reactionBy }}
+                </span>
+              </div>
+
               <!-- Price block -->
               <div class="mt-4">
                 <div class="text-[26px] font-bold tracking-[-0.02em] text-[#1a1a1a]">
@@ -139,24 +192,61 @@
                 </div>
               </div>
 
+              <!-- Notes section -->
+              <div v-if="listing.notes.length > 0 || user" class="mt-4">
+                <div class="text-[11px] font-semibold uppercase tracking-wide text-[#aaa]">
+                  Notes
+                </div>
+                <!-- Existing notes from other users -->
+                <div v-for="note in listing.notes" :key="note.userId" class="mt-2">
+                  <div class="text-[11px] font-medium text-[#999]">{{ note.username }}</div>
+                  <p class="m-0 mt-0.5 text-[13px] leading-[1.5] text-[#555]">{{ note.text }}</p>
+                </div>
+                <!-- Own note input -->
+                <div v-if="user" class="mt-3">
+                  <textarea
+                    v-model="ownNoteText"
+                    rows="2"
+                    class="w-full resize-none rounded-lg border border-black/10 bg-black/[0.02] px-3 py-2 font-inherit text-[13px] text-[#333] outline-none transition-colors placeholder:text-[#bbb] focus:border-black/20 focus:bg-white"
+                    placeholder="Add a note..."
+                  ></textarea>
+                  <button
+                    v-if="ownNoteChanged"
+                    class="mt-1.5 cursor-pointer rounded-md border-none bg-[#1a1a1a] px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:bg-[#333]"
+                    @click="handleSaveNote"
+                  >
+                    Save note
+                  </button>
+                </div>
+              </div>
+
               <!-- Offered since -->
               <div v-if="listing.offeredSince" class="mt-4 text-[12px] text-[#aaa]">
                 Listed since {{ listing.offeredSince }}
               </div>
 
               <!-- Description -->
-              <div v-if="listing.description" class="mt-4">
-                <div class="text-[11px] font-semibold uppercase tracking-wide text-[#aaa]">
-                  Description
+              <div v-if="activeDescription" class="mt-4">
+                <div class="flex items-center justify-between">
+                  <div class="text-[11px] font-semibold uppercase tracking-wide text-[#aaa]">
+                    Description
+                  </div>
+                  <button
+                    v-if="listing.aiDescription && listing.description"
+                    class="cursor-pointer border-none bg-transparent p-0 font-inherit text-[11px] font-medium text-[#999] underline decoration-[#ddd] underline-offset-2 transition-colors hover:text-[#666] hover:decoration-[#aaa]"
+                    @click="showOriginalDesc = !showOriginalDesc"
+                  >
+                    {{ showOriginalDesc ? "Show translated" : "Show original" }}
+                  </button>
                 </div>
                 <p
                   class="m-0 mt-1.5 whitespace-pre-line text-[13px] leading-[1.6] text-[#555]"
                   :class="{ 'line-clamp-6': !descExpanded }"
                 >
-                  {{ listing.description }}
+                  {{ activeDescription }}
                 </p>
                 <button
-                  v-if="listing.description.length > 300"
+                  v-if="activeDescription.length > 300"
                   class="mt-1.5 cursor-pointer border-none bg-transparent p-0 font-inherit text-[12px] font-medium text-[#999] underline decoration-[#ddd] underline-offset-2 transition-colors hover:text-[#666] hover:decoration-[#aaa]"
                   @click="descExpanded = !descExpanded"
                 >
@@ -173,19 +263,32 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from "vue";
+import type { ReactionType } from "@ernest/shared";
 import { useListingStore } from "@/composables/useListingStore";
+import { useAuth } from "@/composables/useAuth";
 import { OFFICES, COLORS } from "@/geo/constants";
 import PhotoGallery from "@/components/PhotoGallery.vue";
 
-const { selectedListing, closeModal } = useListingStore();
+const { selectedListing, closeModal, setReaction, saveNote } = useListingStore();
+const { user } = useAuth();
 
 const listing = selectedListing;
 const descExpanded = ref(false);
+const showOriginalDesc = ref(false);
 const modalRef = ref<HTMLDivElement>();
+const ownNoteText = ref("");
 
 const overbidPrice = computed(() => {
   if (!listing.value) return 0;
   return Math.round(listing.value.price * 1.15);
+});
+
+const activeDescription = computed(() => {
+  if (!listing.value) return null;
+  if (showOriginalDesc.value || !listing.value.aiDescription) {
+    return listing.value.description;
+  }
+  return listing.value.aiDescription;
 });
 
 function formatPrice(price: number): string {
@@ -196,10 +299,46 @@ function close() {
   closeModal();
 }
 
-// Reset description expansion when listing changes
-watch(listing, () => {
-  descExpanded.value = false;
+// Find own note and track if it changed
+const ownNote = computed(() => {
+  if (!listing.value || !user.value) return null;
+  return listing.value.notes.find((n) => n.userId === user.value!.id) ?? null;
 });
+
+const ownNoteChanged = computed(() => {
+  const original = ownNote.value?.text ?? "";
+  return ownNoteText.value.trim() !== original;
+});
+
+function toggleReaction(reaction: ReactionType) {
+  if (!listing.value || !user.value) return;
+  const newReaction = listing.value.reaction === reaction ? null : reaction;
+  setReaction(listing.value.fundaId, newReaction, user.value.username);
+}
+
+function handleSaveNote() {
+  if (!listing.value || !user.value) return;
+  saveNote(listing.value.fundaId, ownNoteText.value.trim(), {
+    id: user.value.id,
+    username: user.value.username,
+  });
+}
+
+// Reset state when listing changes
+watch(
+  listing,
+  (v) => {
+    descExpanded.value = false;
+    showOriginalDesc.value = false;
+    if (v && user.value) {
+      const note = v.notes.find((n) => n.userId === user.value!.id);
+      ownNoteText.value = note?.text ?? "";
+    } else {
+      ownNoteText.value = "";
+    }
+  },
+  { immediate: true },
+);
 
 // Focus trap + initial focus
 watch(listing, (v) => {
@@ -271,6 +410,49 @@ function trapFocus(e: KeyboardEvent) {
   background: rgba(34, 197, 94, 0.08);
   border-color: rgba(34, 197, 94, 0.15);
   color: #2d8a4e;
+}
+
+.reaction-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.03);
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.reaction-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.reaction-btn--active {
+  border-color: transparent;
+}
+
+.reaction-btn--fav {
+  background: rgba(192, 57, 43, 0.1);
+  color: #c0392b;
+  border-color: rgba(192, 57, 43, 0.2);
+}
+
+.reaction-btn--fav:hover {
+  background: rgba(192, 57, 43, 0.18);
+}
+
+.reaction-btn--discard {
+  background: rgba(0, 0, 0, 0.06);
+  color: #999;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.reaction-btn--discard:hover {
+  background: rgba(0, 0, 0, 0.1);
 }
 
 /* Slide-up on mobile, scale-fade on desktop */

@@ -108,6 +108,14 @@
   flex-shrink: 0;
 }
 
+.funda-ai-summary {
+  padding: 6px 10px 8px;
+  font-size: 11px;
+  color: #666;
+  line-height: 1.45;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
 .funda-cycling-loading {
   display: flex;
   flex-direction: column;

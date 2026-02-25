@@ -6,6 +6,8 @@ import {
   timestamp,
   jsonb,
   doublePrecision,
+  index,
+  uniqueIndex,
   customType,
 } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
@@ -102,6 +104,10 @@ export const listings = pgTable("listings", {
   routeFareharbor: jsonb("route_fareharbor").$type<RouteResult>(),
   routeAirwallex: jsonb("route_airwallex").$type<RouteResult>(),
 
+  // AI enrichment
+  aiSummary: text("ai_summary"),
+  aiDescription: text("ai_description"),
+
   // Timestamps
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -109,3 +115,64 @@ export const listings = pgTable("listings", {
 
 export type Listing = InferSelectModel<typeof listings>;
 export type NewListing = InferInsertModel<typeof listings>;
+
+export type JobType = "compute-routes" | "ai-enrich";
+export type JobStatus = "pending" | "running" | "completed" | "failed" | "skipped";
+
+export const jobs = pgTable(
+  "jobs",
+  {
+    id: text("id").primaryKey(),
+    type: text("type").$type<JobType>().notNull(),
+    fundaId: text("funda_id")
+      .notNull()
+      .references(() => listings.fundaId, { onDelete: "cascade" }),
+    status: text("status").$type<JobStatus>().notNull().default("pending"),
+    attempts: integer("attempts").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull().default(3),
+    lastError: text("last_error"),
+    runAfter: timestamp("run_after", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("jobs_poll_idx").on(t.status, t.runAfter, t.type),
+    uniqueIndex("jobs_type_funda_idx").on(t.type, t.fundaId),
+  ],
+);
+
+export type Job = InferSelectModel<typeof jobs>;
+export type NewJob = InferInsertModel<typeof jobs>;
+
+export const listingReactions = pgTable("listing_reactions", {
+  fundaId: text("funda_id")
+    .primaryKey()
+    .references(() => listings.fundaId, { onDelete: "cascade" }),
+  reaction: text("reaction").notNull(), // 'favourite' | 'discarded'
+  changedBy: text("changed_by")
+    .notNull()
+    .references(() => users.id),
+  changedAt: timestamp("changed_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const listingNotes = pgTable(
+  "listing_notes",
+  {
+    id: text("id").primaryKey(),
+    fundaId: text("funda_id")
+      .notNull()
+      .references(() => listings.fundaId, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    text: text("text").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("listing_notes_funda_user_idx").on(t.fundaId, t.userId)],
+);
+
+export type ListingReaction = InferSelectModel<typeof listingReactions>;
+export type NewListingReaction = InferInsertModel<typeof listingReactions>;
+export type ListingNote = InferSelectModel<typeof listingNotes>;
+export type NewListingNote = InferInsertModel<typeof listingNotes>;

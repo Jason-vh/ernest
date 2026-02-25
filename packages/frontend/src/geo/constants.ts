@@ -23,4 +23,7 @@ export const COLORS = {
   zone30: "#ef4444",
   routeFareharbor: "#14b8a6",
   routeAirwallex: "#818cf8",
+  fundaFavourite: "#c0392b",
+  fundaUnreviewed: "#E8950F",
+  fundaDiscarded: "#999",
 } as const;

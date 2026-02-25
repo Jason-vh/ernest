@@ -4,10 +4,10 @@ import { timingSafeEqual } from "node:crypto";
 import path from "path";
 import { REFRESH_SECRET } from "@/config";
 import { db } from "@/db";
-import { listings, type NewListing } from "@/db/schema";
+import { listings, listingReactions, listingNotes, users, type NewListing } from "@/db/schema";
 import { isNull, and, or, eq, sql } from "drizzle-orm";
 import { syncListings } from "@/services/listing-sync";
-import type { Listing } from "@ernest/shared";
+import type { Listing, ListingNote } from "@ernest/shared";
 
 function safeCompare(a: string, b: string): boolean {
   const ba = Buffer.from(a);
@@ -32,6 +32,9 @@ let buurtenData: unknown = null;
 let fundaCache: Listing[] | null = null;
 
 async function queryFundaListings(): Promise<Listing[]> {
+  // Alias for the user who set the reaction
+  const reactionUser = users;
+
   const rows = await db
     .select({
       fundaId: listings.fundaId,
@@ -56,8 +59,14 @@ async function queryFundaListings(): Promise<Listing[]> {
       offeredSince: listings.offeredSince,
       routeFareharbor: sql<number | null>`(${listings.routeFareharbor}->>'duration')::int`,
       routeAirwallex: sql<number | null>`(${listings.routeAirwallex}->>'duration')::int`,
+      aiSummary: listings.aiSummary,
+      aiDescription: listings.aiDescription,
+      reaction: listingReactions.reaction,
+      reactionBy: reactionUser.username,
     })
     .from(listings)
+    .leftJoin(listingReactions, eq(listings.fundaId, listingReactions.fundaId))
+    .leftJoin(reactionUser, eq(listingReactions.changedBy, reactionUser.id))
     .where(
       and(
         isNull(listings.disappearedAt),
@@ -65,7 +74,42 @@ async function queryFundaListings(): Promise<Listing[]> {
       ),
     );
 
-  return rows;
+  // Fetch all notes with usernames in a single query
+  const noteRows = await db
+    .select({
+      fundaId: listingNotes.fundaId,
+      userId: listingNotes.userId,
+      username: users.username,
+      text: listingNotes.text,
+      updatedAt: listingNotes.updatedAt,
+    })
+    .from(listingNotes)
+    .innerJoin(users, eq(listingNotes.userId, users.id));
+
+  // Group notes by fundaId
+  const notesByFundaId = new Map<string, ListingNote[]>();
+  for (const note of noteRows) {
+    const arr = notesByFundaId.get(note.fundaId) ?? [];
+    arr.push({
+      userId: note.userId,
+      username: note.username,
+      text: note.text,
+      updatedAt: note.updatedAt.toISOString(),
+    });
+    notesByFundaId.set(note.fundaId, arr);
+  }
+
+  return rows.map((row) =>
+    Object.assign(row, {
+      reaction: (row.reaction as Listing["reaction"]) ?? null,
+      reactionBy: row.reactionBy ?? null,
+      notes: notesByFundaId.get(row.fundaId) ?? [],
+    }),
+  );
+}
+
+export function invalidateFundaCache() {
+  fundaCache = null;
 }
 
 export async function loadData() {
@@ -213,11 +257,11 @@ geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 })
 
   const stats = await syncListings(incoming);
   console.log(
-    `Funda sync: ${stats.upserted} upserted, ${stats.disappeared} disappeared, ${stats.routesComputed} routes computed`,
+    `Funda sync: ${stats.upserted} upserted, ${stats.disappeared} disappeared, ${stats.jobsEnqueued} jobs enqueued`,
   );
 
   // Invalidate cache so next GET /funda picks up fresh data
-  fundaCache = null;
+  invalidateFundaCache();
 
   return c.json({ ok: true, received: incoming.length, ...stats });
 });

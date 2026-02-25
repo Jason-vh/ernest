@@ -20,14 +20,17 @@ const mapContainer = ref<HTMLDivElement>();
 const {
   zoneVisibility,
   transitVisibility,
-  fundaNewVisible,
-  fundaViewedVisible,
+  fundaFavouriteVisible,
+  fundaUnreviewedVisible,
+  fundaDiscardedVisible,
   hoveredZone,
   hoveredTransit,
-  fundaCount,
+  fundaFavouriteCount,
+  fundaUnreviewedCount,
+  fundaDiscardedCount,
 } = useZoneState();
 
-const { listings, selectedListing, viewedFundaIds, selectListing, setListings } = useListingStore();
+const { listings, favouriteIds, discardedIds, selectListing, setListings } = useListingStore();
 
 const { initMap } = useMap(mapContainer);
 
@@ -52,28 +55,30 @@ onMounted(async () => {
     setListings(fundaData);
 
     const { refreshFundaSource } = useFundaLayer(map, listings, {
-      viewedFundaIds,
-      fundaCount,
-      fundaNewVisible,
-      fundaViewedVisible,
+      favouriteIds,
+      discardedIds,
+      fundaFavouriteVisible,
+      fundaUnreviewedVisible,
+      fundaDiscardedVisible,
+      fundaFavouriteCount,
+      fundaUnreviewedCount,
+      fundaDiscardedCount,
     });
 
     const { updateBuildingHighlights, resetBuildingViewKey } = useBuildingHighlightLayer(
       map,
-      viewedFundaIds,
+      favouriteIds,
+      discardedIds,
     );
 
     useMapPopups({
       map,
       listings,
       selectListing,
-      refreshFundaSource,
-      updateBuildingHighlights,
-      resetBuildingViewKey,
     });
 
-    // Re-derive GeoJSON when viewed state changes (e.g. after modal marks a listing viewed)
-    watch(viewedFundaIds, () => {
+    // Re-derive GeoJSON when reaction state changes
+    watch([favouriteIds, discardedIds], () => {
       refreshFundaSource();
       resetBuildingViewKey();
       updateBuildingHighlights();

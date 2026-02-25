@@ -1,12 +1,12 @@
 import { db } from "@/db";
 import { listings, type NewListing } from "@/db/schema";
-import { eq, isNull, notInArray, and, sql } from "drizzle-orm";
-import { fetchValhallaRoute, OFFICES } from "./valhalla";
+import { isNull, notInArray, and, sql } from "drizzle-orm";
+import { enqueueMany } from "@/services/job-queue";
 
 interface SyncResult {
   upserted: number;
   disappeared: number;
-  routesComputed: number;
+  jobsEnqueued: number;
 }
 
 async function upsertListing(listing: NewListing) {
@@ -41,31 +41,6 @@ async function upsertListing(listing: NewListing) {
     });
 }
 
-async function computeRouteForListing(listing: {
-  fundaId: string;
-  latitude: number;
-  longitude: number;
-}): Promise<boolean> {
-  const from = { lat: listing.latitude, lon: listing.longitude };
-  const fareharbor = await fetchValhallaRoute(from, OFFICES.fareharbor);
-  await new Promise((resolve) => setTimeout(resolve, 200));
-  const airwallex = await fetchValhallaRoute(from, OFFICES.airwallex);
-  await new Promise((resolve) => setTimeout(resolve, 200));
-
-  if (fareharbor || airwallex) {
-    await db
-      .update(listings)
-      .set({
-        routeFareharbor: fareharbor,
-        routeAirwallex: airwallex,
-        updatedAt: sql`now()`,
-      })
-      .where(eq(listings.fundaId, listing.fundaId));
-    return true;
-  }
-  return false;
-}
-
 export async function syncListings(incoming: NewListing[]): Promise<SyncResult> {
   // Upsert all listings sequentially (DB operations, fine to serialize)
   for (const listing of incoming) {
@@ -84,26 +59,31 @@ export async function syncListings(incoming: NewListing[]): Promise<SyncResult> 
     disappeared = result.length;
   }
 
-  // Compute routes for listings missing them
+  // Enqueue jobs for listings needing routes
   const needRoutes = await db
-    .select({
-      fundaId: listings.fundaId,
-      latitude: listings.latitude,
-      longitude: listings.longitude,
-    })
+    .select({ fundaId: listings.fundaId })
     .from(listings)
     .where(and(isNull(listings.disappearedAt), isNull(listings.routeFareharbor)));
 
-  let routesComputed = 0;
-  // Sequential: Valhalla rate-limits, must not parallelize
-  for (const listing of needRoutes) {
-    try {
-      const ok = await computeRouteForListing(listing); // eslint-disable-line no-await-in-loop
-      if (ok) routesComputed++;
-    } catch (err) {
-      console.warn(`Failed to compute routes for ${listing.fundaId}:`, err);
-    }
-  }
+  // Enqueue jobs for listings needing AI enrichment
+  const needAi = await db
+    .select({ fundaId: listings.fundaId })
+    .from(listings)
+    .where(and(isNull(listings.disappearedAt), isNull(listings.aiSummary)));
 
-  return { upserted: incoming.length, disappeared, routesComputed };
+  const routeJobs = needRoutes.map((r) => ({
+    type: "compute-routes" as const,
+    fundaId: r.fundaId,
+    maxAttempts: 3,
+  }));
+  const aiJobs = needAi.map((r) => ({
+    type: "ai-enrich" as const,
+    fundaId: r.fundaId,
+    maxAttempts: 2,
+  }));
+
+  const routesEnqueued = await enqueueMany(routeJobs);
+  const aiEnqueued = await enqueueMany(aiJobs);
+
+  return { upserted: incoming.length, disappeared, jobsEnqueued: routesEnqueued + aiEnqueued };
 }

@@ -11,6 +11,15 @@ export interface CyclingRoutes {
   airwallex: CyclingRoute | null;
 }
 
+export type ReactionType = "favourite" | "discarded";
+
+export interface ListingNote {
+  userId: string;
+  username: string;
+  text: string;
+  updatedAt: string;
+}
+
 /** The shape returned by GET /api/funda — all listing fields except lifecycle timestamps. */
 export interface Listing {
   fundaId: string;
@@ -37,4 +46,16 @@ export interface Listing {
   /** Cycling duration (in minutes) */
   routeFareharbor: number | null;
   routeAirwallex: number | null;
+
+  /** AI-generated 1-2 sentence summary */
+  aiSummary: string | null;
+  /** AI-cleaned English translation of description */
+  aiDescription: string | null;
+
+  /** Collaborative reaction (null = unreviewed) */
+  reaction: ReactionType | null;
+  /** Username of who set the reaction */
+  reactionBy: string | null;
+  /** Notes from all users */
+  notes: ListingNote[];
 }

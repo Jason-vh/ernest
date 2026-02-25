@@ -45,11 +45,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useZoneState } from "@/composables/useZoneState";
 
 const open = ref(false);
-const { fundaCount } = useZoneState();
+const { fundaFavouriteCount, fundaUnreviewedCount, fundaDiscardedCount } = useZoneState();
+const fundaCount = computed(
+  () => fundaFavouriteCount.value + fundaUnreviewedCount.value + fundaDiscardedCount.value,
+);
 
 const chips = ["€450k – €600k", "≥ 2 bedrooms", "≥ 65 m²", "label A/B/C/D"];
 </script>

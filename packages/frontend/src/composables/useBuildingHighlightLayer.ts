@@ -8,7 +8,11 @@ const emptyData: GeoJSON.FeatureCollection = {
   features: [],
 };
 
-export function useBuildingHighlightLayer(map: maplibregl.Map, viewedFundaIds: Ref<Set<string>>) {
+export function useBuildingHighlightLayer(
+  map: maplibregl.Map,
+  favouriteIds: Ref<Set<string>>,
+  discardedIds: Ref<Set<string>>,
+) {
   let lastBuildingViewKey = "";
   let buildingDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -55,7 +59,12 @@ export function useBuildingHighlightLayer(map: maplibregl.Map, viewedFundaIds: R
       }
     }
 
-    const { buildings } = matchBuildingsToFunda(map, unique, viewedFundaIds.value);
+    const { buildings } = matchBuildingsToFunda(
+      map,
+      unique,
+      favouriteIds.value,
+      discardedIds.value,
+    );
     src.setData(buildings);
     // Hide dots when building highlights are active (same frame, no flash)
     const hideDots = buildings.features.length > 0;

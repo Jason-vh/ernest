@@ -15,6 +15,20 @@
       "when": 1772014222946,
       "tag": "0001_complete_lizard",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1772023215592,
+      "tag": "0002_numerous_union_jack",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1772024356861,
+      "tag": "0003_blushing_zodiak",
+      "breakpoints": true
     }
   ]
 }

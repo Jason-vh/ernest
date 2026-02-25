@@ -7,7 +7,13 @@ import path from "path";
 import health from "@/routes/health";
 import geodata, { loadData } from "@/routes/geodata";
 import auth from "@/routes/auth";
+import listingsRouter from "@/routes/listings";
 import { initDb } from "@/db";
+import { resetStaleJobs, enqueueMany } from "@/services/job-queue";
+import { startQueueProcessor } from "@/services/queue-processor";
+import { db } from "@/db";
+import { listings } from "@/db/schema";
+import { isNull, and } from "drizzle-orm";
 
 const app = new Hono();
 
@@ -38,6 +44,26 @@ if (process.env.NODE_ENV !== "production") {
 await initDb();
 await loadData();
 
+// Recover any stale running jobs from previous crash
+await resetStaleJobs();
+
+// Enqueue AI enrichment for existing un-enriched listings (idempotent)
+const unenriched = await db
+  .select({ fundaId: listings.fundaId })
+  .from(listings)
+  .where(and(isNull(listings.aiSummary), isNull(listings.disappearedAt)));
+if (unenriched.length > 0) {
+  const enqueued = await enqueueMany(
+    unenriched.map((r) => ({ type: "ai-enrich" as const, fundaId: r.fundaId, maxAttempts: 2 })),
+  );
+  if (enqueued > 0) {
+    console.log(`Enqueued ${enqueued} AI enrichment jobs for existing listings`);
+  }
+}
+
+// Start background job queue processor
+startQueueProcessor();
+
 // Global error handler
 app.onError((err, c) => {
   console.error("Unhandled error:", err);
@@ -48,6 +74,7 @@ app.onError((err, c) => {
 app.route("/api", health);
 app.route("/api", geodata);
 app.route("/api/auth", auth);
+app.route("/api/listings", listingsRouter);
 
 // Serve frontend static files in production
 const distDir = path.resolve(import.meta.dir, "../../frontend/dist");

@@ -1,6 +1,5 @@
 import maplibregl from "maplibre-gl";
 import type { Listing } from "@ernest/shared";
-import { OFFICES, COLORS } from "@/geo/constants";
 
 function createCell(url: string): HTMLDivElement {
   const el = document.createElement("div");
@@ -12,53 +11,10 @@ interface PopupDeps {
   map: maplibregl.Map;
   listings: { value: Map<string, Listing> };
   selectListing: (fundaId: string) => void;
-  refreshFundaSource: () => void;
-  updateBuildingHighlights: () => void;
-  resetBuildingViewKey: () => void;
-}
-
-function buildCyclingRow(minutes: number, color: string, officeName: string): HTMLSpanElement {
-  const row = document.createElement("span");
-  row.className = "funda-cycling-row";
-
-  const dot = document.createElement("span");
-  dot.className = "funda-cycling-dot";
-  dot.style.background = color;
-  row.appendChild(dot);
-
-  const time = document.createElement("span");
-  time.style.color = color;
-  time.textContent = `${minutes} min`;
-  row.appendChild(time);
-
-  row.appendChild(document.createTextNode(` to ${officeName}`));
-  return row;
-}
-
-function buildCyclingTimesDom(listing: Listing): DocumentFragment {
-  const frag = document.createDocumentFragment();
-  if (listing.routeFareharbor) {
-    frag.appendChild(
-      buildCyclingRow(listing.routeFareharbor, COLORS.routeFareharbor, OFFICES.fareharbor.name),
-    );
-  }
-  if (listing.routeAirwallex) {
-    frag.appendChild(
-      buildCyclingRow(listing.routeAirwallex, COLORS.routeAirwallex, OFFICES.airwallex.name),
-    );
-  }
-  return frag;
 }
 
 export function useMapPopups(deps: PopupDeps) {
-  const {
-    map,
-    listings,
-    selectListing,
-    refreshFundaSource,
-    updateBuildingHighlights,
-    resetBuildingViewKey,
-  } = deps;
+  const { map, listings, selectListing } = deps;
 
   let fundaPopup: maplibregl.Popup | null = null;
   let fundaCloseTimer: ReturnType<typeof setTimeout> | null = null;
@@ -132,12 +88,12 @@ export function useMapPopups(deps: PopupDeps) {
     inner.appendChild(bar);
     container.appendChild(inner);
 
-    // Cycling times
-    if (listing) {
-      const cyclingEl = document.createElement("div");
-      cyclingEl.className = "funda-cycling-times";
-      cyclingEl.appendChild(buildCyclingTimesDom(listing));
-      container.appendChild(cyclingEl);
+    // AI summary
+    if (listing?.aiSummary) {
+      const summaryEl = document.createElement("div");
+      summaryEl.className = "funda-ai-summary";
+      summaryEl.textContent = listing.aiSummary;
+      container.appendChild(summaryEl);
     }
 
     if (fundaPopup) fundaPopup.remove();
@@ -188,9 +144,6 @@ export function useMapPopups(deps: PopupDeps) {
     closeFundaPopup();
     cancelFundaClose();
     selectListing(fundaId);
-    refreshFundaSource();
-    resetBuildingViewKey();
-    updateBuildingHighlights();
   }
 
   // Hover popups: desktop only (devices with a fine pointer)

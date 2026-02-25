@@ -1,5 +1,5 @@
 import type { TransitStop } from "@/types/transit";
-import type { Listing } from "@ernest/shared";
+import type { Listing, ReactionType } from "@ernest/shared";
 
 export async function fetchIsochrone(): Promise<GeoJSON.FeatureCollection> {
   const res = await fetch("/api/isochrone");
@@ -29,4 +29,30 @@ export async function fetchFunda(): Promise<Listing[]> {
   const res = await fetch("/api/funda");
   if (!res.ok) throw new Error(`Failed to fetch funda: ${res.status}`);
   return res.json();
+}
+
+export async function putReaction(fundaId: string, reaction: ReactionType | null): Promise<void> {
+  const res = await fetch(`/api/listings/${encodeURIComponent(fundaId)}/reaction`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ reaction }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Failed to set reaction: ${res.status}`);
+  }
+}
+
+export async function putNote(fundaId: string, text: string): Promise<void> {
+  const res = await fetch(`/api/listings/${encodeURIComponent(fundaId)}/note`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Failed to save note: ${res.status}`);
+  }
 }

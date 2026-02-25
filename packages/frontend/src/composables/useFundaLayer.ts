@@ -2,13 +2,18 @@ import type { Ref } from "vue";
 import { watch } from "vue";
 import type maplibregl from "maplibre-gl";
 import type { Listing } from "@ernest/shared";
+import { COLORS } from "@/geo/constants";
 import { getGeoJSONSource } from "@/geo/map-utils";
 
 interface FundaState {
-  viewedFundaIds: Ref<Set<string>>;
-  fundaCount: Ref<number>;
-  fundaNewVisible: Ref<boolean>;
-  fundaViewedVisible: Ref<boolean>;
+  favouriteIds: Ref<Set<string>>;
+  discardedIds: Ref<Set<string>>;
+  fundaFavouriteVisible: Ref<boolean>;
+  fundaUnreviewedVisible: Ref<boolean>;
+  fundaDiscardedVisible: Ref<boolean>;
+  fundaFavouriteCount: Ref<number>;
+  fundaUnreviewedCount: Ref<number>;
+  fundaDiscardedCount: Ref<number>;
 }
 
 const emptyFC: GeoJSON.FeatureCollection = {
@@ -16,12 +21,17 @@ const emptyFC: GeoJSON.FeatureCollection = {
   features: [],
 };
 
-export function listingsToGeoJSON(
-  listings: Map<string, Listing>,
-  viewedIds: Set<string>,
-): GeoJSON.FeatureCollection {
+type Category = "favourite" | "discarded" | "unreviewed";
+
+export function listingsToGeoJSON(listings: Map<string, Listing>): GeoJSON.FeatureCollection {
   const features: GeoJSON.Feature[] = [];
   for (const listing of listings.values()) {
+    const category: Category =
+      listing.reaction === "favourite"
+        ? "favourite"
+        : listing.reaction === "discarded"
+          ? "discarded"
+          : "unreviewed";
     features.push({
       type: "Feature",
       geometry: {
@@ -36,7 +46,7 @@ export function listingsToGeoJSON(
         bedrooms: listing.bedrooms,
         livingArea: listing.livingArea,
         photo: listing.photos.length > 0 ? listing.photos[0] : "",
-        clicked: viewedIds.has(listing.fundaId),
+        category,
       },
     });
   }
@@ -48,18 +58,36 @@ export function useFundaLayer(
   listings: Ref<Map<string, Listing>>,
   state: FundaState,
 ) {
-  const { viewedFundaIds, fundaCount, fundaNewVisible, fundaViewedVisible } = state;
+  const {
+    favouriteIds,
+    discardedIds,
+    fundaFavouriteVisible,
+    fundaUnreviewedVisible,
+    fundaDiscardedVisible,
+    fundaFavouriteCount,
+    fundaUnreviewedCount,
+    fundaDiscardedCount,
+  } = state;
 
   function refreshFundaSource() {
     const src = getGeoJSONSource(map, "funda");
     if (!src) return;
-    const geojson = listingsToGeoJSON(listings.value, viewedFundaIds.value);
+    const geojson = listingsToGeoJSON(listings.value);
     src.setData(geojson);
-    fundaCount.value = listings.value.size;
+
+    // Update counts
+    fundaFavouriteCount.value = favouriteIds.value.size;
+    fundaDiscardedCount.value = discardedIds.value.size;
+    fundaUnreviewedCount.value =
+      listings.value.size - favouriteIds.value.size - discardedIds.value.size;
   }
 
-  const initialGeoJSON = listingsToGeoJSON(listings.value, viewedFundaIds.value);
-  fundaCount.value = listings.value.size;
+  const initialGeoJSON = listingsToGeoJSON(listings.value);
+  fundaFavouriteCount.value = favouriteIds.value.size;
+  fundaDiscardedCount.value = discardedIds.value.size;
+  fundaUnreviewedCount.value =
+    listings.value.size - favouriteIds.value.size - discardedIds.value.size;
+
   map.addSource("funda", { type: "geojson", data: initialGeoJSON });
 
   // --- Funda building highlights (below dots) ---
@@ -69,8 +97,16 @@ export function useFundaLayer(
     type: "fill",
     source: "funda-buildings",
     paint: {
-      "fill-color": ["case", ["==", ["get", "clicked"], true], "#aaa", "#E8950F"],
-      "fill-opacity": ["case", ["==", ["get", "clicked"], true], 0.25, 0.4],
+      "fill-color": [
+        "match",
+        ["get", "category"],
+        "favourite",
+        COLORS.fundaFavourite,
+        "discarded",
+        COLORS.fundaDiscarded,
+        COLORS.fundaUnreviewed,
+      ],
+      "fill-opacity": ["match", ["get", "category"], "discarded", 0.25, 0.4],
     },
   });
   map.addLayer({
@@ -78,8 +114,16 @@ export function useFundaLayer(
     type: "line",
     source: "funda-buildings",
     paint: {
-      "line-color": ["case", ["==", ["get", "clicked"], true], "#aaa", "#E8950F"],
-      "line-opacity": ["case", ["==", ["get", "clicked"], true], 0.4, 0.7],
+      "line-color": [
+        "match",
+        ["get", "category"],
+        "favourite",
+        COLORS.fundaFavourite,
+        "discarded",
+        COLORS.fundaDiscarded,
+        COLORS.fundaUnreviewed,
+      ],
+      "line-opacity": ["match", ["get", "category"], "discarded", 0.4, 0.7],
       "line-width": 1.5,
     },
   });
@@ -91,8 +135,16 @@ export function useFundaLayer(
     source: "funda",
     paint: {
       "circle-radius": 5,
-      "circle-color": ["case", ["==", ["get", "clicked"], true], "#aaa", "#E8950F"],
-      "circle-opacity": 1,
+      "circle-color": [
+        "match",
+        ["get", "category"],
+        "favourite",
+        COLORS.fundaFavourite,
+        "discarded",
+        COLORS.fundaDiscarded,
+        COLORS.fundaUnreviewed,
+      ],
+      "circle-opacity": ["match", ["get", "category"], "discarded", 0.5, 0.85],
       "circle-stroke-width": 1,
       "circle-stroke-color": "#fff",
     },
@@ -110,7 +162,7 @@ export function useFundaLayer(
     },
   });
 
-  // --- Funda visibility (new + viewed as independent toggles) ---
+  // --- Funda visibility (3 independent toggles) ---
   const FUNDA_LAYERS = [
     "funda-circles",
     "funda-circles-hitarea",
@@ -120,31 +172,45 @@ export function useFundaLayer(
 
   function updateFundaLayer() {
     if (!map.getLayer("funda-circles")) return;
-    const showNew = fundaNewVisible.value;
-    const showViewed = fundaViewedVisible.value;
+    const showFav = fundaFavouriteVisible.value;
+    const showUnreviewed = fundaUnreviewedVisible.value;
+    const showDiscarded = fundaDiscardedVisible.value;
 
-    if (!showNew && !showViewed) {
+    if (!showFav && !showUnreviewed && !showDiscarded) {
       for (const id of FUNDA_LAYERS) {
         map.setLayoutProperty(id, "visibility", "none");
       }
-    } else {
-      for (const id of FUNDA_LAYERS) {
-        map.setLayoutProperty(id, "visibility", "visible");
-      }
-      let filter: maplibregl.FilterSpecification | null = null;
-      if (showNew && !showViewed) {
-        filter = ["!=", ["get", "clicked"], true];
-      } else if (!showNew && showViewed) {
-        filter = ["==", ["get", "clicked"], true];
-      }
-      for (const id of FUNDA_LAYERS) {
-        map.setFilter(id, filter);
-      }
+      return;
+    }
+
+    for (const id of FUNDA_LAYERS) {
+      map.setLayoutProperty(id, "visibility", "visible");
+    }
+
+    // Build category filter
+    const visibleCategories: string[] = [];
+    if (showFav) visibleCategories.push("favourite");
+    if (showUnreviewed) visibleCategories.push("unreviewed");
+    if (showDiscarded) visibleCategories.push("discarded");
+
+    const allVisible = showFav && showUnreviewed && showDiscarded;
+    const categoryFilter: maplibregl.FilterSpecification = allVisible
+      ? null!
+      : ["in", ["get", "category"], ["literal", visibleCategories]];
+
+    // Shared layers: full category filter (or none)
+    for (const id of [
+      "funda-circles",
+      "funda-circles-hitarea",
+      "funda-building-fill",
+      "funda-building-outline",
+    ]) {
+      map.setFilter(id, allVisible ? null : categoryFilter);
     }
   }
 
   updateFundaLayer();
-  watch([fundaNewVisible, fundaViewedVisible], updateFundaLayer);
+  watch([fundaFavouriteVisible, fundaUnreviewedVisible, fundaDiscardedVisible], updateFundaLayer);
 
   return { refreshFundaSource };
 }

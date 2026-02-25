@@ -1,9 +1,13 @@
 import { ref, computed } from "vue";
-import type { Listing } from "@ernest/shared";
+import type { Listing, ReactionType, ListingNote } from "@ernest/shared";
+import { putReaction, putNote } from "@/api/client";
 
 const listings = ref<Map<string, Listing>>(new Map());
 const selectedFundaId = ref<string | null>(null);
 let pushedState = false;
+
+// One-time cleanup of old localStorage viewed tracking
+localStorage.removeItem("ernest:viewedFunda");
 
 // Read initial ?listing= param for deep-links
 const initialParam = new URLSearchParams(window.location.search).get("listing");
@@ -16,34 +20,24 @@ const selectedListing = computed(() => {
   return listings.value.get(selectedFundaId.value) ?? null;
 });
 
-// Viewed funda IDs (persisted in localStorage, keyed by fundaId)
-const VIEWED_KEY = "ernest:viewedFunda";
-
-function loadViewedIds(): Set<string> {
-  try {
-    const raw = localStorage.getItem(VIEWED_KEY);
-    if (raw) return new Set(JSON.parse(raw));
-  } catch {
-    /* ignore */
+// Derived sets from listing data
+const favouriteIds = computed(() => {
+  const ids = new Set<string>();
+  for (const [id, listing] of listings.value) {
+    if (listing.reaction === "favourite") ids.add(id);
   }
-  return new Set();
-}
+  return ids;
+});
 
-function saveViewedIds(ids: Set<string>) {
-  localStorage.setItem(VIEWED_KEY, JSON.stringify([...ids]));
-}
-
-const viewedFundaIds = ref(loadViewedIds());
-
-function markViewed(fundaId: string) {
-  if (viewedFundaIds.value.has(fundaId)) return;
-  viewedFundaIds.value = new Set([...viewedFundaIds.value, fundaId]);
-  saveViewedIds(viewedFundaIds.value);
-}
+const discardedIds = computed(() => {
+  const ids = new Set<string>();
+  for (const [id, listing] of listings.value) {
+    if (listing.reaction === "discarded") ids.add(id);
+  }
+  return ids;
+});
 
 function selectListing(fundaId: string) {
-  markViewed(fundaId);
-
   // Push a history entry so Back button closes the modal
   const params = new URLSearchParams(window.location.search);
   params.set("listing", fundaId);
@@ -87,10 +81,6 @@ function setListings(items: Listing[]) {
   }
   listings.value = map;
 
-  // Handle deep-link: mark viewed once listings are loaded
-  if (selectedFundaId.value && map.has(selectedFundaId.value)) {
-    markViewed(selectedFundaId.value);
-  }
   // If deep-linked listing doesn't exist, clear the param
   if (selectedFundaId.value && !map.has(selectedFundaId.value)) {
     const params = new URLSearchParams(window.location.search);
@@ -102,15 +92,87 @@ function setListings(items: Listing[]) {
   }
 }
 
+async function setReaction(fundaId: string, reaction: ReactionType | null, username: string) {
+  const listing = listings.value.get(fundaId);
+  if (!listing) return;
+
+  // Optimistic update: clone listing with new reaction, replace Map ref for reactivity
+  const prev = { reaction: listing.reaction, reactionBy: listing.reactionBy };
+  const updated = {
+    ...listing,
+    reaction,
+    reactionBy: reaction ? username : null,
+  };
+  const newMap = new Map(listings.value);
+  newMap.set(fundaId, updated);
+  listings.value = newMap;
+
+  try {
+    await putReaction(fundaId, reaction);
+  } catch {
+    // Rollback on failure
+    const rollback = { ...updated, reaction: prev.reaction, reactionBy: prev.reactionBy };
+    const rollbackMap = new Map(listings.value);
+    rollbackMap.set(fundaId, rollback);
+    listings.value = rollbackMap;
+  }
+}
+
+async function saveNote(fundaId: string, text: string, user: { id: string; username: string }) {
+  const listing = listings.value.get(fundaId);
+  if (!listing) return;
+
+  try {
+    await putNote(fundaId, text);
+
+    // Update listing with new note
+    const trimmed = text.trim();
+    let newNotes: ListingNote[];
+    if (trimmed === "") {
+      newNotes = listing.notes.filter((n) => n.userId !== user.id);
+    } else {
+      const existingIdx = listing.notes.findIndex((n) => n.userId === user.id);
+      if (existingIdx >= 0) {
+        newNotes = [...listing.notes];
+        newNotes[existingIdx] = {
+          userId: user.id,
+          username: user.username,
+          text: trimmed,
+          updatedAt: new Date().toISOString(),
+        };
+      } else {
+        newNotes = [
+          ...listing.notes,
+          {
+            userId: user.id,
+            username: user.username,
+            text: trimmed,
+            updatedAt: new Date().toISOString(),
+          },
+        ];
+      }
+    }
+
+    const updated = { ...listing, notes: newNotes };
+    const newMap = new Map(listings.value);
+    newMap.set(fundaId, updated);
+    listings.value = newMap;
+  } catch {
+    // Note save failed — listing stays unchanged
+  }
+}
+
 export function useListingStore() {
   return {
     listings,
     selectedFundaId,
     selectedListing,
-    viewedFundaIds,
+    favouriteIds,
+    discardedIds,
     selectListing,
     closeModal,
     setListings,
-    markViewed,
+    setReaction,
+    saveNote,
   };
 }
