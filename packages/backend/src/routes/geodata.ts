@@ -1,5 +1,7 @@
 import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import path from "path";
+import { REFRESH_SECRET } from "../config";
 
 const geodata = new Hono();
 
@@ -13,13 +15,25 @@ const buurtenPath = path.join(dataDir, "buurten.geojson");
 const bundledFundaPath = path.join(dataDir, "funda.geojson");
 const volumeFundaPath = path.join(volumePath, "funda.geojson");
 
-let isochroneData: any = null;
+let isochroneData: unknown = null;
 let stationsData: unknown = null;
 let linesData: unknown = null;
 let buurtenData: unknown = null;
 let fundaData: unknown = null;
 
-async function loadData() {
+function featureCount(data: unknown): number {
+  if (
+    typeof data === "object" &&
+    data !== null &&
+    "features" in data &&
+    Array.isArray(data.features)
+  ) {
+    return data.features.length;
+  }
+  return 0;
+}
+
+export async function loadData() {
   const isoFile = Bun.file(isochronePath);
   const staFile = Bun.file(stationsPath);
   const linesFile = Bun.file(linesPath);
@@ -43,9 +57,7 @@ async function loadData() {
     const volFile = Bun.file(volumeFundaPath);
     if (await volFile.exists()) {
       fundaData = await volFile.json();
-      console.log(
-        `Loaded funda data from volume: ${(fundaData as any)?.features?.length ?? 0} listings`,
-      );
+      console.log(`Loaded funda data from volume: ${featureCount(fundaData)} listings`);
       return;
     }
   } catch (e) {
@@ -57,9 +69,6 @@ async function loadData() {
     fundaData = await fundaFile.json();
   }
 }
-
-// Load data at startup
-loadData();
 
 geodata.get("/isochrone", (c) => {
   if (!isochroneData) {
@@ -96,25 +105,27 @@ geodata.get("/funda", (c) => {
   return c.json(fundaData);
 });
 
-geodata.post("/internal/refresh-funda", async (c) => {
-  const secret = process.env.REFRESH_SECRET;
-  if (!secret) {
-    return c.json({ error: "REFRESH_SECRET not configured" }, 500);
-  }
-
+geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 }), async (c) => {
   const auth = c.req.header("Authorization");
-  if (auth !== `Bearer ${secret}`) {
+  if (auth !== `Bearer ${REFRESH_SECRET}`) {
     return c.json({ error: "Unauthorized" }, 401);
   }
 
-  let body: any;
+  let body: unknown;
   try {
     body = await c.req.json();
   } catch {
     return c.json({ error: "Invalid JSON body" }, 400);
   }
 
-  if (body?.type !== "FeatureCollection" || !Array.isArray(body?.features)) {
+  if (
+    typeof body !== "object" ||
+    body === null ||
+    !("type" in body) ||
+    body.type !== "FeatureCollection" ||
+    !("features" in body) ||
+    !Array.isArray(body.features)
+  ) {
     return c.json({ error: "Expected a GeoJSON FeatureCollection" }, 400);
   }
 

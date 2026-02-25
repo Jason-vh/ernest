@@ -106,7 +106,7 @@ route.post("/routes", async (c) => {
     return c.json({ error: "Invalid JSON body" }, 400);
   }
 
-  if (!body.from?.lat || !body.from?.lon) {
+  if (body.from?.lat == null || body.from?.lon == null) {
     return c.json({ error: "Missing from coordinates" }, 400);
   }
 

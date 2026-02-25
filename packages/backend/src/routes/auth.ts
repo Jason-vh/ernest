@@ -156,7 +156,13 @@ auth.post("/register/verify", async (c) => {
       expectedChallenge: challenge.challenge,
     });
   } catch (e) {
-    return c.json({ error: "Verification failed", detail: String(e) }, 400);
+    return c.json(
+      {
+        error: "Verification failed",
+        detail: process.env.NODE_ENV !== "production" ? String(e) : undefined,
+      },
+      400,
+    );
   }
 
   if (!verification.verified || !verification.registrationInfo) {
@@ -292,7 +298,13 @@ auth.post("/login/verify", async (c) => {
       },
     });
   } catch (e) {
-    return c.json({ error: "Verification failed", detail: String(e) }, 400);
+    return c.json(
+      {
+        error: "Verification failed",
+        detail: process.env.NODE_ENV !== "production" ? String(e) : undefined,
+      },
+      400,
+    );
   }
 
   if (!verification.verified) {

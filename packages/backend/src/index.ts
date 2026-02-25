@@ -3,7 +3,7 @@ import { cors } from "hono/cors";
 import { serveStatic } from "hono/bun";
 import path from "path";
 import health from "./routes/health";
-import geodata from "./routes/geodata";
+import geodata, { loadData } from "./routes/geodata";
 import route from "./routes/route";
 import auth from "./routes/auth";
 import { initDb } from "./db";
@@ -21,8 +21,15 @@ if (process.env.NODE_ENV !== "production") {
   );
 }
 
-// Run migrations before accepting requests
+// Run migrations and load data before accepting requests
 await initDb();
+await loadData();
+
+// Global error handler
+app.onError((err, c) => {
+  console.error("Unhandled error:", err);
+  return c.json({ error: "Internal server error" }, 500);
+});
 
 // API routes
 app.route("/api", health);
@@ -52,9 +59,9 @@ app.use(
 
 const port = parseInt(process.env.PORT || "3000", 10);
 
+console.log(`Server running on http://localhost:${port}`);
+
 export default {
   port,
   fetch: app.fetch,
 };
-
-console.log(`Server running on http://localhost:${port}`);
