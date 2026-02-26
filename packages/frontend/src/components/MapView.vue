@@ -35,6 +35,7 @@ const {
   listings,
   favouriteIds,
   discardedIds,
+  lastViewedFundaId,
   clusterListingIds,
   selectListing,
   consumeDeepLink,
@@ -78,6 +79,7 @@ onMounted(async () => {
     const { refreshFundaSource } = useFundaLayer(map, listings, {
       favouriteIds,
       discardedIds,
+      lastViewedFundaId,
       fundaFavouriteVisible,
       fundaUnreviewedVisible,
       fundaDiscardedVisible,

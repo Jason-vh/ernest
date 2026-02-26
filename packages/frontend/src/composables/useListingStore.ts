@@ -1,10 +1,22 @@
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import type { Listing, ReactionType, ListingNote } from "@ernest/shared";
 import { putReaction, putNote } from "@/api/client";
 
 const listings = ref<Map<string, Listing>>(new Map());
 const selectedFundaId = ref<string | null>(null);
 const clusterListingIds = ref<string[]>([]);
+const lastViewedFundaId = ref<string | null>(null);
+
+// Track when modal closes: record the last-viewed listing for map highlight
+watch(selectedFundaId, (newVal, oldVal) => {
+  if (newVal === null && oldVal !== null) {
+    // Modal just closed — highlight the listing that was being viewed
+    lastViewedFundaId.value = oldVal;
+  } else if (newVal !== null) {
+    // A new listing is being opened — clear the previous highlight
+    lastViewedFundaId.value = null;
+  }
+});
 let pushedState = false;
 
 // One-time cleanup of old localStorage viewed tracking
@@ -232,6 +244,7 @@ export function useListingStore() {
     listings,
     selectedFundaId,
     selectedListing,
+    lastViewedFundaId,
     favouriteIds,
     discardedIds,
     clusterListingIds,

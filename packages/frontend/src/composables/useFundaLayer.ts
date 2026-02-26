@@ -8,6 +8,7 @@ import { getGeoJSONSource } from "@/geo/map-utils";
 interface FundaState {
   favouriteIds: Ref<Set<string>>;
   discardedIds: Ref<Set<string>>;
+  lastViewedFundaId: Ref<string | null>;
   fundaFavouriteVisible: Ref<boolean>;
   fundaUnreviewedVisible: Ref<boolean>;
   fundaDiscardedVisible: Ref<boolean>;
@@ -85,6 +86,7 @@ export function useFundaLayer(
   const {
     favouriteIds,
     discardedIds,
+    lastViewedFundaId,
     fundaFavouriteVisible,
     fundaUnreviewedVisible,
     fundaDiscardedVisible,
@@ -207,6 +209,21 @@ export function useFundaLayer(
     },
   });
 
+  // Highlight ring for last-viewed listing (shown after closing modal)
+  map.addLayer({
+    id: "funda-highlight-ring",
+    type: "circle",
+    source: "funda",
+    filter: ["==", ["get", "fundaId"], ""],
+    paint: {
+      "circle-radius": 12,
+      "circle-color": "transparent",
+      "circle-stroke-width": 2.5,
+      "circle-stroke-color": COLORS.fundaUnreviewed,
+      "circle-stroke-opacity": 0.8,
+    },
+  });
+
   // Invisible larger hit area for easier tapping on touch devices
   map.addLayer({
     id: "funda-circles-hitarea",
@@ -267,6 +284,33 @@ export function useFundaLayer(
 
   updateFundaLayer();
   watch([fundaFavouriteVisible, fundaUnreviewedVisible, fundaDiscardedVisible], updateFundaLayer);
+
+  // Update highlight ring when last-viewed listing changes
+  function updateHighlightRing() {
+    if (!map.getLayer("funda-highlight-ring")) return;
+    const id = lastViewedFundaId.value;
+    if (!id) {
+      // Hide the ring by matching nothing
+      map.setFilter("funda-highlight-ring", ["==", ["get", "fundaId"], ""]);
+      return;
+    }
+
+    map.setFilter("funda-highlight-ring", ["==", ["get", "fundaId"], id]);
+
+    // Color the ring to match the listing's category
+    const listing = listings.value.get(id);
+    let color: string = COLORS.fundaUnreviewed;
+    if (listing) {
+      if (listing.reaction === "favourite") {
+        color = COLORS.fundaFavourite;
+      } else if (listing.reaction === "discarded") {
+        color = COLORS.fundaDiscarded;
+      }
+    }
+    map.setPaintProperty("funda-highlight-ring", "circle-stroke-color", color);
+  }
+
+  watch(lastViewedFundaId, updateHighlightRing);
 
   return { refreshFundaSource };
 }
