@@ -81,11 +81,6 @@
             <div ref="scrollContainerRef" class="flex-1 overflow-y-auto overscroll-none">
               <!-- Photo gallery -->
               <div v-if="listing.photos.length > 0" class="relative">
-                <PhotoGallery
-                  :photos="listing.photos"
-                  :initial-fullscreen-index="initialPhotoIndex"
-                  @fullscreen-change="onFullscreenChange"
-                />
                 <!-- Floating top bar (zero-height sticky overlay, no layout impact) -->
                 <div
                   class="pointer-events-none sticky top-0 z-20 flex h-0 items-start justify-end gap-1.5 overflow-visible px-2.5"
@@ -125,6 +120,11 @@
                     </button>
                   </div>
                 </div>
+                <PhotoGallery
+                  :photos="listing.photos"
+                  :initial-fullscreen-index="initialPhotoIndex"
+                  @fullscreen-change="onFullscreenChange"
+                />
               </div>
 
               <!-- Top bar fallback when no photos -->
