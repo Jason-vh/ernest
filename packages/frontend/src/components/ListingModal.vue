@@ -516,6 +516,7 @@ const listingAgeText = computed(() => {
   const offered = new Date(listing.value.offeredSince);
   if (Number.isNaN(offered.getTime())) return null;
   const days = Math.floor((Date.now() - offered.getTime()) / (1000 * 60 * 60 * 24));
+  if (days === 0) return "listed today";
   if (days < 14) return `listed ${days} day${days === 1 ? "" : "s"} ago`;
   if (days < 60) return `listed ${Math.round(days / 7)} weeks ago`;
   return `listed ${Math.round(days / 30)} months ago`;
