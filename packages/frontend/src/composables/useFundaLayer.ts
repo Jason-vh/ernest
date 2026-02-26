@@ -43,6 +43,9 @@ export function listingsToGeoJSON(listings: Map<string, Listing>): GeoJSON.Featu
     counts[cat]++;
   }
 
+  // Track which coordinate keys have already had a primary feature assigned
+  const primaryAssigned = new Set<string>();
+
   const features: GeoJSON.Feature[] = [];
   for (const listing of listings.values()) {
     const category: Category =
@@ -52,7 +55,15 @@ export function listingsToGeoJSON(listings: Map<string, Listing>): GeoJSON.Featu
           ? "discarded"
           : "unreviewed";
     const key = `${listing.longitude},${listing.latitude}`;
-    const counts = coordCats.get(key)!;
+    const counts = coordCats.get(key);
+    const favourite = counts ? counts.favourite : 0;
+    const unreviewed = counts ? counts.unreviewed : 0;
+    const discarded = counts ? counts.discarded : 0;
+
+    // Only one feature per coordinate should render the count label
+    const isPrimary = !primaryAssigned.has(key);
+    if (isPrimary) primaryAssigned.add(key);
+
     features.push({
       type: "Feature",
       geometry: {
@@ -68,9 +79,10 @@ export function listingsToGeoJSON(listings: Map<string, Listing>): GeoJSON.Featu
         livingArea: listing.livingArea,
         photo: listing.photos.length > 0 ? listing.photos[0] : "",
         category,
-        colocatedFavourite: counts.favourite,
-        colocatedUnreviewed: counts.unreviewed,
-        colocatedDiscarded: counts.discarded,
+        colocatedFavourite: favourite,
+        colocatedUnreviewed: unreviewed,
+        colocatedDiscarded: discarded,
+        colocatedPrimary: isPrimary,
       },
     });
   }
@@ -166,26 +178,32 @@ export function useFundaLayer(
     [">", ["get", "colocatedFavourite"], 0],
     [">", ["get", "colocatedUnreviewed"], 0],
   ];
+
+  // Data-driven radius: scale up for co-located listings
+  const totalColocated: maplibregl.ExpressionSpecification = [
+    "+",
+    ["get", "colocatedFavourite"],
+    ["get", "colocatedUnreviewed"],
+    ["get", "colocatedDiscarded"],
+  ];
+  const clusterRadius: maplibregl.ExpressionSpecification = [
+    "step",
+    totalColocated,
+    5, // count 1: radius 5
+    2,
+    8, // count 2: radius 8
+    3,
+    10, // count 3: radius 10
+    5,
+    12, // count 5+: radius 12
+  ];
+
   map.addLayer({
     id: "funda-circles",
     type: "circle",
     source: "funda",
     paint: {
-      "circle-radius": [
-        "case",
-        [
-          ">",
-          [
-            "+",
-            ["get", "colocatedFavourite"],
-            ["get", "colocatedUnreviewed"],
-            ["get", "colocatedDiscarded"],
-          ],
-          1,
-        ],
-        6.5,
-        5,
-      ],
+      "circle-radius": clusterRadius,
       "circle-radius-transition": { duration: 200, delay: 0 },
       "circle-color": [
         "case",
@@ -224,6 +242,26 @@ export function useFundaLayer(
     },
   });
 
+  // Count label on clusters (only for co-located locations with 2+ listings)
+  // Only one feature per coordinate needs to show the label; use colocatedPrimary flag
+  map.addLayer({
+    id: "funda-count",
+    type: "symbol",
+    source: "funda",
+    filter: ["all", [">", totalColocated, 1], ["==", ["get", "colocatedPrimary"], true]],
+    layout: {
+      "text-field": ["to-string", totalColocated],
+      "text-size": 10,
+      "text-allow-overlap": true,
+      "text-ignore-placement": true,
+    },
+    paint: {
+      "text-color": "#fff",
+      "text-halo-color": "rgba(0,0,0,0.3)",
+      "text-halo-width": 0.5,
+    },
+  });
+
   // Invisible larger hit area for easier tapping on touch devices
   map.addLayer({
     id: "funda-circles-hitarea",
@@ -237,6 +275,19 @@ export function useFundaLayer(
   });
 
   // --- Funda visibility (3 independent toggles) ---
+  function buildVisibleColocated(): maplibregl.ExpressionSpecification {
+    const showFav = fundaFavouriteVisible.value;
+    const showUnreviewed = fundaUnreviewedVisible.value;
+    const showDiscarded = fundaDiscardedVisible.value;
+    const expr: maplibregl.ExpressionSpecification = [
+      "+",
+      showFav ? ["get", "colocatedFavourite"] : 0,
+      showUnreviewed ? ["get", "colocatedUnreviewed"] : 0,
+      showDiscarded ? ["get", "colocatedDiscarded"] : 0,
+    ];
+    return expr;
+  }
+
   function updateFundaLayer() {
     if (!map.getLayer("funda-circles")) return;
     const showFav = fundaFavouriteVisible.value;
@@ -258,28 +309,38 @@ export function useFundaLayer(
     if (visibleCategories.length === 0) {
       map.setLayoutProperty("funda-circles-hitarea", "visibility", "none");
       map.setLayoutProperty("funda-circles", "visibility", "none");
+      map.setLayoutProperty("funda-count", "visibility", "none");
     } else {
       map.setLayoutProperty("funda-circles-hitarea", "visibility", "visible");
       map.setLayoutProperty("funda-circles", "visibility", "visible");
+      map.setLayoutProperty("funda-count", "visibility", "visible");
       map.setFilter("funda-circles-hitarea", categoryFilter);
       map.setFilter("funda-circles", categoryFilter);
     }
     map.setFilter("funda-building-fill", categoryFilter);
     map.setFilter("funda-building-outline", categoryFilter);
 
-    // Update circle size based on visible co-located count
-    const visibleColocated = [
-      "+",
-      showFav ? ["get", "colocatedFavourite"] : 0,
-      showUnreviewed ? ["get", "colocatedUnreviewed"] : 0,
-      showDiscarded ? ["get", "colocatedDiscarded"] : 0,
-    ];
+    // Update circle size + count label based on visible co-located count
+    const visibleColocated = buildVisibleColocated();
     map.setPaintProperty("funda-circles", "circle-radius", [
-      "case",
-      [">", visibleColocated, 1],
-      6.5,
+      "step",
+      visibleColocated,
+      5, // count 1: radius 5
+      2,
+      8, // count 2: radius 8
+      3,
+      10, // count 3: radius 10
       5,
+      12, // count 5+: radius 12
     ]);
+
+    // Update count label text and filter to only show for visible clusters of 2+
+    map.setFilter("funda-count", [
+      "all",
+      [">", visibleColocated, 1],
+      ["==", ["get", "colocatedPrimary"], true],
+    ]);
+    map.setLayoutProperty("funda-count", "text-field", ["to-string", visibleColocated]);
   }
 
   updateFundaLayer();

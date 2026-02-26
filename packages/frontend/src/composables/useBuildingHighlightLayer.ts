@@ -24,8 +24,28 @@ export function useBuildingHighlightLayer(
       if (lastBuildingViewKey !== "empty") {
         lastBuildingViewKey = "empty";
         src.setData(emptyData);
-        map.setPaintProperty("funda-circles", "circle-radius", 5);
+        // Restore data-driven circle sizing for clusters (matches useFundaLayer)
+        const totalColocated: maplibregl.ExpressionSpecification = [
+          "+",
+          ["get", "colocatedFavourite"],
+          ["get", "colocatedUnreviewed"],
+          ["get", "colocatedDiscarded"],
+        ];
+        map.setPaintProperty("funda-circles", "circle-radius", [
+          "step",
+          totalColocated,
+          5,
+          2,
+          8,
+          3,
+          10,
+          5,
+          12,
+        ]);
         map.setPaintProperty("funda-circles", "circle-stroke-width", 1);
+        if (map.getLayer("funda-count")) {
+          map.setLayoutProperty("funda-count", "visibility", "visible");
+        }
       }
       return;
     }
@@ -66,10 +86,38 @@ export function useBuildingHighlightLayer(
       discardedIds.value,
     );
     src.setData(buildings);
-    // Hide dots when building highlights are active (same frame, no flash)
+    // Hide dots + count labels when building highlights are active (same frame, no flash)
     const hideDots = buildings.features.length > 0;
-    map.setPaintProperty("funda-circles", "circle-radius", hideDots ? 0 : 5);
-    map.setPaintProperty("funda-circles", "circle-stroke-width", hideDots ? 0 : 1);
+    if (hideDots) {
+      map.setPaintProperty("funda-circles", "circle-radius", 0);
+      map.setPaintProperty("funda-circles", "circle-stroke-width", 0);
+      if (map.getLayer("funda-count")) {
+        map.setLayoutProperty("funda-count", "visibility", "none");
+      }
+    } else {
+      // Restore data-driven circle sizing for clusters (matches useFundaLayer)
+      const totalColocated: maplibregl.ExpressionSpecification = [
+        "+",
+        ["get", "colocatedFavourite"],
+        ["get", "colocatedUnreviewed"],
+        ["get", "colocatedDiscarded"],
+      ];
+      map.setPaintProperty("funda-circles", "circle-radius", [
+        "step",
+        totalColocated,
+        5,
+        2,
+        8,
+        3,
+        10,
+        5,
+        12,
+      ]);
+      map.setPaintProperty("funda-circles", "circle-stroke-width", 1);
+      if (map.getLayer("funda-count")) {
+        map.setLayoutProperty("funda-count", "visibility", "visible");
+      }
+    }
   }
 
   function resetBuildingViewKey() {
