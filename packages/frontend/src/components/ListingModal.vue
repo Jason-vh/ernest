@@ -187,56 +187,79 @@
                   </template>
                 </div>
 
-                <!-- Actions row -->
-                <div class="mt-3 flex items-center gap-2">
-                  <button
-                    class="reaction-btn"
-                    :class="{
-                      'reaction-btn--active reaction-btn--fav': listing.reaction === 'favourite',
-                    }"
-                    @click="toggleReaction('favourite')"
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
+                <!-- Actions row + integrated note -->
+                <div class="mt-3">
+                  <div class="flex items-center gap-2">
+                    <button
+                      class="reaction-btn"
+                      :class="{
+                        'reaction-btn--active reaction-btn--fav': listing.reaction === 'favourite',
+                      }"
+                      @click="toggleReaction('favourite')"
                     >
-                      <path
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                        :fill="listing.reaction === 'favourite' ? 'currentColor' : 'none'"
-                      />
-                    </svg>
-                    Favourite
-                  </button>
-                  <button
-                    class="reaction-btn"
-                    :class="{
-                      'reaction-btn--active reaction-btn--discard':
-                        listing.reaction === 'discarded',
-                    }"
-                    @click="toggleReaction('discarded')"
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path
+                          d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                          :fill="listing.reaction === 'favourite' ? 'currentColor' : 'none'"
+                        />
+                      </svg>
+                      {{ listing.reaction === "favourite" ? "Favourited" : "Favourite" }}
+                    </button>
+                    <button
+                      class="reaction-btn"
+                      :class="{
+                        'reaction-btn--active reaction-btn--discard':
+                          listing.reaction === 'discarded',
+                      }"
+                      @click="toggleReaction('discarded')"
                     >
-                      <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
-                    Discard
-                  </button>
-                  <span
-                    v-if="listing.reactionBy"
-                    class="ml-auto self-center text-[11px] text-[#bbb]"
-                  >
-                    by {{ listing.reactionBy }}
-                  </span>
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path d="M18 6L6 18M6 6l12 12" />
+                      </svg>
+                      {{ listing.reaction === "discarded" ? "Discarded" : "Discard" }}
+                    </button>
+                    <span
+                      v-if="listing.reactionBy"
+                      class="ml-auto self-center text-[11px] text-[#bbb]"
+                    >
+                      by {{ listing.reactionBy }}
+                    </span>
+                  </div>
+
+                  <!-- Inline note editor (shows after reacting or when note exists) -->
+                  <div v-if="noteEditorOpen" class="note-editor mt-2.5">
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-[11px] font-medium text-[#999]">
+                        {{ ownNote ? "Your note" : "Add a note" }}
+                      </span>
+                      <span v-if="noteSaving" class="text-[11px] font-normal text-[#bbb]"
+                        >saving...</span
+                      >
+                      <span v-else-if="noteSaved" class="text-[11px] font-normal text-emerald-600"
+                        >saved</span
+                      >
+                    </div>
+                    <textarea
+                      v-model="ownNoteText"
+                      rows="2"
+                      class="mt-1 w-full resize-none rounded-lg border border-black/10 bg-white/80 px-3 py-2 font-inherit text-[13px] text-[#333] outline-none transition-colors placeholder:text-[#bbb] focus:border-black/20 focus:bg-white"
+                      placeholder="Why do you like or dislike this place?"
+                    ></textarea>
+                  </div>
                 </div>
 
                 <!-- Divider -->
@@ -292,13 +315,13 @@
                 </div>
 
                 <!-- Notes (read-only display) -->
-                <div v-if="listing.notes.length > 0" class="mt-4">
+                <div v-if="otherNotes.length > 0" class="mt-4">
                   <div class="text-[11px] font-semibold uppercase tracking-wide text-[#888]">
                     Notes
                   </div>
-                  <div v-for="note in listing.notes" :key="note.userId" class="mt-2">
-                    <div class="text-[11px] font-medium text-[#999]">{{ note.username }}</div>
-                    <p class="m-0 mt-0.5 whitespace-pre-line text-[13px] leading-[1.5] text-[#555]">
+                  <div v-for="note in otherNotes" :key="note.userId" class="notes-card mt-2">
+                    <div class="text-[11px] font-semibold text-[#999]">{{ note.username }}</div>
+                    <p class="m-0 mt-1 whitespace-pre-line text-[13px] leading-[1.5] text-[#444]">
                       {{ note.text }}
                     </p>
                   </div>
@@ -382,11 +405,14 @@
                 <!-- Location mini map -->
                 <ListingMiniMap :longitude="listing.longitude" :latitude="listing.latitude" />
 
-                <!-- Collapsible note editor (at bottom) -->
-                <div v-if="user" class="mt-4 border-t border-black/6 pt-4">
+                <!-- Add note link (shown when logged in, no reaction yet, and editor not open) -->
+                <div
+                  v-if="user && !listing.reaction && !noteEditorOpen"
+                  class="mt-4 border-t border-black/6 pt-4"
+                >
                   <button
-                    class="flex w-full cursor-pointer items-center gap-1.5 border-none bg-transparent p-0 font-inherit text-[11px] font-semibold uppercase tracking-wide text-[#888] transition-colors hover:text-[#888]"
-                    @click="noteEditorOpen = !noteEditorOpen"
+                    class="flex w-full cursor-pointer items-center gap-1.5 border-none bg-transparent p-0 font-inherit text-[11px] font-semibold uppercase tracking-wide text-[#888] transition-colors hover:text-[#666]"
+                    @click="noteEditorOpen = true"
                   >
                     <svg
                       width="10"
@@ -395,29 +421,11 @@
                       fill="none"
                       stroke="currentColor"
                       stroke-width="2.5"
-                      class="transition-transform"
-                      :class="{ 'rotate-90': noteEditorOpen }"
                     >
-                      <path d="M9 18l6-6-6-6" />
+                      <path d="M12 5v14M5 12h14" />
                     </svg>
-                    {{ ownNote ? "Edit note" : "Add note" }}
-                    <span v-if="noteSaving" class="ml-1 font-normal normal-case tracking-normal"
-                      >saving...</span
-                    >
-                    <span
-                      v-else-if="noteSaved"
-                      class="ml-1 font-normal normal-case tracking-normal text-emerald-600"
-                      >saved</span
-                    >
+                    Add note
                   </button>
-                  <div v-if="noteEditorOpen" class="mt-2">
-                    <textarea
-                      v-model="ownNoteText"
-                      rows="3"
-                      class="w-full resize-none rounded-lg border border-black/10 bg-black/[0.02] px-3 py-2 font-inherit text-[13px] text-[#333] outline-none transition-colors placeholder:text-[#bbb] focus:border-black/20 focus:bg-white"
-                      placeholder="Add a note..."
-                    ></textarea>
-                  </div>
                 </div>
                 <!-- View on Funda -->
                 <div class="mt-4 border-t border-black/6 pt-4">
@@ -648,6 +656,13 @@ const ownNoteChanged = computed(() => {
   return ownNoteText.value.trim() !== original;
 });
 
+// Notes from other users (own note is shown in the inline editor)
+const otherNotes = computed(() => {
+  if (!listing.value) return [];
+  if (!user.value) return listing.value.notes;
+  return listing.value.notes.filter((n) => n.userId !== user.value!.id);
+});
+
 function toggleReaction(reaction: ReactionType) {
   if (!listing.value) return;
   if (!user.value) {
@@ -656,6 +671,10 @@ function toggleReaction(reaction: ReactionType) {
   }
   const newReaction = listing.value.reaction === reaction ? null : reaction;
   setReaction(listing.value.fundaId, newReaction, user.value.username);
+  // Auto-open the note editor when setting a reaction (not when clearing)
+  if (newReaction) {
+    noteEditorOpen.value = true;
+  }
 }
 
 // Auto-save note on text change (debounced 1s)
@@ -723,7 +742,8 @@ watch(
     if (v && user.value) {
       const note = v.notes.find((n) => n.userId === user.value!.id);
       ownNoteText.value = note?.text ?? "";
-      if (note) noteEditorOpen.value = true;
+      // Show note editor if user has a note or already reacted
+      if (note || v.reaction) noteEditorOpen.value = true;
     } else {
       ownNoteText.value = "";
     }
@@ -791,6 +811,20 @@ function trapFocus(e: KeyboardEvent) {
   border-radius: 12px;
   background: #f7f7f6;
   border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.notes-card {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #f7f7f6;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.note-editor {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #f7f7f6;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .reaction-btn {
