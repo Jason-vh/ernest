@@ -78,16 +78,21 @@
             @keydown="trapFocus"
           >
             <!-- Scrollable content -->
-            <div class="flex-1 overflow-y-auto overscroll-contain">
-              <!-- Photo gallery with floating close button -->
-              <div v-if="listing.photos.length > 0" class="relative">
-                <PhotoGallery
-                  :photos="listing.photos"
-                  :initial-fullscreen-index="initialPhotoIndex"
-                  @fullscreen-change="onFullscreenChange"
-                />
+            <div
+              ref="scrollContainerRef"
+              class="flex-1 overflow-y-auto overscroll-contain"
+              @scroll="onScrollContent"
+            >
+              <!-- Sticky top bar with fly-to and close buttons -->
+              <div
+                class="sticky top-0 z-20 flex items-center justify-end gap-1.5 px-2.5 pt-2.5 pb-1.5"
+              >
+                <div
+                  class="pointer-events-none absolute inset-0 rounded-t-[14px] glass opacity-0 transition-opacity duration-200"
+                  :class="{ 'opacity-100': scrolledPastPhoto }"
+                ></div>
                 <button
-                  class="absolute top-2.5 right-12 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
+                  class="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
                   title="Show on map"
                   @click="showOnMap"
                 >
@@ -104,7 +109,7 @@
                   </svg>
                 </button>
                 <button
-                  class="absolute top-2.5 right-2.5 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
+                  class="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
                   @click="close"
                 >
                   <svg
@@ -120,40 +125,13 @@
                 </button>
               </div>
 
-              <!-- No-photo fallback header -->
-              <div v-else class="flex items-center justify-end gap-1.5 px-4 pt-3">
-                <button
-                  class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none bg-black/8 text-[#666] transition-colors hover:bg-black/15"
-                  title="Show on map"
-                  @click="showOnMap"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                  >
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
-                  </svg>
-                </button>
-                <button
-                  class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none bg-black/8 text-[#666] transition-colors hover:bg-black/15"
-                  @click="close"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                  >
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                </button>
+              <!-- Photo gallery -->
+              <div v-if="listing.photos.length > 0" class="-mt-[46px]">
+                <PhotoGallery
+                  :photos="listing.photos"
+                  :initial-fullscreen-index="initialPhotoIndex"
+                  @fullscreen-change="onFullscreenChange"
+                />
               </div>
 
               <div class="flex flex-col gap-0 px-5 pt-4 pb-5">
@@ -514,9 +492,18 @@ const ownNoteText = ref("");
 const noteEditorOpen = ref(false);
 const noteSaving = ref(false);
 const noteSaved = ref(false);
+const scrolledPastPhoto = ref(false);
+const scrollContainerRef = ref<HTMLDivElement>();
 let saveDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 let savedFadeTimer: ReturnType<typeof setTimeout> | null = null;
 let prevFundaId: string | null = null;
+
+function onScrollContent() {
+  const el = scrollContainerRef.value;
+  if (!el) return;
+  // Show glass background once scrolled more than 10px
+  scrolledPastPhoto.value = el.scrollTop > 10;
+}
 
 const overbidPrice = computed(() => {
   if (!listing.value) return 0;
@@ -711,7 +698,8 @@ watch(
     noteEditorOpen.value = false;
 
     // Scroll inner content back to top when switching listings
-    modalRef.value?.querySelector<HTMLElement>(".overflow-y-auto")?.scrollTo({ top: 0 });
+    scrollContainerRef.value?.scrollTo({ top: 0 });
+    scrolledPastPhoto.value = false;
 
     // Read photo deep-link param
     const photoParam = new URLSearchParams(window.location.search).get("photo");
