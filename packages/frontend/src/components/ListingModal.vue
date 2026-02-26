@@ -91,29 +91,33 @@
                       title="Copy link"
                       @click="copyLink"
                     >
-                      <svg
-                        v-if="!linkCopied"
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2.5"
-                      >
-                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                      </svg>
-                      <svg
-                        v-else
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2.5"
-                      >
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
+                      <Transition name="icon-swap" mode="out-in">
+                        <svg
+                          v-if="!linkCopied"
+                          key="link"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.5"
+                        >
+                          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                        </svg>
+                        <svg
+                          v-else
+                          key="check"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.5"
+                        >
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                      </Transition>
                     </button>
                     <button
                       class="pointer-events-auto relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
@@ -163,29 +167,33 @@
                   title="Copy link"
                   @click="copyLink"
                 >
-                  <svg
-                    v-if="!linkCopied"
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                  >
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                  </svg>
-                  <svg
-                    v-else
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                  >
-                    <path d="M20 6L9 17l-5-5" />
-                  </svg>
+                  <Transition name="icon-swap" mode="out-in">
+                    <svg
+                      v-if="!linkCopied"
+                      key="link"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                    >
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                    </svg>
+                    <svg
+                      v-else
+                      key="check"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                    >
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                  </Transition>
                 </button>
                 <button
                   class="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/10 text-[#666] transition-colors hover:bg-black/15"
@@ -1007,6 +1015,23 @@ function trapFocus(e: KeyboardEvent) {
 
 .cluster-arrow:hover {
   background: rgba(0, 0, 0, 0.6);
+}
+
+.icon-swap-enter-active,
+.icon-swap-leave-active {
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.icon-swap-enter-from {
+  opacity: 0;
+  transform: scale(0.4);
+}
+
+.icon-swap-leave-to {
+  opacity: 0;
+  transform: scale(0.4);
 }
 
 /* Slide-up on mobile, scale-fade on desktop */
