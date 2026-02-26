@@ -202,7 +202,7 @@
                 </div>
 
                 <!-- Actions row -->
-                <div v-if="user" class="mt-3 flex items-center gap-2">
+                <div class="mt-3 flex items-center gap-2">
                   <button
                     class="reaction-btn"
                     :class="{
@@ -493,7 +493,7 @@ const {
   currentClusterIndex,
   navigateCluster,
 } = useListingStore();
-const { user } = useAuth();
+const { user, showAuthModal } = useAuth();
 
 const listing = selectedListing;
 const isCluster = computed(() => clusterListingIds.value.length > 1);
@@ -645,7 +645,11 @@ const ownNoteChanged = computed(() => {
 });
 
 function toggleReaction(reaction: ReactionType) {
-  if (!listing.value || !user.value) return;
+  if (!listing.value) return;
+  if (!user.value) {
+    showAuthModal.value = true;
+    return;
+  }
   const newReaction = listing.value.reaction === reaction ? null : reaction;
   setReaction(listing.value.fundaId, newReaction, user.value.username);
 }

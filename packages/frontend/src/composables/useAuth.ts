@@ -12,6 +12,7 @@ import {
 const user = ref<User | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
+const showAuthModal = ref(false);
 
 let initialized = false;
 
@@ -64,6 +65,7 @@ export function useAuth() {
     user,
     loading,
     error,
+    showAuthModal,
     register,
     login,
     logout,
