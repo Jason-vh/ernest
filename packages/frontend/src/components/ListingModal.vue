@@ -78,19 +78,11 @@
             @keydown="trapFocus"
           >
             <!-- Scrollable content -->
-            <div
-              ref="scrollContainerRef"
-              class="flex-1 overflow-y-auto overscroll-contain"
-              @scroll="onScrollContent"
-            >
+            <div ref="scrollContainerRef" class="flex-1 overflow-y-auto overscroll-contain">
               <!-- Sticky top bar with fly-to and close buttons -->
               <div
                 class="sticky top-0 z-20 flex items-center justify-end gap-1.5 px-2.5 pt-2.5 pb-1.5"
               >
-                <div
-                  class="pointer-events-none absolute inset-0 rounded-t-[14px] glass opacity-0 transition-opacity duration-200"
-                  :class="{ 'opacity-100': scrolledPastPhoto }"
-                ></div>
                 <button
                   class="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
                   title="Show on map"
@@ -500,18 +492,10 @@ const ownNoteText = ref("");
 const noteEditorOpen = ref(false);
 const noteSaving = ref(false);
 const noteSaved = ref(false);
-const scrolledPastPhoto = ref(false);
 const scrollContainerRef = ref<HTMLDivElement>();
 let saveDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 let savedFadeTimer: ReturnType<typeof setTimeout> | null = null;
 let prevFundaId: string | null = null;
-
-function onScrollContent() {
-  const el = scrollContainerRef.value;
-  if (!el) return;
-  // Show glass background once scrolled more than 10px
-  scrolledPastPhoto.value = el.scrollTop > 10;
-}
 
 const overbidPrice = computed(() => {
   if (!listing.value) return 0;
@@ -718,7 +702,6 @@ watch(
 
     // Scroll inner content back to top when switching listings
     scrollContainerRef.value?.scrollTo({ top: 0 });
-    scrolledPastPhoto.value = false;
 
     // Read photo deep-link param
     const photoParam = new URLSearchParams(window.location.search).get("photo");
@@ -816,15 +799,15 @@ function trapFocus(e: KeyboardEvent) {
 .notes-card {
   padding: 10px 14px;
   border-radius: 10px;
-  background: #f7f7f6;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: rgba(139, 92, 246, 0.06);
+  border: 1px solid rgba(139, 92, 246, 0.12);
 }
 
 .note-editor {
   padding: 10px 14px;
   border-radius: 10px;
-  background: #f7f7f6;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: rgba(139, 92, 246, 0.06);
+  border: 1px solid rgba(139, 92, 246, 0.12);
 }
 
 .reaction-btn {

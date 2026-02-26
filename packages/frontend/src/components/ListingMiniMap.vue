@@ -39,7 +39,7 @@ async function initMiniMap() {
     container: mapContainer.value,
     style,
     center: [props.longitude, props.latitude],
-    zoom: 15,
+    zoom: 13,
     attributionControl: false,
     interactive: false,
   });
