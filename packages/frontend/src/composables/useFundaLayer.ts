@@ -1,6 +1,6 @@
 import type { Ref } from "vue";
 import { watch } from "vue";
-import type maplibregl from "maplibre-gl";
+import maplibregl from "maplibre-gl";
 import type { Listing } from "@ernest/shared";
 import { COLORS } from "@/geo/constants";
 import { getGeoJSONSource } from "@/geo/map-utils";
@@ -23,6 +23,23 @@ const emptyFC: GeoJSON.FeatureCollection = {
 };
 
 type Category = "favourite" | "discarded" | "unreviewed";
+
+function createPulseElement(color: string): HTMLDivElement {
+  const el = document.createElement("div");
+  el.className = "funda-pulse-marker";
+  el.style.width = "12px";
+  el.style.height = "12px";
+  el.style.position = "relative";
+  const ring1 = document.createElement("div");
+  ring1.className = "funda-pulse-ring";
+  ring1.style.borderColor = color;
+  const ring2 = document.createElement("div");
+  ring2.className = "funda-pulse-ring";
+  ring2.style.borderColor = color;
+  el.appendChild(ring1);
+  el.appendChild(ring2);
+  return el;
+}
 
 export function listingsToGeoJSON(listings: Map<string, Listing>): GeoJSON.FeatureCollection {
   // Count co-located listings per coordinate, split by category
@@ -227,20 +244,8 @@ export function useFundaLayer(
     },
   });
 
-  // Highlight ring for last-viewed listing (shown after closing modal)
-  map.addLayer({
-    id: "funda-highlight-ring",
-    type: "circle",
-    source: "funda",
-    filter: ["==", ["get", "fundaId"], ""],
-    paint: {
-      "circle-radius": 12,
-      "circle-color": "transparent",
-      "circle-stroke-width": 2.5,
-      "circle-stroke-color": COLORS.fundaUnreviewed,
-      "circle-stroke-opacity": 0.8,
-    },
-  });
+  // Pulse marker for last-viewed listing (shown after closing modal)
+  let pulseMarker: maplibregl.Marker | null = null;
 
   // Count label on clusters (only for co-located locations with 2+ listings)
   // Only one feature per coordinate needs to show the label; use colocatedPrimary flag
@@ -346,32 +351,54 @@ export function useFundaLayer(
   updateFundaLayer();
   watch([fundaFavouriteVisible, fundaUnreviewedVisible, fundaDiscardedVisible], updateFundaLayer);
 
-  // Update highlight ring when last-viewed listing changes
-  function updateHighlightRing() {
-    if (!map.getLayer("funda-highlight-ring")) return;
-    const id = lastViewedFundaId.value;
-    if (!id) {
-      // Hide the ring by matching nothing
-      map.setFilter("funda-highlight-ring", ["==", ["get", "fundaId"], ""]);
-      return;
+  // Update pulse marker when last-viewed listing changes
+  function clearPulseMarker() {
+    if (pulseMarker) {
+      pulseMarker.remove();
+      pulseMarker = null;
     }
-
-    map.setFilter("funda-highlight-ring", ["==", ["get", "fundaId"], id]);
-
-    // Color the ring to match the listing's category
-    const listing = listings.value.get(id);
-    let color: string = COLORS.fundaUnreviewed;
-    if (listing) {
-      if (listing.reaction === "favourite") {
-        color = COLORS.fundaFavourite;
-      } else if (listing.reaction === "discarded") {
-        color = COLORS.fundaDiscarded;
-      }
-    }
-    map.setPaintProperty("funda-highlight-ring", "circle-stroke-color", color);
   }
 
-  watch(lastViewedFundaId, updateHighlightRing);
+  function updatePulseMarker() {
+    clearPulseMarker();
+
+    const id = lastViewedFundaId.value;
+    if (!id) return;
+
+    // Hide pulse when zoomed in far enough for building highlights
+    if (map.getZoom() >= 15) return;
+
+    const listing = listings.value.get(id);
+    if (!listing) return;
+
+    let color: string = COLORS.fundaUnreviewed;
+    if (listing.reaction === "favourite") {
+      color = COLORS.fundaFavourite;
+    } else if (listing.reaction === "discarded") {
+      color = COLORS.fundaDiscarded;
+    }
+
+    pulseMarker = new maplibregl.Marker({
+      element: createPulseElement(color),
+      anchor: "center",
+    })
+      .setLngLat([listing.longitude, listing.latitude])
+      .addTo(map);
+  }
+
+  watch(lastViewedFundaId, updatePulseMarker);
+
+  // Hide/show pulse marker based on zoom level (building highlights take over at zoom >= 15)
+  map.on("zoom", () => {
+    const id = lastViewedFundaId.value;
+    if (!id) return;
+
+    if (map.getZoom() >= 15) {
+      clearPulseMarker();
+    } else if (!pulseMarker) {
+      updatePulseMarker();
+    }
+  });
 
   return { refreshFundaSource };
 }
