@@ -88,6 +88,35 @@
                   <div class="flex gap-1.5 pt-2.5">
                     <button
                       class="pointer-events-auto relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
+                      title="Copy link"
+                      @click="copyLink"
+                    >
+                      <svg
+                        v-if="!linkCopied"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                      >
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                      </svg>
+                      <svg
+                        v-else
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                      >
+                        <path d="M20 6L9 17l-5-5" />
+                      </svg>
+                    </button>
+                    <button
+                      class="pointer-events-auto relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
                       title="Show on map"
                       @click="showOnMap"
                     >
@@ -129,6 +158,35 @@
 
               <!-- Top bar fallback when no photos -->
               <div v-else class="flex items-center justify-end gap-1.5 px-2.5 pt-2.5 pb-1.5">
+                <button
+                  class="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/10 text-[#666] transition-colors hover:bg-black/15"
+                  title="Copy link"
+                  @click="copyLink"
+                >
+                  <svg
+                    v-if="!linkCopied"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                  </svg>
+                  <svg
+                    v-else
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                </button>
                 <button
                   class="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/10 text-[#666] transition-colors hover:bg-black/15"
                   title="Show on map"
@@ -566,6 +624,8 @@ const noteEditorOpen = ref(false);
 const noteSaving = ref(false);
 const noteSaved = ref(false);
 const scrollContainerRef = ref<HTMLDivElement>();
+const linkCopied = ref(false);
+let linkCopiedTimer: ReturnType<typeof setTimeout> | null = null;
 let saveDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 let savedFadeTimer: ReturnType<typeof setTimeout> | null = null;
 let prevFundaId: string | null = null;
@@ -658,6 +718,15 @@ const activeDescription = computed(() => {
 
 function formatPrice(price: number): string {
   return `\u20AC${price.toLocaleString("nl-NL")}`;
+}
+
+function copyLink() {
+  navigator.clipboard.writeText(window.location.href);
+  linkCopied.value = true;
+  if (linkCopiedTimer) clearTimeout(linkCopiedTimer);
+  linkCopiedTimer = setTimeout(() => {
+    linkCopied.value = false;
+  }, 2000);
 }
 
 function close() {
