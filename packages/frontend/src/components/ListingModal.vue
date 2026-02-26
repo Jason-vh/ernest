@@ -48,7 +48,7 @@
         </div>
 
         <!-- Row: optional prev arrow + modal + optional next arrow -->
-        <div class="flex w-full items-center justify-center gap-3">
+        <div class="flex w-full items-center justify-center gap-3" @click.self="close">
           <!-- Prev arrow (desktop only) -->
           <button
             v-if="isCluster"
