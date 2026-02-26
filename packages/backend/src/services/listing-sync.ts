@@ -42,6 +42,7 @@ async function upsertListing(listing: NewListing, buurt: BuurtStats | null) {
         houseType: listing.houseType,
         constructionYear: listing.constructionYear,
         description: listing.description,
+        ownership: listing.ownership,
         hasGarden: listing.hasGarden,
         hasBalcony: listing.hasBalcony,
         hasRoofTerrace: listing.hasRoofTerrace,

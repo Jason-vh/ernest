@@ -142,6 +142,7 @@ def to_geojson(listings, coords, details):
         url = ""
         photo_urls = []
         status = ""
+        ownership = ""
         if detail:
             try:
                 url = detail.get("url") or ""
@@ -154,6 +155,7 @@ def to_geojson(listings, coords, details):
             try:
                 chars = detail.get("characteristics") or {}
                 status = chars.get("Status", "")
+                ownership = chars.get("Eigendomssituatie", chars.get("Eigendom", ""))
             except Exception:
                 pass
 
@@ -186,6 +188,7 @@ def to_geojson(listings, coords, details):
                     "hasBalcony": listing.get("has_balcony"),
                     "hasRoofTerrace": listing.get("has_roof_terrace"),
                     "status": status,
+                    "ownership": ownership,
                     "photos": json.dumps(photo_urls),
                     "url": url,
                 },

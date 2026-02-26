@@ -178,8 +178,11 @@
                   </div>
                 </div>
 
-                <!-- Key facts (inline) with status + energy badges -->
-                <div v-if="keyFacts || energyLabelBadge" class="mt-2.5 text-[13px] text-[#666]">
+                <!-- Key facts (inline) with status + energy + ownership badges -->
+                <div
+                  v-if="keyFacts || energyLabelBadge || ownershipBadge"
+                  class="mt-2.5 text-[13px] text-[#666]"
+                >
                   <span
                     v-if="listing.status === 'Beschikbaar'"
                     class="mr-1.5 inline-block rounded bg-emerald-500/10 px-1.5 py-[1px] text-[11px] font-semibold text-emerald-700"
@@ -189,6 +192,11 @@
                     class="mr-1.5 inline-block rounded px-1.5 py-[1px] text-[11px] font-semibold"
                     :class="energyLabelBadge.cls"
                     >{{ energyLabelBadge.text }}</span
+                  ><span
+                    v-if="ownershipBadge"
+                    class="mr-1.5 inline-block rounded px-1.5 py-[1px] text-[11px] font-semibold"
+                    :class="ownershipBadge.cls"
+                    >{{ ownershipBadge.text }}</span
                   >{{ keyFacts }}
                 </div>
 
@@ -566,6 +574,15 @@ const energyLabelBadge = computed(() => {
     return { text: "No energy label", cls: "bg-red-500/10 text-red-700" };
   if (label === "D") return { text: `Label ${label}`, cls: "bg-amber-500/10 text-amber-700" };
   return { text: `Label ${label}`, cls: "bg-emerald-500/10 text-emerald-700" };
+});
+
+const ownershipBadge = computed(() => {
+  if (!listing.value) return null;
+  const ownership = listing.value.ownership;
+  if (!ownership) return null;
+  const isErfpacht = ownership.toLowerCase().includes("erfpacht");
+  if (isErfpacht) return { text: ownership, cls: "bg-amber-500/10 text-amber-700" };
+  return { text: ownership, cls: "bg-black/5 text-[#666]" };
 });
 
 const hasBuurtStats = computed(() => {

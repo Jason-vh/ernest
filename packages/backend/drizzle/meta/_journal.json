@@ -57,6 +57,13 @@
       "when": 1772047369196,
       "tag": "0007_plain_nextwave",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1772097541927,
+      "tag": "0008_soft_punisher",
+      "breakpoints": true
     }
   ]
 }

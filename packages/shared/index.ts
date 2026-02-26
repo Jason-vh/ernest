@@ -34,6 +34,7 @@ export interface Listing {
   objectType: string | null;
   constructionYear: number | null;
   description: string | null;
+  ownership: string | null;
   hasGarden: boolean | null;
   hasBalcony: boolean | null;
   hasRoofTerrace: boolean | null;

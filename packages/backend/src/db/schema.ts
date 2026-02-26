@@ -87,6 +87,9 @@ export const listings = pgTable(
     constructionYear: integer("construction_year"),
     description: text("description"),
 
+    // Ownership
+    ownership: text("ownership"),
+
     // Amenities
     hasGarden: boolean("has_garden"),
     hasBalcony: boolean("has_balcony"),
