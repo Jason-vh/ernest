@@ -28,12 +28,15 @@ async function maybeEnqueueNotification(fundaId: string): Promise<void> {
     .select({
       routeFareharbor: listings.routeFareharbor,
       aiPositives: listings.aiPositives,
+      notifiedAt: listings.notifiedAt,
     })
     .from(listings)
     .where(eq(listings.fundaId, fundaId));
 
   if (rows.length === 0) return;
   const listing = rows[0];
+
+  if (listing.notifiedAt !== null) return;
 
   const routesReady = listing.routeFareharbor !== null;
   const aiReady = listing.aiPositives !== null || ANTHROPIC_API_KEY === null;

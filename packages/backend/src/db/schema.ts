@@ -122,6 +122,9 @@ export const listings = pgTable(
     aiNegatives: jsonb("ai_negatives").$type<string[]>(),
     aiDescription: text("ai_description"),
 
+    // Notification tracking
+    notifiedAt: timestamp("notified_at", { withTimezone: true }),
+
     // Timestamps
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

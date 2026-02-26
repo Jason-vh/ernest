@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { listings } from "@/db/schema";
 import type { Job } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, ORIGIN } from "@/config";
 import type { RouteResult } from "@/services/valhalla";
 
@@ -148,6 +148,11 @@ export async function handleTelegramNotify(job: Job): Promise<"completed" | "ski
       reply_markup: replyMarkup,
     });
   }
+
+  await db
+    .update(listings)
+    .set({ notifiedAt: sql`now()` })
+    .where(eq(listings.fundaId, job.fundaId));
 
   return "completed";
 }
