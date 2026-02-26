@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from funda import Funda
 
 PRICE_MIN = 450000
-PRICE_MAX = 680000
+PRICE_MAX = 565000
 MIN_BEDROOMS = 2
 MIN_LIVING_AREA = 65
 ACCEPTABLE_LABELS = {"A+++", "A++", "A+", "A", "B", "C", "D", "unknown"}
