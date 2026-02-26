@@ -7,8 +7,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from "vue";
 import maplibregl from "maplibre-gl";
-import { loadGreyscaleStyle } from "@/geo/greyscale-style";
 import { COLORS } from "@/geo/constants";
+import { fetchLines, fetchStations } from "@/api/client";
+import { StopType } from "@/types/transit";
 
 const props = defineProps<{
   longitude: number;
@@ -33,16 +34,19 @@ function createMarkerElement(): HTMLDivElement {
 async function initMiniMap() {
   if (!mapContainer.value) return;
 
-  const style = await loadGreyscaleStyle("https://tiles.openfreemap.org/styles/bright");
-
   map = new maplibregl.Map({
     container: mapContainer.value,
-    style,
+    style: "https://tiles.openfreemap.org/styles/bright",
     center: [props.longitude, props.latitude],
-    zoom: 13,
+    zoom: 14,
     attributionControl: false,
-    interactive: false,
+    dragPan: false,
+    dragRotate: false,
+    touchZoomRotate: true,
+    touchPitch: false,
   });
+
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
 
   marker = new maplibregl.Marker({
     element: createMarkerElement(),
@@ -50,6 +54,64 @@ async function initMiniMap() {
   })
     .setLngLat([props.longitude, props.latitude])
     .addTo(map);
+
+  map.on("load", async () => {
+    if (!map) return;
+    const [lines, stations] = await Promise.all([fetchLines(), fetchStations()]);
+
+    const lineTypes = [
+      { type: "tram", color: COLORS.tramLine, width: 1.5 },
+      { type: "metro", color: COLORS.metro, width: 2 },
+      { type: "train", color: COLORS.train, width: 2 },
+    ];
+
+    for (const { type, color, width } of lineTypes) {
+      const data: GeoJSON.FeatureCollection = {
+        type: "FeatureCollection",
+        features: lines.features.filter((f) => f.properties?.lineType === type),
+      };
+      map.addSource(`mini-${type}-lines`, { type: "geojson", data });
+      map.addLayer({
+        id: `mini-${type}-lines`,
+        type: "line",
+        source: `mini-${type}-lines`,
+        paint: { "line-color": color, "line-width": width, "line-opacity": 0.2 },
+        layout: { "line-cap": "round", "line-join": "round" },
+      });
+    }
+
+    const stopTypes = [
+      { stopType: StopType.Tram, color: COLORS.tram, radius: 2 },
+      { stopType: StopType.Metro, color: COLORS.metro, radius: 3.5 },
+      { stopType: StopType.Train, color: COLORS.train, radius: 3.5 },
+    ];
+
+    for (const { stopType, color, radius } of stopTypes) {
+      const data: GeoJSON.FeatureCollection = {
+        type: "FeatureCollection",
+        features: stations
+          .filter((s) => s.type === stopType)
+          .map((s) => ({
+            type: "Feature" as const,
+            geometry: { type: "Point" as const, coordinates: [s.lon, s.lat] },
+            properties: {},
+          })),
+      };
+      map.addSource(`mini-${stopType}-stops`, { type: "geojson", data });
+      map.addLayer({
+        id: `mini-${stopType}-stops`,
+        type: "circle",
+        source: `mini-${stopType}-stops`,
+        paint: {
+          "circle-radius": radius,
+          "circle-color": color,
+          "circle-opacity": 0.5,
+          "circle-stroke-width": 1,
+          "circle-stroke-color": "#fff",
+        },
+      });
+    }
+  });
 }
 
 // When coordinates change (navigating cluster), update map center and marker
