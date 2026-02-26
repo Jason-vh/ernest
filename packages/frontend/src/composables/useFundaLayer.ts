@@ -196,23 +196,11 @@ export function useFundaLayer(
     [">", ["get", "colocatedUnreviewed"], 0],
   ];
 
-  // Data-driven radius: scale up for co-located listings
   const totalColocated: maplibregl.ExpressionSpecification = [
     "+",
     ["get", "colocatedFavourite"],
     ["get", "colocatedUnreviewed"],
     ["get", "colocatedDiscarded"],
-  ];
-  const clusterRadius: maplibregl.ExpressionSpecification = [
-    "step",
-    totalColocated,
-    5, // count 1: radius 5
-    2,
-    8, // count 2: radius 8
-    3,
-    10, // count 3: radius 10
-    5,
-    12, // count 5+: radius 12
   ];
 
   map.addLayer({
@@ -220,7 +208,7 @@ export function useFundaLayer(
     type: "circle",
     source: "funda",
     paint: {
-      "circle-radius": clusterRadius,
+      "circle-radius": ["step", totalColocated, 5, 2, 7.5],
       "circle-radius-transition": { duration: 200, delay: 0 },
       "circle-color": [
         "case",
@@ -325,19 +313,8 @@ export function useFundaLayer(
     map.setFilter("funda-building-fill", categoryFilter);
     map.setFilter("funda-building-outline", categoryFilter);
 
-    // Update circle size + count label based on visible co-located count
+    // Update count label text and filter based on visible co-located count
     const visibleColocated = buildVisibleColocated();
-    map.setPaintProperty("funda-circles", "circle-radius", [
-      "step",
-      visibleColocated,
-      5, // count 1: radius 5
-      2,
-      8, // count 2: radius 8
-      3,
-      10, // count 3: radius 10
-      5,
-      12, // count 5+: radius 12
-    ]);
 
     // Update count label text and filter to only show for visible clusters of 2+
     map.setFilter("funda-count", [

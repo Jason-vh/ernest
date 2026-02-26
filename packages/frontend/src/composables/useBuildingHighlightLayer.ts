@@ -3,6 +3,19 @@ import type maplibregl from "maplibre-gl";
 import { getGeoJSONSource } from "@/geo/map-utils";
 import { matchBuildingsToFunda } from "@/composables/useBuildingHighlights";
 
+const clusterRadius: maplibregl.ExpressionSpecification = [
+  "step",
+  [
+    "+",
+    ["get", "colocatedFavourite"],
+    ["get", "colocatedUnreviewed"],
+    ["get", "colocatedDiscarded"],
+  ],
+  5,
+  2,
+  7.5,
+];
+
 const emptyData: GeoJSON.FeatureCollection = {
   type: "FeatureCollection",
   features: [],
@@ -24,24 +37,7 @@ export function useBuildingHighlightLayer(
       if (lastBuildingViewKey !== "empty") {
         lastBuildingViewKey = "empty";
         src.setData(emptyData);
-        // Restore data-driven circle sizing for clusters (matches useFundaLayer)
-        const totalColocated: maplibregl.ExpressionSpecification = [
-          "+",
-          ["get", "colocatedFavourite"],
-          ["get", "colocatedUnreviewed"],
-          ["get", "colocatedDiscarded"],
-        ];
-        map.setPaintProperty("funda-circles", "circle-radius", [
-          "step",
-          totalColocated,
-          5,
-          2,
-          8,
-          3,
-          10,
-          5,
-          12,
-        ]);
+        map.setPaintProperty("funda-circles", "circle-radius", clusterRadius);
         map.setPaintProperty("funda-circles", "circle-stroke-width", 1);
         if (map.getLayer("funda-count")) {
           map.setLayoutProperty("funda-count", "visibility", "visible");
@@ -95,24 +91,7 @@ export function useBuildingHighlightLayer(
         map.setLayoutProperty("funda-count", "visibility", "none");
       }
     } else {
-      // Restore data-driven circle sizing for clusters (matches useFundaLayer)
-      const totalColocated: maplibregl.ExpressionSpecification = [
-        "+",
-        ["get", "colocatedFavourite"],
-        ["get", "colocatedUnreviewed"],
-        ["get", "colocatedDiscarded"],
-      ];
-      map.setPaintProperty("funda-circles", "circle-radius", [
-        "step",
-        totalColocated,
-        5,
-        2,
-        8,
-        3,
-        10,
-        5,
-        12,
-      ]);
+      map.setPaintProperty("funda-circles", "circle-radius", clusterRadius);
       map.setPaintProperty("funda-circles", "circle-stroke-width", 1);
       if (map.getLayer("funda-count")) {
         map.setLayoutProperty("funda-count", "visibility", "visible");
