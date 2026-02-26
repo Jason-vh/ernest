@@ -78,13 +78,59 @@
             @keydown="trapFocus"
           >
             <!-- Scrollable content -->
-            <div ref="scrollContainerRef" class="flex-1 overflow-y-auto overscroll-contain">
-              <!-- Sticky top bar with fly-to and close buttons -->
-              <div
-                class="sticky top-0 z-20 flex items-center justify-end gap-1.5 px-2.5 pt-2.5 pb-1.5"
-              >
+            <div ref="scrollContainerRef" class="flex-1 overflow-y-auto overscroll-none">
+              <!-- Photo gallery -->
+              <div v-if="listing.photos.length > 0" class="relative">
+                <PhotoGallery
+                  :photos="listing.photos"
+                  :initial-fullscreen-index="initialPhotoIndex"
+                  @fullscreen-change="onFullscreenChange"
+                />
+                <!-- Floating top bar (zero-height sticky overlay, no layout impact) -->
+                <div
+                  class="pointer-events-none sticky top-0 z-20 flex h-0 items-start justify-end gap-1.5 overflow-visible px-2.5"
+                >
+                  <div class="flex gap-1.5 pt-2.5">
+                    <button
+                      class="pointer-events-auto relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
+                      title="Show on map"
+                      @click="showOnMap"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                      >
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+                      </svg>
+                    </button>
+                    <button
+                      class="pointer-events-auto relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
+                      @click="close"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                      >
+                        <path d="M18 6L6 18M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Top bar fallback when no photos -->
+              <div v-else class="flex items-center justify-end gap-1.5 px-2.5 pt-2.5 pb-1.5">
                 <button
-                  class="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
+                  class="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/10 text-[#666] transition-colors hover:bg-black/15"
                   title="Show on map"
                   @click="showOnMap"
                 >
@@ -101,7 +147,7 @@
                   </svg>
                 </button>
                 <button
-                  class="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
+                  class="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/10 text-[#666] transition-colors hover:bg-black/15"
                   @click="close"
                 >
                   <svg
@@ -115,15 +161,6 @@
                     <path d="M18 6L6 18M6 6l12 12" />
                   </svg>
                 </button>
-              </div>
-
-              <!-- Photo gallery -->
-              <div v-if="listing.photos.length > 0" class="-mt-[46px]">
-                <PhotoGallery
-                  :photos="listing.photos"
-                  :initial-fullscreen-index="initialPhotoIndex"
-                  @fullscreen-change="onFullscreenChange"
-                />
               </div>
 
               <div class="flex flex-col gap-0 px-5 pt-4 pb-5">
@@ -179,8 +216,8 @@
                   </template>
                 </div>
 
-                <!-- Actions row + integrated note -->
-                <div class="mt-3">
+                <!-- Actions row + integrated note (logged-in users) -->
+                <div v-if="user" class="mt-3">
                   <div class="flex items-center gap-2">
                     <button
                       class="reaction-btn"
@@ -252,6 +289,42 @@
                       placeholder="Why do you like or dislike this place?"
                     ></textarea>
                   </div>
+                </div>
+
+                <!-- Read-only reaction display (logged-out users) -->
+                <div
+                  v-else-if="listing.reaction && listing.reactionBy"
+                  class="mt-3 flex items-center gap-1.5 text-[12px] text-[#999]"
+                >
+                  <svg
+                    v-if="listing.reaction === 'favourite'"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#c0392b"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                      fill="#c0392b"
+                    />
+                  </svg>
+                  <svg
+                    v-else
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#b91c1c"
+                    stroke-width="2"
+                  >
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                  <span>
+                    {{ listing.reaction === "favourite" ? "Favourited" : "Discarded" }} by
+                    {{ listing.reactionBy }}
+                  </span>
                 </div>
 
                 <!-- Divider -->
@@ -479,7 +552,7 @@ const {
   currentClusterIndex,
   navigateCluster,
 } = useListingStore();
-const { user, showAuthModal } = useAuth();
+const { user } = useAuth();
 
 const listing = selectedListing;
 const isCluster = computed(() => clusterListingIds.value.length > 1);
@@ -648,11 +721,7 @@ const otherNotes = computed(() => {
 });
 
 function toggleReaction(reaction: ReactionType) {
-  if (!listing.value) return;
-  if (!user.value) {
-    showAuthModal.value = true;
-    return;
-  }
+  if (!listing.value || !user.value) return;
   const newReaction = listing.value.reaction === reaction ? null : reaction;
   setReaction(listing.value.fundaId, newReaction, user.value.username);
   // Auto-open the note editor when setting a reaction (not when clearing)
