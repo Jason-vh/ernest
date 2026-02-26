@@ -70,7 +70,7 @@ bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 
 ### Services & Scripts
 
-- `services/funda-cron/funda_core.py` — Shared Funda logic: fetch, filter, enrich with coordinates, convert to GeoJSON. Searches Amsterdam, Diemen, Duivendrecht, Amstelveen, Ouderkerk aan de Amstel. Filters: €450k–€600k, ≥2 bed, ≥65 m², energy label ≥ D or unknown, status "Beschikbaar" only. Per-area error handling so one failure doesn't stop the rest.
+- `services/funda-cron/funda_core.py` — Shared Funda logic: fetch, filter, enrich with coordinates, convert to GeoJSON. Searches Amsterdam, Diemen, Duivendrecht, Amstelveen, Ouderkerk aan de Amstel. Filters: €450k–€680k, ≥2 bed, ≥65 m², energy label ≥ D or unknown, status "Beschikbaar" only. Per-area error handling so one failure doesn't stop the rest.
 - `services/funda-cron/fetch_and_push.py` — Cron job: calls `funda_core.fetch_and_build_geojson()` and POSTs result to backend
 - `scripts/fetch-data.ts` — Data precomputation pipeline (Valhalla + Overpass + Amsterdam BBGA + Funda + Turf)
 - `scripts/fetch_funda.py` — Thin wrapper: imports from `funda_core`, outputs GeoJSON to stdout for `fetch-data.ts`

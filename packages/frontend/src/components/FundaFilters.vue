@@ -54,5 +54,5 @@ const fundaCount = computed(
   () => fundaFavouriteCount.value + fundaUnreviewedCount.value + fundaDiscardedCount.value,
 );
 
-const chips = ["€450k – €600k", "≥ 2 bedrooms", "≥ 65 m²", "label A/B/C/D"];
+const chips = ["€450k – €680k", "≥ 2 bedrooms", "≥ 65 m²", "label A/B/C/D"];
 </script>

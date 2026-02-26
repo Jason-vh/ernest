@@ -7,7 +7,7 @@ Amsterdam house-hunting map. Shows cycling distance zones from two offices overl
 - Computes 10/20/30-minute cycling isochrones from two offices (FareHarbor and Airwallex), intersects them to show areas reachable from **both** within each time budget. Isochrones are augmented with ferry supplements for Amsterdam Noord (Buiksloterweg F3).
 - Overlays transit stations (train, metro, tram) and line geometries
 - Shows Amsterdam neighbourhood (buurt) boundaries with labels
-- Displays available Funda listings (€450k–€600k, ≥2 bed, ≥65 m²) from Amsterdam, Diemen, Duivendrecht, Amstelveen, and Ouderkerk aan de Amstel as map markers with photo popups and estimated overbid pricing — refreshed hourly
+- Displays available Funda listings (€450k–€680k, ≥2 bed, ≥65 m²) from Amsterdam, Diemen, Duivendrecht, Amstelveen, and Ouderkerk aan de Amstel as map markers with photo popups and estimated overbid pricing — refreshed hourly
 - AI-enriches listings with positives, negatives, and translated descriptions using Claude Haiku
 - Greyscale base map with parks and water preserved in color
 
