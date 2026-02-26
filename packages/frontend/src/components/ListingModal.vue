@@ -393,6 +393,9 @@
                   </div>
                 </div>
 
+                <!-- Location mini map -->
+                <ListingMiniMap :longitude="listing.longitude" :latitude="listing.latitude" />
+
                 <!-- Collapsible note editor (at bottom) -->
                 <div v-if="user" class="mt-4 border-t border-black/6 pt-4">
                   <button
@@ -477,6 +480,7 @@ import { useAuth } from "@/composables/useAuth";
 import { flyTo } from "@/composables/useMapPosition";
 import { OFFICES } from "@/geo/constants";
 import PhotoGallery from "@/components/PhotoGallery.vue";
+import ListingMiniMap from "@/components/ListingMiniMap.vue";
 import fundaLogo from "@/assets/funda.svg";
 
 const {
