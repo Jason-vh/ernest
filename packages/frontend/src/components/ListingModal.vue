@@ -248,6 +248,9 @@
                     <div class="mt-0.5 text-[11px] text-[#999]">
                       asking {{ formatPrice(listing.price) }}
                     </div>
+                    <div class="mt-0.5 text-[11px] text-[#bbb]">
+                      ~{{ formatPrice(monthlyMortgage) }}/mo at 4.5%
+                    </div>
                   </div>
                 </div>
 
@@ -641,6 +644,17 @@ let prevFundaId: string | null = null;
 const overbidPrice = computed(() => {
   if (!listing.value) return 0;
   return Math.round(listing.value.price * 1.15);
+});
+
+const monthlyMortgage = computed(() => {
+  if (!listing.value) return 0;
+  const principal = listing.value.price;
+  const monthlyRate = 0.045 / 12;
+  const months = 360;
+  return Math.round(
+    (principal * (monthlyRate * Math.pow(1 + monthlyRate, months))) /
+      (Math.pow(1 + monthlyRate, months) - 1),
+  );
 });
 
 const listingAgeText = computed(() => {
