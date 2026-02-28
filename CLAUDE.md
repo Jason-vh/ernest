@@ -21,6 +21,7 @@ bun run db:push          # Push schema directly to DB (dev shortcut)
 bun run db:studio        # Open Drizzle Studio (DB browser)
 bun run fetch-data       # Refetch isochrones + stations + buurten + funda from APIs
 bun run fetch-funda      # Run Funda fetch standalone (python3.13)
+bun run fetch-ferries    # Fetch ferry routes/stops from Overpass into data files
 ```
 
 **Verification tips**: `bun run check` runs both format check and lint in one command (<1s). `bun run typecheck` uses `bunx` which can be flaky; if it fails with a GitHub 404, run each package directly instead: `cd packages/backend && bun x tsc --noEmit` and `cd packages/frontend && ./node_modules/.bin/vue-tsc --noEmit`.
@@ -74,6 +75,7 @@ bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 - `services/funda-cron/fetch_and_push.py` — Cron job: calls `funda_core.fetch_and_build_geojson()` and POSTs result to backend
 - `scripts/fetch-data.ts` — Data precomputation pipeline (Valhalla + Overpass + Amsterdam BBGA + Funda + Turf)
 - `scripts/fetch_funda.py` — Thin wrapper: imports from `funda_core`, outputs GeoJSON to stdout for `fetch-data.ts`
+- `scripts/fetch-ferries.ts` — Fetches GVB ferry routes + stops from Overpass and merges them into `lines.geojson` and `stations.json`
 
 ## Conventions
 
@@ -88,7 +90,7 @@ bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 - **Frontend composable pattern**: MapView.vue is a thin orchestrator. Each concern (zones, transit, routes, funda, buildings, popups) lives in its own `useXxx` composable under `src/composables/`. Composables receive the map instance and reactive state as parameters.
 - Shared types in `packages/frontend/src/types/transit.ts` (StopType enum, TransitStop interface) and `packages/frontend/src/types/buurt.ts` (BuurtProperties interface)
 - Office locations defined in both `scripts/fetch-data.ts` and `packages/frontend/src/geo/constants.ts` — keep in sync if changed
-- Transit line colors: train=#003DA5 (OV blue), metro=#E4003A (red), tram=#7B2D8E (purple), funda=#E8950F (amber). Defined in `COLORS` object in `geo/constants.ts` and as Tailwind tokens in `app.css`.
+- Transit line colors: train=#003DA5 (OV blue), metro=#E4003A (red), tram=#7B2D8E (purple), ferry=#0891B2 (cyan, dashed), funda=#E8950F (amber). Defined in `COLORS` object in `geo/constants.ts` and as Tailwind tokens in `app.css`.
 - Funda overbid price shown at 115% of list price in popup
 - Vite config uses `target: "esnext"` for both optimizeDeps and build (required for MapLibre GL)
 

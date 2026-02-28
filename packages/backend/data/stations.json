@@ -1657,5 +1657,124 @@
     "lat": 52.3608538,
     "lon": 4.9311929,
     "type": "train"
+  },
+  {
+    "id": 46434756,
+    "name": "IJplein",
+    "lat": 52.3816386,
+    "lon": 4.9085707,
+    "type": "ferry"
+  },
+  {
+    "id": 1496686505,
+    "name": "Buiksloterweg",
+    "lat": 52.3821461,
+    "lon": 4.9031727,
+    "type": "ferry"
+  },
+  {
+    "id": 1752654876,
+    "name": "Zaandam",
+    "lat": 52.4212466,
+    "lon": 4.8265667,
+    "type": "ferry"
+  },
+  {
+    "id": 2722313098,
+    "name": "Veer Zamenhofstraat",
+    "lat": 52.3847785,
+    "lon": 4.9308851,
+    "type": "ferry"
+  },
+  {
+    "id": 2816348374,
+    "name": "Passenger Terminal Amsterdam",
+    "lat": 52.3778116,
+    "lon": 4.9153293,
+    "type": "ferry"
+  },
+  {
+    "id": 3803711385,
+    "name": "Landsmeer",
+    "lat": 52.4219854,
+    "lon": 4.9477032,
+    "type": "ferry"
+  },
+  {
+    "id": 3803711386,
+    "name": "'t Schouw",
+    "lat": 52.4215767,
+    "lon": 4.9486066,
+    "type": "ferry"
+  },
+  {
+    "id": 3837674489,
+    "name": "Hembrugterrein",
+    "lat": 52.4218082,
+    "lon": 4.8390373,
+    "type": "ferry"
+  },
+  {
+    "id": 3837714669,
+    "name": "Zaandam kade Zaantheater",
+    "lat": 52.4380937,
+    "lon": 4.8260494,
+    "type": "ferry"
+  },
+  {
+    "id": 4848393940,
+    "name": "Hempontplein",
+    "lat": 52.4180666,
+    "lon": 4.8268893,
+    "type": "ferry"
+  },
+  {
+    "id": 5699915436,
+    "name": "Pontsteiger",
+    "lat": 52.3921894,
+    "lon": 4.8860225,
+    "type": "ferry"
+  },
+  {
+    "id": 9548252070,
+    "name": "Centraal Station",
+    "lat": 52.3786651,
+    "lon": 4.9059863,
+    "type": "ferry"
+  },
+  {
+    "id": 10290288210,
+    "name": "Sporenburg",
+    "lat": 52.3744644,
+    "lon": 4.9498098,
+    "type": "ferry"
+  },
+  {
+    "id": 10290288309,
+    "name": "Sluisbuurt",
+    "lat": 52.375741,
+    "lon": 4.9559568,
+    "type": "ferry"
+  },
+  {
+    "id": 40426664,
+    "name": "Distelweg",
+    "lat": 52.3957676,
+    "lon": 4.8964739,
+    "type": "ferry"
+  },
+  {
+    "id": 588710849,
+    "name": "NDSM",
+    "lat": 52.401133,
+    "lon": 4.8911964,
+    "type": "ferry"
+  },
+  {
+    "id": 671858223,
+    "name": "Azartplein",
+    "lat": 52.3779572,
+    "lon": 4.9372171,
+    "type": "ferry"
   }
 ]

@@ -19,7 +19,8 @@
     "lint": "oxlint packages/backend/src packages/frontend/src",
     "typecheck": "bunx --cwd packages/backend tsc --noEmit && bunx --cwd packages/frontend vue-tsc --noEmit",
     "fetch-data": "bun scripts/fetch-data.ts",
-    "fetch-funda": "python3.13 scripts/fetch_funda.py"
+    "fetch-funda": "python3.13 scripts/fetch_funda.py",
+    "fetch-ferries": "bun scripts/fetch-ferries.ts"
   },
   "workspaces": ["packages/*", "scripts"]
 }

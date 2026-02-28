@@ -2,6 +2,7 @@ export enum StopType {
   Tram = "tram",
   Metro = "metro",
   Train = "train",
+  Ferry = "ferry",
 }
 
 export interface TransitStop {

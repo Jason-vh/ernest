@@ -26,4 +26,5 @@ export const COLORS = {
   fundaFavourite: "#c0392b",
   fundaUnreviewed: "#E8950F",
   fundaDiscarded: "#999",
+  ferry: "#0891B2",
 } as const;

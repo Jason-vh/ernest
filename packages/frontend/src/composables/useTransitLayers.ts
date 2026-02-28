@@ -10,18 +10,21 @@ const LINE_LAYERS: Record<TransitKey, string[]> = {
   train: ["train-lines-casing", "train-lines-fill"],
   metro: ["metro-lines-casing", "metro-lines-fill"],
   tram: ["tram-lines-fill"],
+  ferry: ["ferry-lines-fill"],
 };
 
 const STATION_LAYERS: Record<TransitKey, string[]> = {
   train: ["train-circles-outer"],
   metro: ["metro-circles"],
   tram: ["tram-stops"],
+  ferry: ["ferry-circles"],
 };
 
 export const TRANSIT_LAYERS: Record<TransitKey, string[]> = {
   train: [...LINE_LAYERS.train, ...STATION_LAYERS.train],
   metro: [...LINE_LAYERS.metro, ...STATION_LAYERS.metro],
   tram: [...LINE_LAYERS.tram, ...STATION_LAYERS.tram],
+  ferry: [...LINE_LAYERS.ferry, ...STATION_LAYERS.ferry],
 };
 
 interface TransitState {
@@ -70,6 +73,25 @@ export function useTransitLayers(
     type: "FeatureCollection",
     features: lines.features.filter((f) => f.properties?.lineType === "metro"),
   };
+  const ferryLines: GeoJSON.FeatureCollection = {
+    type: "FeatureCollection",
+    features: lines.features.filter((f) => f.properties?.lineType === "ferry"),
+  };
+
+  // Ferry lines (added first so they render beneath other transit)
+  map.addSource("ferry-lines", { type: "geojson", data: ferryLines });
+  map.addLayer({
+    id: "ferry-lines-fill",
+    type: "line",
+    source: "ferry-lines",
+    paint: {
+      "line-color": COLORS.ferry,
+      "line-width": 1.5,
+      "line-opacity": 0.1,
+      "line-dasharray": [4, 3],
+    },
+    layout: { "line-cap": "round", "line-join": "round" },
+  });
 
   // Tram lines
   map.addSource("tram-lines", { type: "geojson", data: tramLines });
@@ -135,6 +157,24 @@ export function useTransitLayers(
     layout: { "line-cap": "round", "line-join": "round" },
   });
 
+  // --- Ferry stops ---
+  const ferryGeoJSON = stationsToGeoJSON(stations, StopType.Ferry);
+  map.addSource("ferry-stations", { type: "geojson", data: ferryGeoJSON });
+  map.addLayer({
+    id: "ferry-circles",
+    type: "circle",
+    source: "ferry-stations",
+    paint: {
+      "circle-radius": 4,
+      "circle-color": COLORS.ferry,
+      "circle-opacity": 0.6,
+      "circle-opacity-transition": { duration: 200, delay: 0 },
+      "circle-stroke-width": 1,
+      "circle-stroke-color": "#fff",
+      "circle-stroke-opacity-transition": { duration: 200, delay: 0 },
+    },
+  });
+
   // --- Tram stops (swells on lines) ---
   const tramGeoJSON = stationsToGeoJSON(stations, StopType.Tram);
   map.addSource("tram-stations", { type: "geojson", data: tramGeoJSON });
@@ -168,12 +208,32 @@ export function useTransitLayers(
     },
   });
 
-  // Metro station labels (HTML markers)
+  // Station labels (HTML markers)
   const transitMarkers: Record<TransitKey, maplibregl.Marker[]> = {
     train: [],
     metro: [],
     tram: [],
+    ferry: [],
   };
+
+  // Ferry stop labels
+  for (const feature of ferryGeoJSON.features) {
+    const geom = feature.geometry;
+    if (geom.type !== "Point") continue;
+    const coords = geom.coordinates;
+    if (!Array.isArray(coords) || coords.length < 2) continue;
+    const name = feature.properties?.name;
+    if (!name) continue;
+    const marker = new maplibregl.Marker({
+      element: createLabel(name, COLORS.ferry, 0.7),
+      anchor: "top",
+    })
+      .setLngLat([coords[0], coords[1]])
+      .addTo(map);
+    transitMarkers.ferry.push(marker);
+  }
+
+  // Metro station labels
   for (const feature of metroGeoJSON.features) {
     const geom = feature.geometry;
     if (geom.type !== "Point") continue;
@@ -228,16 +288,19 @@ export function useTransitLayers(
     train: 0.1,
     metro: 0.1,
     tram: 0.1,
+    ferry: 0.1,
   };
   const DEFAULT_CIRCLE_OPACITY: Record<TransitKey, number> = {
     train: 0.6,
     metro: 0.6,
     tram: 0.5,
+    ferry: 0.6,
   };
   const DEFAULT_LABEL_OPACITY: Record<TransitKey, number> = {
     train: 0.7,
     metro: 0.7,
     tram: 1,
+    ferry: 0.7,
   };
 
   function updateTransitLayers() {

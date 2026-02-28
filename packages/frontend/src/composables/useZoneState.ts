@@ -3,7 +3,7 @@ import { ref, watch } from "vue";
 export const ZONE_KEYS = ["10", "20", "30"] as const;
 export type ZoneKey = (typeof ZONE_KEYS)[number];
 
-export const TRANSIT_KEYS = ["train", "metro", "tram"] as const;
+export const TRANSIT_KEYS = ["train", "metro", "tram", "ferry"] as const;
 export type TransitKey = (typeof TRANSIT_KEYS)[number];
 
 const STORAGE_KEY = "ernest:legend";
@@ -39,7 +39,7 @@ function readFromStorage(): LegendState {
         typeof parsed.zones === "object" && parsed.zones !== null ? parsed.zones : defaults.zones,
       transit:
         typeof parsed.transit === "object" && parsed.transit !== null
-          ? parsed.transit
+          ? { ...defaults.transit, ...parsed.transit }
           : defaults.transit,
       fundaFav: typeof parsed.fundaFav === "boolean" ? parsed.fundaFav : defaults.fundaFav,
       fundaUnreviewed:

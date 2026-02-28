@@ -138,6 +138,7 @@ const transit: { key: TransitKey; label: string; color: string }[] = [
   { key: "train", label: "train stations", color: "#003DA5" },
   { key: "metro", label: "metro stations", color: "#E4003A" },
   { key: "tram", label: "tram stops", color: "#7B2D8E" },
+  { key: "ferry", label: "ferry routes", color: "#0891B2" },
 ];
 
 const fundaItems = computed(() => [
