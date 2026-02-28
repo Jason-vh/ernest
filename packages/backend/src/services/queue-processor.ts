@@ -26,7 +26,6 @@ const RATE_LIMITS: Record<string, number> = {
 async function maybeEnqueueNotification(fundaId: string): Promise<void> {
   const rows = await db
     .select({
-      routeFareharbor: listings.routeFareharbor,
       aiPositives: listings.aiPositives,
       notifiedAt: listings.notifiedAt,
     })
@@ -38,10 +37,9 @@ async function maybeEnqueueNotification(fundaId: string): Promise<void> {
 
   if (listing.notifiedAt !== null) return;
 
-  const routesReady = listing.routeFareharbor !== null;
   const aiReady = listing.aiPositives !== null || ANTHROPIC_API_KEY === null;
 
-  if (routesReady && aiReady) {
+  if (aiReady) {
     await enqueueMany([{ type: "telegram-notify", fundaId, maxAttempts: 3 }]);
   }
 }

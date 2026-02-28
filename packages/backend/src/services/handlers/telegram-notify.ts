@@ -3,7 +3,6 @@ import { listings } from "@/db/schema";
 import type { Job } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, ORIGIN } from "@/config";
-import type { RouteResult } from "@/services/valhalla";
 
 async function telegramApi(method: string, body: unknown): Promise<void> {
   const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/${method}`, {
@@ -21,11 +20,6 @@ function formatPrice(price: number): string {
   return `\u20AC${price.toLocaleString("nl-NL")}`;
 }
 
-function routeMinutes(route: RouteResult | null): number | null {
-  if (!route) return null;
-  return Math.round(route.duration / 60);
-}
-
 function buildCaption(listing: {
   address: string;
   price: number;
@@ -35,24 +29,13 @@ function buildCaption(listing: {
   hasBalcony: boolean | null;
   hasRoofTerrace: boolean | null;
   energyLabel: string | null;
-  routeFareharbor: RouteResult | null;
-  routeAirwallex: RouteResult | null;
   aiPositives: string[] | null;
   aiNegatives: string[] | null;
 }): string {
   const overbidPrice = Math.round(listing.price * 1.15);
 
-  // Summary line: price · area · commute
+  // Summary line: price · area
   const summaryParts: string[] = [formatPrice(overbidPrice), `${listing.livingArea} m\u00B2`];
-  const fhMin = routeMinutes(listing.routeFareharbor);
-  const awMin = routeMinutes(listing.routeAirwallex);
-  if (fhMin !== null && awMin !== null) {
-    summaryParts.push(`${fhMin} / ${awMin} min cycle`);
-  } else if (fhMin !== null) {
-    summaryParts.push(`${fhMin} min cycle`);
-  } else if (awMin !== null) {
-    summaryParts.push(`${awMin} min cycle`);
-  }
 
   // Extra facts
   const extras: string[] = [];
@@ -108,8 +91,6 @@ export async function handleTelegramNotify(job: Job): Promise<"completed" | "ski
       photos: listings.photos,
       status: listings.status,
       disappearedAt: listings.disappearedAt,
-      routeFareharbor: listings.routeFareharbor,
-      routeAirwallex: listings.routeAirwallex,
       aiPositives: listings.aiPositives,
       aiNegatives: listings.aiNegatives,
     })
