@@ -90,6 +90,11 @@ export const listings = pgTable(
     // Ownership
     ownership: text("ownership"),
 
+    // Monthly costs
+    vveCostsMonthly: integer("vve_costs_monthly"),
+    erfpachtCostsMonthly: integer("erfpacht_costs_monthly"),
+    wozValue: integer("woz_value"),
+
     // Amenities
     hasGarden: boolean("has_garden"),
     hasBalcony: boolean("has_balcony"),

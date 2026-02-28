@@ -35,6 +35,9 @@ export interface Listing {
   constructionYear: number | null;
   description: string | null;
   ownership: string | null;
+  vveCostsMonthly: number | null;
+  erfpachtCostsMonthly: number | null;
+  wozValue: number | null;
   hasGarden: boolean | null;
   hasBalcony: boolean | null;
   hasRoofTerrace: boolean | null;

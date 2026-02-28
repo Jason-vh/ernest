@@ -248,9 +248,6 @@
                     <div class="mt-0.5 text-[11px] text-[#999]">
                       asking {{ formatPrice(listing.price) }}
                     </div>
-                    <div class="mt-0.5 text-[11px] text-[#bbb]">
-                      ~{{ formatPrice(monthlyMortgage) }}/mo at 4.5%
-                    </div>
                   </div>
                 </div>
 
@@ -536,6 +533,41 @@
                   </div>
                 </div>
 
+                <!-- Financials card -->
+                <div class="mt-4 rounded-xl border border-black/6 bg-[#f0f0ee] px-4 py-3">
+                  <div class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#888]">
+                    Financials
+                  </div>
+                  <div class="flex flex-col gap-1.5 text-[13px]">
+                    <div class="flex justify-between text-[#555]">
+                      <span class="text-[#999]">Mortgage (4.5%, 30yr)</span>
+                      <span>{{ formatPrice(monthlyMortgage) }}</span>
+                    </div>
+                    <div v-if="listing.vveCostsMonthly" class="flex justify-between text-[#555]">
+                      <span class="text-[#999]">VvE contribution</span>
+                      <span>{{ formatPrice(listing.vveCostsMonthly) }}</span>
+                    </div>
+                    <div
+                      v-if="listing.erfpachtCostsMonthly"
+                      class="flex justify-between text-[#555]"
+                    >
+                      <span class="text-[#999]">Erfpacht (leasehold)</span>
+                      <span>{{ formatPrice(listing.erfpachtCostsMonthly) }}</span>
+                    </div>
+                    <div v-if="estimatedOzb" class="flex justify-between text-[#555]">
+                      <span class="text-[#999]">Property tax (OZB)</span>
+                      <span>{{ formatPrice(estimatedOzb) }}</span>
+                    </div>
+                    <template v-if="hasExtraMonthlyCosts">
+                      <div class="my-0.5 h-px bg-black/6"></div>
+                      <div class="flex justify-between font-medium text-[#444]">
+                        <span>Total</span>
+                        <span>{{ formatPrice(totalMonthlyCost) }}/mo</span>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
                 <!-- Location mini map -->
                 <ListingMiniMap :longitude="listing.longitude" :latitude="listing.latitude" />
 
@@ -648,12 +680,36 @@ const overbidPrice = computed(() => {
 
 const monthlyMortgage = computed(() => {
   if (!listing.value) return 0;
-  const principal = listing.value.price;
+  const principal = overbidPrice.value;
   const monthlyRate = 0.045 / 12;
   const months = 360;
   return Math.round(
     (principal * (monthlyRate * Math.pow(1 + monthlyRate, months))) /
       (Math.pow(1 + monthlyRate, months) - 1),
+  );
+});
+
+const estimatedOzb = computed(() => {
+  if (!listing.value) return null;
+  const woz = listing.value.wozValue ?? listing.value.buurtWozValue;
+  if (woz == null) return null;
+  // Amsterdam OZB rate ~0.05% annually
+  return Math.round((woz * 0.0005) / 12);
+});
+
+const totalMonthlyCost = computed(() => {
+  let total = monthlyMortgage.value;
+  if (listing.value?.vveCostsMonthly) total += listing.value.vveCostsMonthly;
+  if (listing.value?.erfpachtCostsMonthly) total += listing.value.erfpachtCostsMonthly;
+  if (estimatedOzb.value) total += estimatedOzb.value;
+  return total;
+});
+
+const hasExtraMonthlyCosts = computed(() => {
+  return (
+    (listing.value?.vveCostsMonthly ?? 0) > 0 ||
+    (listing.value?.erfpachtCostsMonthly ?? 0) > 0 ||
+    (estimatedOzb.value ?? 0) > 0
   );
 });
 

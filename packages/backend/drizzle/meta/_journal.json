@@ -71,6 +71,13 @@
       "when": 1772179200000,
       "tag": "0009_add_notified_at",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1772280343207,
+      "tag": "0010_classy_calypso",
+      "breakpoints": true
     }
   ]
 }

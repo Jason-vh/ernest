@@ -1,6 +1,7 @@
 """Shared Funda listing fetch, filter, and GeoJSON conversion logic."""
 
 import json
+import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from funda import Funda
@@ -12,6 +13,36 @@ MIN_LIVING_AREA = 65
 ACCEPTABLE_LABELS = {"A+++", "A++", "A+", "A", "B", "C", "D", "unknown"}
 DETAIL_WORKERS = 8
 SEARCH_AREAS = ["amsterdam", "diemen", "duivendrecht", "amstelveen", "ouderkerk-aan-de-amstel"]
+
+
+def _parse_monthly_cost(value):
+    """Parse Dutch currency strings like '€ 121,00 per maand' or '€ 1.800 per jaar' to monthly int."""
+    if not value or not isinstance(value, str):
+        return None
+    # Strip euro sign and whitespace
+    s = value.replace("€", "").strip()
+    # Detect yearly vs monthly
+    is_yearly = "jaar" in s.lower()
+    # Extract numeric part: remove everything after the number
+    # e.g. "121,00 per maand" or "1.800,- per jaar" or "1.800 per jaar"
+    num_match = re.match(r"[\d.,\-]+", s.strip())
+    if not num_match:
+        return None
+    num_str = num_match.group(0)
+    # Remove trailing dash/comma (e.g. "1.800,-" -> "1.800")
+    num_str = num_str.rstrip(",-")
+    # Dutch format: dots are thousands, comma is decimal
+    # Remove thousand separators
+    num_str = num_str.replace(".", "")
+    # Replace decimal comma with dot
+    num_str = num_str.replace(",", ".")
+    try:
+        amount = float(num_str)
+    except ValueError:
+        return None
+    if is_yearly:
+        amount = amount / 12
+    return round(amount)
 
 
 def _is_terminal_page_error(error):
@@ -91,8 +122,8 @@ def filter_listings(listings, log=print):
     return filtered
 
 
-def _fetch_detail(global_id, log=print):
-    """Fetch individual listing to get coordinates."""
+def _fetch_detail(global_id, known_ids=None, log=print):
+    """Fetch individual listing to get coordinates and optionally WOZ value."""
     try:
         f = Funda(timeout=30)
         detail = f.get_listing(global_id)
@@ -100,13 +131,25 @@ def _fetch_detail(global_id, log=print):
             lat = detail.get("latitude")
             lng = detail.get("longitude")
             if lat is not None and lng is not None:
+                # Fetch WOZ value for new listings (not already in DB)
+                if known_ids is None or global_id not in known_ids:
+                    try:
+                        url = detail.get("url") or ""
+                        if url:
+                            history = f.get_price_history(url)
+                            woz_entries = [e for e in history if e.get("source") == "WOZ"]
+                            if woz_entries:
+                                # Most recent WOZ is the last entry
+                                detail["_woz_value"] = woz_entries[-1].get("price")
+                    except Exception as e:
+                        log(f"  Warning: failed to fetch WOZ for {global_id}: {e}")
                 return global_id, float(lat), float(lng), detail
     except Exception as e:
         log(f"  Warning: failed to fetch {global_id}: {e}")
     return global_id, None, None, None
 
 
-def enrich_with_coordinates(listings, log=print):
+def enrich_with_coordinates(listings, known_ids=None, log=print):
     """Fetch coordinates for all listings using parallel requests."""
     log(f"  Fetching details for {len(listings)} listings ({DETAIL_WORKERS} workers)...")
     coords = {}
@@ -114,7 +157,7 @@ def enrich_with_coordinates(listings, log=print):
     ids = [l.get("global_id") for l in listings if l.get("global_id")]
 
     with ThreadPoolExecutor(max_workers=DETAIL_WORKERS) as executor:
-        futures = {executor.submit(_fetch_detail, gid, log): gid for gid in ids}
+        futures = {executor.submit(_fetch_detail, gid, known_ids, log): gid for gid in ids}
         done = 0
         for future in as_completed(futures):
             gid, lat, lng, detail = future.result()
@@ -143,6 +186,9 @@ def to_geojson(listings, coords, details):
         photo_urls = []
         status = ""
         ownership = ""
+        vve_costs = None
+        erfpacht_costs = None
+        woz_value = None
         if detail:
             try:
                 url = detail.get("url") or ""
@@ -156,8 +202,13 @@ def to_geojson(listings, coords, details):
                 chars = detail.get("characteristics") or {}
                 status = chars.get("Status", "")
                 ownership = chars.get("Eigendomssituatie", chars.get("Eigendom", ""))
+                vve_costs = _parse_monthly_cost(chars.get("Bijdrage VvE"))
+                erfpacht_costs = _parse_monthly_cost(
+                    chars.get("Erfpachtcanon") or chars.get("Canon")
+                )
             except Exception:
                 pass
+            woz_value = detail.get("_woz_value")
 
         if not url:
             detail_url = listing.get("detail_url") or ""
@@ -189,6 +240,9 @@ def to_geojson(listings, coords, details):
                     "hasRoofTerrace": listing.get("has_roof_terrace"),
                     "status": status,
                     "ownership": ownership,
+                    "vveCostsMonthly": vve_costs,
+                    "erfpachtCostsMonthly": erfpacht_costs,
+                    "wozValue": woz_value,
                     "photos": json.dumps(photo_urls),
                     "url": url,
                 },
@@ -198,12 +252,12 @@ def to_geojson(listings, coords, details):
     return {"type": "FeatureCollection", "features": features}
 
 
-def fetch_and_build_geojson(log=print):
+def fetch_and_build_geojson(known_ids=None, log=print):
     """Full pipeline: fetch, filter, enrich, convert to GeoJSON."""
     log("Fetching Funda listings...")
     listings = fetch_all_listings(log)
     filtered = filter_listings(listings, log)
-    coords, details = enrich_with_coordinates(filtered, log)
+    coords, details = enrich_with_coordinates(filtered, known_ids=known_ids, log=log)
     geojson = to_geojson(filtered, coords, details)
     log(f"  {len(geojson['features'])} features with coordinates")
     return geojson

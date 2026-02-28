@@ -39,8 +39,32 @@ def push_to_server(geojson):
     return result
 
 
+def fetch_known_ids():
+    """Fetch the set of known listing IDs from the backend to skip redundant WOZ fetches."""
+    refresh_url = os.environ.get("REFRESH_URL", "")
+    refresh_secret = os.environ.get("REFRESH_SECRET", "")
+    # Derive base URL from refresh URL (strip the path)
+    base_url = refresh_url.rsplit("/api/", 1)[0] if "/api/" in refresh_url else ""
+    if not base_url or not refresh_secret:
+        return None
+    try:
+        resp = requests.get(
+            f"{base_url}/api/internal/known-listings",
+            headers={"Authorization": f"Bearer {refresh_secret}"},
+            timeout=30,
+        )
+        if resp.status_code == 200:
+            ids = resp.json()
+            print(f"  Got {len(ids)} known listing IDs from backend")
+            return set(ids)
+    except Exception as e:
+        print(f"  Warning: failed to fetch known IDs: {e}")
+    return None
+
+
 def main():
-    geojson = fetch_and_build_geojson()
+    known_ids = fetch_known_ids()
+    geojson = fetch_and_build_geojson(known_ids=known_ids)
     push_to_server(geojson)
     print("Done!")
 

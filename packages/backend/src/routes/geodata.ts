@@ -73,6 +73,9 @@ async function queryFundaListings(): Promise<Listing[]> {
       constructionYear: listings.constructionYear,
       description: listings.description,
       ownership: listings.ownership,
+      vveCostsMonthly: listings.vveCostsMonthly,
+      erfpachtCostsMonthly: listings.erfpachtCostsMonthly,
+      wozValue: listings.wozValue,
       hasGarden: listings.hasGarden,
       hasBalcony: listings.hasBalcony,
       hasRoofTerrace: listings.hasRoofTerrace,
@@ -207,6 +210,25 @@ geodata.get("/funda", async (c) => {
   return c.body(json, 200, { "Content-Type": "application/json" });
 });
 
+geodata.get("/internal/known-listings", async (c) => {
+  const auth = c.req.header("Authorization");
+  if (!auth || !safeCompare(auth, `Bearer ${REFRESH_SECRET}`)) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const rows = await db
+    .select({ fundaId: listings.fundaId })
+    .from(listings)
+    .where(
+      and(
+        isNull(listings.disappearedAt),
+        or(eq(listings.status, "Beschikbaar"), eq(listings.status, "")),
+      ),
+    );
+
+  return c.json(rows.map((r) => r.fundaId));
+});
+
 geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 }), async (c) => {
   const auth = c.req.header("Authorization");
   if (!auth || !safeCompare(auth, `Bearer ${REFRESH_SECRET}`)) {
@@ -274,6 +296,9 @@ geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 })
       constructionYear: p.constructionYear ? Number(p.constructionYear) : null,
       description: p.description || null,
       ownership: p.ownership || null,
+      vveCostsMonthly: p.vveCostsMonthly != null ? Number(p.vveCostsMonthly) : null,
+      erfpachtCostsMonthly: p.erfpachtCostsMonthly != null ? Number(p.erfpachtCostsMonthly) : null,
+      wozValue: p.wozValue != null ? Number(p.wozValue) : null,
       hasGarden: p.hasGarden ?? null,
       hasBalcony: p.hasBalcony ?? null,
       hasRoofTerrace: p.hasRoofTerrace ?? null,

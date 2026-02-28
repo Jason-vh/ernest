@@ -43,6 +43,10 @@ async function upsertListing(listing: NewListing, buurt: BuurtStats | null) {
         constructionYear: listing.constructionYear,
         description: listing.description,
         ownership: listing.ownership,
+        vveCostsMonthly: listing.vveCostsMonthly,
+        erfpachtCostsMonthly: listing.erfpachtCostsMonthly,
+        // Only update WOZ if incoming value is non-null (don't overwrite existing with null)
+        ...(listing.wozValue != null ? { wozValue: listing.wozValue } : {}),
         hasGarden: listing.hasGarden,
         hasBalcony: listing.hasBalcony,
         hasRoofTerrace: listing.hasRoofTerrace,
