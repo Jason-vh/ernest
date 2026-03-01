@@ -73,7 +73,7 @@ The backend serves the built frontend via `serveStatic` with SPA fallback. Set `
 
 ### Deployment
 
-Hosted on [Railway](https://railway.com) at **https://ernest.vanhattum.xyz**. Two services:
+Hosted on [Railway](https://railway.com) at **https://ernest.vhtm.eu**. Two services:
 
 **Web service** (`ernest-web`): Config in `railway.toml`. Railway auto-detects Bun, builds the frontend, and runs the server. A 1 GB volume at `/data` persists Funda data across deploys.
 

@@ -97,10 +97,10 @@ bun run fetch-ferries    # Fetch ferry routes/stops from Overpass into data file
 ## Deployment
 
 - **Hosting**: Railway (two services). Config in `railway.toml` (web service only).
-- **URL**: https://ernest.vanhattum.xyz
+- **URL**: https://ernest.vhtm.eu
 - **Web service** (`ernest-web`): Railpack detects `bun.lock`, installs Bun, runs `bun install && bun run build`, then `bun run start`. Health check hits `/api/health`. Has a 1 GB volume mounted at `/data` for persisted Funda data.
 - **Cron service** (`ernest-cron`): Dockerfile-based Python service. Root directory `services/funda-cron`. Runs on schedule `0 5-21 * * *` (hourly during daytime-ish UTC hours). Communicates with web service via Railway internal networking (`http://ernest.railway.internal:8080`).
-- **Env vars on web service**: `DATABASE_URL` (references `ernest-db`), `JWT_SECRET`, `ORIGIN=https://ernest.vanhattum.xyz`, `RP_ID=ernest.vanhattum.xyz`, `NODE_ENV=production`, `REFRESH_SECRET`, `VOLUME_PATH=/data`, `ANTHROPIC_API_KEY` (for AI enrichment), `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` (for new-listing notifications). `PORT` is auto-set by Railway. All four auth vars (`DATABASE_URL`, `JWT_SECRET`, `ORIGIN`, `RP_ID`) are required — server refuses to start without them. `ANTHROPIC_API_KEY`, `TELEGRAM_BOT_TOKEN`, and `TELEGRAM_CHAT_ID` are optional — enrichment/notification jobs are skipped if not set.
+- **Env vars on web service**: `DATABASE_URL` (references `ernest-db`), `JWT_SECRET`, `ORIGIN=https://ernest.vhtm.eu`, `RP_ID=ernest.vhtm.eu`, `NODE_ENV=production`, `REFRESH_SECRET`, `VOLUME_PATH=/data`, `ANTHROPIC_API_KEY` (for AI enrichment), `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` (for new-listing notifications). `PORT` is auto-set by Railway. All four auth vars (`DATABASE_URL`, `JWT_SECRET`, `ORIGIN`, `RP_ID`) are required — server refuses to start without them. `ANTHROPIC_API_KEY`, `TELEGRAM_BOT_TOKEN`, and `TELEGRAM_CHAT_ID` are optional — enrichment/notification jobs are skipped if not set.
 - **Env vars on cron service**: `REFRESH_SECRET` (same value), `REFRESH_URL=http://ernest.railway.internal:8080/api/internal/refresh-funda`.
 - **Database** (`ernest-db`): Railway-managed PostgreSQL. Connected to web service via internal networking. Drizzle migrations run on startup.
 - **Auto-deploy**: GitHub repo connected for deploy-on-push to `main`.
