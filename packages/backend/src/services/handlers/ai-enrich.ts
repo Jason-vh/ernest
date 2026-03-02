@@ -15,6 +15,58 @@ function getClient(): Anthropic | null {
   return client;
 }
 
+type MediaType = "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+
+const ALLOWED_MEDIA_TYPES = new Set<string>(["image/jpeg", "image/png", "image/gif", "image/webp"]);
+
+interface DownloadedImage {
+  data: string;
+  mediaType: MediaType;
+}
+
+async function downloadImage(url: string): Promise<DownloadedImage | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+    const resp = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+
+    if (!resp.ok) return null;
+
+    const contentType = resp.headers.get("content-type")?.split(";")[0]?.trim() ?? "";
+    const mediaType = ALLOWED_MEDIA_TYPES.has(contentType) ? contentType : "image/jpeg";
+
+    const buffer = await resp.arrayBuffer();
+    const data = Buffer.from(buffer).toString("base64");
+    return { data, mediaType: mediaType as MediaType };
+  } catch {
+    return null;
+  }
+}
+
+async function downloadImages(urls: string[], maxConcurrent = 5): Promise<DownloadedImage[]> {
+  const batches: string[][] = [];
+  for (let i = 0; i < urls.length; i += maxConcurrent) {
+    batches.push(urls.slice(i, i + maxConcurrent));
+  }
+
+  const batchResults = await batches.reduce<Promise<DownloadedImage[]>>(
+    async (accPromise, batch) => {
+      const acc = await accPromise;
+      const settled = await Promise.allSettled(batch.map((url) => downloadImage(url)));
+      for (const result of settled) {
+        if (result.status === "fulfilled" && result.value) {
+          acc.push(result.value);
+        }
+      }
+      return acc;
+    },
+    Promise.resolve([]),
+  );
+
+  return batchResults;
+}
+
 export async function handleAiEnrich(job: Job): Promise<"completed" | "skipped"> {
   const anthropic = getClient();
   if (!anthropic) return "skipped";
@@ -53,13 +105,14 @@ export async function handleAiEnrich(job: Job): Promise<"completed" | "skipped">
   // Build message content
   const content: Anthropic.MessageCreateParams["messages"][number]["content"] = [];
 
-  // Photo blocks (up to 20)
+  // Download photos server-side as base64 (up to 20)
   const photos = listing.photos ?? [];
   const photosToSend = photos.slice(0, 20);
-  for (const url of photosToSend) {
+  const downloaded = await downloadImages(photosToSend);
+  for (const img of downloaded) {
     content.push({
       type: "image",
-      source: { type: "url", url },
+      source: { type: "base64", media_type: img.mediaType, data: img.data },
     });
   }
 

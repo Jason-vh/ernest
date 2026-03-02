@@ -52,7 +52,7 @@ export async function enqueueMany(items: EnqueueItem[]): Promise<number> {
         runAfter: sql`now()`,
         updatedAt: sql`now()`,
       },
-      setWhere: sql`${jobs.status} IN ('completed', 'skipped', 'failed')`,
+      setWhere: sql`${jobs.status} IN ('completed', 'skipped')`,
     })
     .returning({ id: jobs.id });
 

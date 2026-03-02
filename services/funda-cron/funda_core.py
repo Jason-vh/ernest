@@ -122,8 +122,8 @@ def filter_listings(listings, log=print):
     return filtered
 
 
-def _fetch_detail(global_id, known_ids=None, log=print):
-    """Fetch individual listing to get coordinates and optionally WOZ value."""
+def _fetch_detail(global_id, log=print):
+    """Fetch individual listing to get coordinates."""
     try:
         f = Funda(timeout=30)
         detail = f.get_listing(global_id)
@@ -131,25 +131,13 @@ def _fetch_detail(global_id, known_ids=None, log=print):
             lat = detail.get("latitude")
             lng = detail.get("longitude")
             if lat is not None and lng is not None:
-                # Fetch WOZ value for new listings (not already in DB)
-                if known_ids is None or global_id not in known_ids:
-                    try:
-                        url = detail.get("url") or ""
-                        if url:
-                            history = f.get_price_history(url)
-                            woz_entries = [e for e in history if e.get("source") == "WOZ"]
-                            if woz_entries:
-                                # Most recent WOZ is the last entry
-                                detail["_woz_value"] = woz_entries[-1].get("price")
-                    except Exception as e:
-                        log(f"  Warning: failed to fetch WOZ for {global_id}: {e}")
                 return global_id, float(lat), float(lng), detail
     except Exception as e:
         log(f"  Warning: failed to fetch {global_id}: {e}")
     return global_id, None, None, None
 
 
-def enrich_with_coordinates(listings, known_ids=None, log=print):
+def enrich_with_coordinates(listings, log=print):
     """Fetch coordinates for all listings using parallel requests."""
     log(f"  Fetching details for {len(listings)} listings ({DETAIL_WORKERS} workers)...")
     coords = {}
@@ -157,7 +145,7 @@ def enrich_with_coordinates(listings, known_ids=None, log=print):
     ids = [l.get("global_id") for l in listings if l.get("global_id")]
 
     with ThreadPoolExecutor(max_workers=DETAIL_WORKERS) as executor:
-        futures = {executor.submit(_fetch_detail, gid, known_ids, log): gid for gid in ids}
+        futures = {executor.submit(_fetch_detail, gid, log): gid for gid in ids}
         done = 0
         for future in as_completed(futures):
             gid, lat, lng, detail = future.result()
@@ -170,6 +158,37 @@ def enrich_with_coordinates(listings, known_ids=None, log=print):
 
     log(f"  Got coordinates for {len(coords)}/{len(ids)} listings")
     return coords, details
+
+
+def _fetch_woz_values(details, known_ids=None, log=print):
+    """Fetch WOZ values sequentially with delays to avoid rate limiting."""
+    new_details = {
+        gid: d for gid, d in details.items()
+        if known_ids is None or gid not in known_ids
+    }
+    if not new_details:
+        return
+
+    log(f"  Fetching WOZ values for {len(new_details)} new listings (sequential)...")
+    fetched = 0
+    failed = 0
+    for gid, detail in new_details.items():
+        url = detail.get("url") or ""
+        if not url:
+            continue
+        try:
+            f = Funda(timeout=30)
+            history = f.get_price_history(url)
+            woz_entries = [e for e in history if e.get("source") == "WOZ"]
+            if woz_entries:
+                detail["_woz_value"] = woz_entries[-1].get("price")
+                fetched += 1
+        except Exception as e:
+            failed += 1
+            log(f"  Warning: failed to fetch WOZ for {gid}: {e}")
+        time.sleep(1.5)
+
+    log(f"  WOZ fetch done: {fetched} values, {failed} failures")
 
 
 def to_geojson(listings, coords, details):
@@ -257,7 +276,8 @@ def fetch_and_build_geojson(known_ids=None, log=print):
     log("Fetching Funda listings...")
     listings = fetch_all_listings(log)
     filtered = filter_listings(listings, log)
-    coords, details = enrich_with_coordinates(filtered, known_ids=known_ids, log=log)
+    coords, details = enrich_with_coordinates(filtered, log=log)
+    _fetch_woz_values(details, known_ids=known_ids, log=log)
     geojson = to_geojson(filtered, coords, details)
     log(f"  {len(geojson['features'])} features with coordinates")
     return geojson
