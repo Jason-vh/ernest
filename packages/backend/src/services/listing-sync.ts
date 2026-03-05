@@ -69,16 +69,29 @@ export async function syncListings(incoming: NewListing[]): Promise<SyncResult> 
     await upsertListing(listing, buurt); // eslint-disable-line no-await-in-loop
   }
 
-  // Mark disappeared: only if incoming set is non-empty (guards against API failures)
+  // Mark disappeared: only if incoming set is large enough relative to current active count
+  // This guards against partial fetches (e.g. transient API errors) marking everything as gone
   let disappeared = 0;
   if (incoming.length > 0) {
-    const incomingIds = incoming.map((l) => l.fundaId);
-    const result = await db
-      .update(listings)
-      .set({ disappearedAt: sql`now()`, updatedAt: sql`now()` })
-      .where(and(isNull(listings.disappearedAt), notInArray(listings.fundaId, incomingIds)))
-      .returning({ fundaId: listings.fundaId });
-    disappeared = result.length;
+    const [{ count: activeCount }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(listings)
+      .where(isNull(listings.disappearedAt));
+
+    const MIN_RATIO = 0.5;
+    if (activeCount === 0 || incoming.length >= activeCount * MIN_RATIO) {
+      const incomingIds = incoming.map((l) => l.fundaId);
+      const result = await db
+        .update(listings)
+        .set({ disappearedAt: sql`now()`, updatedAt: sql`now()` })
+        .where(and(isNull(listings.disappearedAt), notInArray(listings.fundaId, incomingIds)))
+        .returning({ fundaId: listings.fundaId });
+      disappeared = result.length;
+    } else {
+      console.warn(
+        `Funda sync: received ${incoming.length} listings but ${activeCount} are active — skipping mark-disappeared (possible partial fetch)`,
+      );
+    }
   }
 
   // Enqueue jobs for active listings needing routes

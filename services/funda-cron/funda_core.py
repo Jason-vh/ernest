@@ -63,6 +63,7 @@ def fetch_all_listings(log=print):
     page = 0
     fetched_any_page = False
     tried_one_based_fallback = False
+    retries_left = 2
 
     while True:
         log(f"  Fetching page {page}...")
@@ -83,12 +84,18 @@ def fetch_all_listings(log=print):
                 continue
 
             if fetched_any_page and _is_terminal_page_error(e):
-                log(f"  Reached last page at page {page - 1} (page {page} returned 400)")
+                if retries_left > 0:
+                    retries_left -= 1
+                    log(f"  Page {page} returned 400, retrying after delay ({retries_left} retries left)...")
+                    time.sleep(3)
+                    continue
+                log(f"  Reached last page at page {page - 1} (page {page} returned 400 after retries)")
                 break
             raise
         if not results:
             break
         fetched_any_page = True
+        retries_left = 2
         for listing in results:
             gid = listing.get("global_id")
             if gid and gid not in seen_ids:
