@@ -1,5 +1,6 @@
 import {
   pgTable,
+  serial,
   text,
   integer,
   boolean,
@@ -130,6 +131,9 @@ export const listings = pgTable(
     // Notification tracking
     notifiedAt: timestamp("notified_at", { withTimezone: true }),
 
+    // Manual listing flag
+    manual: boolean("manual").notNull().default(false),
+
     // Timestamps
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -200,3 +204,16 @@ export type ListingReaction = InferSelectModel<typeof listingReactions>;
 export type NewListingReaction = InferInsertModel<typeof listingReactions>;
 export type ListingNote = InferSelectModel<typeof listingNotes>;
 export type NewListingNote = InferInsertModel<typeof listingNotes>;
+
+export const manualListings = pgTable("manual_listings", {
+  id: serial("id").primaryKey(),
+  url: text("url").notNull().unique(),
+  fundaId: text("funda_id"),
+  status: text("status").notNull().default("pending"),
+  error: text("error"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdBy: text("created_by").notNull(),
+});
+
+export type ManualListing = InferSelectModel<typeof manualListings>;
+export type NewManualListing = InferInsertModel<typeof manualListings>;

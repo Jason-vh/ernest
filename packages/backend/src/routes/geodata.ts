@@ -1,20 +1,26 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { timingSafeEqual } from "node:crypto";
+import { timingSafeEqual, createHash } from "node:crypto";
 import path from "path";
 import { REFRESH_SECRET } from "@/config";
 import { db } from "@/db";
-import { listings, listingReactions, listingNotes, users, type NewListing } from "@/db/schema";
+import {
+  listings,
+  listingReactions,
+  listingNotes,
+  manualListings,
+  users,
+  type NewListing,
+} from "@/db/schema";
 import { isNull, and, or, eq, sql } from "drizzle-orm";
 import { syncListings } from "@/services/listing-sync";
 import { setBuurtenData } from "@/services/buurt-matcher";
 import type { Listing, ListingNote } from "@ernest/shared";
 
 function safeCompare(a: string, b: string): boolean {
-  const ba = Buffer.from(a);
-  const bb = Buffer.from(b);
-  if (ba.length !== bb.length) return false;
-  return timingSafeEqual(ba, bb);
+  const ha = createHash("sha256").update(a).digest();
+  const hb = createHash("sha256").update(b).digest();
+  return timingSafeEqual(ha, hb);
 }
 
 const geodata = new Hono();
@@ -93,6 +99,7 @@ async function queryFundaListings(): Promise<Listing[]> {
       aiPositives: listings.aiPositives,
       aiNegatives: listings.aiNegatives,
       aiDescription: listings.aiDescription,
+      manual: listings.manual,
       reaction: listingReactions.reaction,
       reactionBy: reactionUser.username,
     })
@@ -307,6 +314,7 @@ geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 })
       photos,
       status: p.status || "Beschikbaar",
       offeredSince: p.offeredSince || null,
+      manual: p.manual ?? false,
     });
   }
 
@@ -323,6 +331,66 @@ geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 })
   await invalidateFundaCache();
 
   return c.json({ ok: true, received: incoming.length, ...stats });
+});
+
+geodata.get("/internal/manual-listings", async (c) => {
+  const auth = c.req.header("Authorization");
+  if (!auth || !safeCompare(auth, `Bearer ${REFRESH_SECRET}`)) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const rows = await db.select().from(manualListings).where(eq(manualListings.status, "pending"));
+
+  return c.json(rows);
+});
+
+geodata.post("/internal/manual-listings/complete", async (c) => {
+  const auth = c.req.header("Authorization");
+  if (!auth || !safeCompare(auth, `Bearer ${REFRESH_SECRET}`)) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "Invalid JSON body" }, 400);
+  }
+
+  if (
+    typeof body !== "object" ||
+    body === null ||
+    !("results" in body) ||
+    !Array.isArray(body.results)
+  ) {
+    return c.json({ error: "Expected { results: [...] }" }, 400);
+  }
+
+  const updates = body.results
+    .filter(
+      (r: unknown): r is { id: unknown; error?: string; fundaId?: string } =>
+        typeof r === "object" && r !== null && "id" in r,
+    )
+    .map((result) => {
+      const id = Number(result.id);
+      if (result.error) {
+        return db
+          .update(manualListings)
+          .set({ status: "failed", error: String(result.error) })
+          .where(eq(manualListings.id, id));
+      }
+      if (result.fundaId) {
+        return db
+          .update(manualListings)
+          .set({ status: "fetched", fundaId: String(result.fundaId) })
+          .where(eq(manualListings.id, id));
+      }
+      return null;
+    })
+    .filter(Boolean);
+  await Promise.all(updates);
+
+  return c.json({ ok: true });
 });
 
 export default geodata;

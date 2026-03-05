@@ -57,6 +57,8 @@ async function upsertListing(listing: NewListing, buurt: BuurtStats | null) {
         offeredSince: listing.offeredSince,
         disappearedAt: null,
         updatedAt: sql`now()`,
+        // Only set manual to true, never overwrite back to false
+        ...(listing.manual ? { manual: true } : {}),
         ...buurtFields,
       },
     });
@@ -76,7 +78,7 @@ export async function syncListings(incoming: NewListing[]): Promise<SyncResult> 
     const [{ count: activeCount }] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(listings)
-      .where(isNull(listings.disappearedAt));
+      .where(and(isNull(listings.disappearedAt), eq(listings.manual, false)));
 
     const MIN_RATIO = 0.5;
     if (activeCount === 0 || incoming.length >= activeCount * MIN_RATIO) {
@@ -84,7 +86,13 @@ export async function syncListings(incoming: NewListing[]): Promise<SyncResult> 
       const result = await db
         .update(listings)
         .set({ disappearedAt: sql`now()`, updatedAt: sql`now()` })
-        .where(and(isNull(listings.disappearedAt), notInArray(listings.fundaId, incomingIds)))
+        .where(
+          and(
+            isNull(listings.disappearedAt),
+            eq(listings.manual, false),
+            notInArray(listings.fundaId, incomingIds),
+          ),
+        )
         .returning({ fundaId: listings.fundaId });
       disappeared = result.length;
     } else {

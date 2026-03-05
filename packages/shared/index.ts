@@ -61,6 +61,9 @@ export interface Listing {
   /** AI-cleaned English translation of description */
   aiDescription: string | null;
 
+  /** Whether this listing was manually added */
+  manual: boolean;
+
   /** Collaborative reaction (null = unreviewed) */
   reaction: ReactionType | null;
   /** Username of who set the reaction */

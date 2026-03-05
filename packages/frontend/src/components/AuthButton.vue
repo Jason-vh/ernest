@@ -36,6 +36,13 @@
           <span class="text-[13px] font-semibold text-[#333]">{{ user?.username }}</span>
         </div>
         <div class="my-1 h-px bg-black/8"></div>
+        <router-link
+          to="/manage"
+          class="block w-full cursor-pointer border-none bg-transparent px-3.5 py-2 text-left font-inherit text-[13px] text-[#666] no-underline transition-colors hover:bg-black/4 hover:text-[#333]"
+          @click="showMenu = false"
+        >
+          Manage listings
+        </router-link>
         <button
           class="block w-full cursor-pointer border-none bg-transparent px-3.5 py-2 text-left font-inherit text-[13px] text-[#666] transition-colors hover:bg-black/4 hover:text-[#333]"
           @click="handleLogout"

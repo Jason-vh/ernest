@@ -14,20 +14,26 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const showAuthModal = ref(false);
 
-let initialized = false;
+let sessionPromise: Promise<void> | null = null;
 
-async function checkSession() {
-  if (initialized) return;
-  initialized = true;
-  loading.value = true;
-  try {
-    user.value = await getMe();
-  } catch {
-    user.value = null;
-  } finally {
-    loading.value = false;
+function checkSession(): Promise<void> {
+  if (!sessionPromise) {
+    sessionPromise = (async () => {
+      loading.value = true;
+      try {
+        user.value = await getMe();
+      } catch {
+        user.value = null;
+      } finally {
+        loading.value = false;
+      }
+    })();
   }
+  return sessionPromise;
 }
+
+/** Resolves once the initial auth check completes. */
+export const authReady = checkSession();
 
 export function useAuth() {
   // Check session on first use

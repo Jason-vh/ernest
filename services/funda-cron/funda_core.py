@@ -278,6 +278,58 @@ def to_geojson(listings, coords, details):
     return {"type": "FeatureCollection", "features": features}
 
 
+def fetch_single_listing(url_or_id, log=print):
+    """Fetch a single listing by URL or ID and return a GeoJSON feature with manual=True."""
+    # Extract the global_id from URL if needed
+    # URLs look like: https://www.funda.nl/detail/koop/amsterdam/appartement-straat-1/12345678/
+    gid = url_or_id
+    if "/" in str(url_or_id):
+        # Extract numeric ID from URL path
+        parts = [p for p in str(url_or_id).rstrip("/").split("/") if p]
+        # The last numeric segment is the ID
+        for part in reversed(parts):
+            if part.isdigit():
+                gid = part
+                break
+
+    log(f"  Fetching single listing {gid}...")
+    _, lat, lng, detail = _fetch_detail(gid, log=log)
+    if lat is None or detail is None:
+        raise ValueError(f"Could not fetch listing {gid}")
+
+    # Fetch WOZ value
+    _fetch_woz_values({gid: detail}, log=log)
+
+    # Build a synthetic listing dict for to_geojson compatibility
+    listing = {
+        "global_id": gid,
+        "price": detail.get("price"),
+        "title": detail.get("address") or detail.get("title") or "",
+        "bedrooms": detail.get("bedrooms"),
+        "living_area": detail.get("living_area"),
+        "energy_label": detail.get("energy_label") or None,
+        "object_type": detail.get("object_type") or None,
+        "construction_year": detail.get("construction_year"),
+        "postcode": detail.get("postcode") or None,
+        "neighbourhood": detail.get("neighbourhood") or None,
+        "has_garden": detail.get("has_garden"),
+        "has_balcony": detail.get("has_balcony"),
+        "has_roof_terrace": detail.get("has_roof_terrace"),
+        "detail_url": detail.get("detail_url") or "",
+    }
+
+    coords = {gid: (lat, lng)}
+    details = {gid: detail}
+    geojson = to_geojson([listing], coords, details)
+
+    if not geojson["features"]:
+        raise ValueError(f"Could not build GeoJSON feature for {gid}")
+
+    feature = geojson["features"][0]
+    feature["properties"]["manual"] = True
+    return feature
+
+
 def fetch_and_build_geojson(known_ids=None, log=print):
     """Full pipeline: fetch, filter, enrich, convert to GeoJSON."""
     log("Fetching Funda listings...")
