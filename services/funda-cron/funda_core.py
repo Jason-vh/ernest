@@ -279,23 +279,32 @@ def to_geojson(listings, coords, details):
 
 
 def fetch_single_listing(url_or_id, log=print):
-    """Fetch a single listing by URL or ID and return a GeoJSON feature with manual=True."""
-    # Extract the global_id from URL if needed
-    # URLs look like: https://www.funda.nl/detail/koop/amsterdam/appartement-straat-1/12345678/
-    gid = url_or_id
-    if "/" in str(url_or_id):
-        # Extract numeric ID from URL path
-        parts = [p for p in str(url_or_id).rstrip("/").split("/") if p]
-        # The last numeric segment is the ID
-        for part in reversed(parts):
-            if part.isdigit():
-                gid = part
-                break
+    """Fetch a single listing by URL or ID and return a GeoJSON feature with manual=True.
 
-    log(f"  Fetching single listing {gid}...")
-    _, lat, lng, detail = _fetch_detail(gid, log=log)
-    if lat is None or detail is None:
-        raise ValueError(f"Could not fetch listing {gid}")
+    Accepts a Funda URL or numeric ID. Uses pyfunda's get_listing() directly
+    (which handles both URLs and IDs), then extracts the global_id from the
+    detail response to stay consistent with the bulk pipeline's fundaId format.
+    """
+    log(f"  Fetching single listing from {url_or_id}...")
+    try:
+        f = Funda(timeout=30)
+        detail = f.get_listing(url_or_id)
+    except Exception as e:
+        raise ValueError(f"Could not fetch listing {url_or_id}: {e}") from e
+
+    if not detail:
+        raise ValueError(f"Could not fetch listing {url_or_id}")
+
+    lat = detail.get("latitude")
+    lng = detail.get("longitude")
+    if lat is None or lng is None:
+        raise ValueError(f"No coordinates for listing {url_or_id}")
+
+    # Use global_id from the detail response (matches the bulk pipeline's fundaId)
+    gid = detail.get("global_id")
+    if not gid:
+        raise ValueError(f"No global_id in listing detail for {url_or_id}")
+    gid = str(gid)
 
     # Fetch WOZ value
     _fetch_woz_values({gid: detail}, log=log)
@@ -304,7 +313,7 @@ def fetch_single_listing(url_or_id, log=print):
     listing = {
         "global_id": gid,
         "price": detail.get("price"),
-        "title": detail.get("address") or detail.get("title") or "",
+        "title": detail.get("title") or "",
         "bedrooms": detail.get("bedrooms"),
         "living_area": detail.get("living_area"),
         "energy_label": detail.get("energy_label") or None,
@@ -315,7 +324,7 @@ def fetch_single_listing(url_or_id, log=print):
         "has_garden": detail.get("has_garden"),
         "has_balcony": detail.get("has_balcony"),
         "has_roof_terrace": detail.get("has_roof_terrace"),
-        "detail_url": detail.get("detail_url") or "",
+        "detail_url": "",
     }
 
     coords = {gid: (lat, lng)}
