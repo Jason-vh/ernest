@@ -40,11 +40,14 @@ async function initMiniMap() {
     center: [props.longitude, props.latitude],
     zoom: 14,
     attributionControl: false,
-    dragPan: false,
     dragRotate: false,
-    touchZoomRotate: true,
+    scrollZoom: false,
+    keyboard: false,
+    cooperativeGestures: true,
     touchPitch: false,
   });
+
+  map.touchZoomRotate.disableRotation();
 
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
 
