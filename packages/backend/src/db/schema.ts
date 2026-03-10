@@ -130,6 +130,7 @@ export const listings = pgTable(
 
     // Notification tracking
     notifiedAt: timestamp("notified_at", { withTimezone: true }),
+    telegramMessageId: integer("telegram_message_id"),
 
     // Manual listing flag
     manual: boolean("manual").notNull().default(false),

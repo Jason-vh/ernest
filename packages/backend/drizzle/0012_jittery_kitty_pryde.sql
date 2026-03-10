@@ -1,0 +1,1 @@
+ALTER TABLE "listings" ADD COLUMN "telegram_message_id" integer;

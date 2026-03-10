@@ -5,6 +5,8 @@ import { db } from "@/db";
 import { listings, listingReactions, listingNotes, manualListings } from "@/db/schema";
 import { requireAuth, csrfCheck } from "@/auth/middleware";
 import { invalidateFundaCache } from "@/routes/geodata";
+import { telegramApi } from "@/services/telegram";
+import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID } from "@/config";
 
 const listingsRouter = new Hono<AppEnv>();
 
@@ -23,7 +25,7 @@ listingsRouter.put("/:fundaId/reaction", requireAuth, async (c) => {
 
   // Validate listing exists
   const [existing] = await db
-    .select({ fundaId: listings.fundaId })
+    .select({ fundaId: listings.fundaId, telegramMessageId: listings.telegramMessageId })
     .from(listings)
     .where(eq(listings.fundaId, fundaId))
     .limit(1);
@@ -54,6 +56,23 @@ listingsRouter.put("/:fundaId/reaction", requireAuth, async (c) => {
           changedAt: new Date(),
         },
       });
+  }
+
+  // Fire-and-forget Telegram reaction update
+  if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && existing.telegramMessageId) {
+    const emojiMap: Record<string, Array<{ type: string; emoji: string }>> = {
+      favourite: [{ type: "emoji", emoji: "\uD83D\uDC4D" }],
+      discarded: [{ type: "emoji", emoji: "\uD83D\uDC4E" }],
+    };
+    const telegramReaction = reaction !== null ? (emojiMap[reaction] ?? []) : [];
+
+    telegramApi("setMessageReaction", {
+      chat_id: TELEGRAM_CHAT_ID,
+      message_id: existing.telegramMessageId,
+      reaction: telegramReaction,
+    }).catch((err) => {
+      console.warn(`Failed to set Telegram reaction for ${fundaId}:`, err);
+    });
   }
 
   await invalidateFundaCache();

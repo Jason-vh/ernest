@@ -3,18 +3,7 @@ import { listings } from "@/db/schema";
 import type { Job } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, ORIGIN } from "@/config";
-
-async function telegramApi(method: string, body: unknown): Promise<void> {
-  const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/${method}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Telegram ${method} failed (${res.status}): ${text}`);
-  }
-}
+import { telegramApi } from "@/services/telegram";
 
 function formatPrice(price: number): string {
   return `\u20AC${price.toLocaleString("nl-NL")}`;
@@ -113,8 +102,9 @@ export async function handleTelegramNotify(job: Job): Promise<"completed" | "ski
     inline_keyboard: [[{ text: "View", url: ernestUrl }]],
   };
 
+  let response: unknown;
   if (photos.length >= 1) {
-    await telegramApi("sendPhoto", {
+    response = await telegramApi("sendPhoto", {
       chat_id: chatId,
       photo: photos[0],
       caption,
@@ -122,7 +112,7 @@ export async function handleTelegramNotify(job: Job): Promise<"completed" | "ski
       reply_markup: replyMarkup,
     });
   } else {
-    await telegramApi("sendMessage", {
+    response = await telegramApi("sendMessage", {
       chat_id: chatId,
       text: caption,
       parse_mode: "HTML",
@@ -130,9 +120,23 @@ export async function handleTelegramNotify(job: Job): Promise<"completed" | "ski
     });
   }
 
+  // Extract message_id from Telegram response using runtime narrowing
+  let telegramMessageId: number | undefined;
+  if (
+    typeof response === "object" &&
+    response !== null &&
+    "result" in response &&
+    typeof response.result === "object" &&
+    response.result !== null &&
+    "message_id" in response.result &&
+    typeof response.result.message_id === "number"
+  ) {
+    telegramMessageId = response.result.message_id;
+  }
+
   await db
     .update(listings)
-    .set({ notifiedAt: sql`now()` })
+    .set({ notifiedAt: sql`now()`, telegramMessageId })
     .where(eq(listings.fundaId, job.fundaId));
 
   return "completed";

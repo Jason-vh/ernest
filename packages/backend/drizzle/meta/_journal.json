@@ -85,6 +85,13 @@
       "when": 1772714435675,
       "tag": "0011_motionless_barracuda",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1773158643485,
+      "tag": "0012_jittery_kitty_pryde",
+      "breakpoints": true
     }
   ]
 }
