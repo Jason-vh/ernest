@@ -61,8 +61,8 @@ listingsRouter.put("/:fundaId/reaction", requireAuth, async (c) => {
   // Fire-and-forget Telegram reaction update
   if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && existing.telegramMessageId) {
     const emojiMap: Record<string, Array<{ type: string; emoji: string }>> = {
-      favourite: [{ type: "emoji", emoji: "\uD83D\uDC4D" }],
-      discarded: [{ type: "emoji", emoji: "\uD83D\uDC4E" }],
+      favourite: [{ type: "emoji", emoji: "\u2764\uFE0F" }],
+      discarded: [{ type: "emoji", emoji: "\uD83E\uDD71" }],
     };
     const telegramReaction = reaction !== null ? (emojiMap[reaction] ?? []) : [];
 
