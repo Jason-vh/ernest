@@ -219,12 +219,18 @@ onMounted(() => {
 .hero-single {
   display: block;
   width: 100%;
-  height: 260px;
+  height: min(260px, 38dvh);
   padding: 0;
   border: none;
   background: #e5e5e5;
   cursor: pointer;
   overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .hero-single {
+    height: 260px;
+  }
 }
 
 .hero-single img {
@@ -247,7 +253,13 @@ onMounted(() => {
 .masonry-track {
   display: flex;
   gap: 2px;
-  height: 260px;
+  height: min(260px, 38dvh);
+}
+
+@media (min-width: 640px) {
+  .masonry-track {
+    height: 260px;
+  }
 }
 
 .masonry-full {

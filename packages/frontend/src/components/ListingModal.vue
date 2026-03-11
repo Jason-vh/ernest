@@ -4,6 +4,11 @@
       <div
         v-if="listing"
         class="fixed inset-0 z-100 flex flex-col items-center justify-end bg-black/20 backdrop-blur-[6px] sm:justify-center"
+        :style="
+          swipeTranslateY > 0
+            ? { backgroundColor: `rgba(0, 0, 0, ${0.2 * Math.max(0, 1 - swipeTranslateY / 300)})` }
+            : undefined
+        "
         @click.self="close"
       >
         <!-- Cluster nav above modal -->
@@ -74,9 +79,27 @@
             aria-modal="true"
             aria-label="Listing details"
             tabindex="-1"
-            class="listing-panel relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[14px] bg-white/90 shadow-[0_8px_40px_rgba(0,0,0,0.15),0_1px_3px_rgba(0,0,0,0.08)] outline-none backdrop-blur-[24px] sm:max-h-[calc(100dvh-6rem)] sm:max-w-[580px] sm:rounded-[14px]"
+            class="listing-panel relative flex max-h-[100dvh] w-full flex-col overflow-hidden rounded-t-[14px] bg-white/90 shadow-[0_8px_40px_rgba(0,0,0,0.15),0_1px_3px_rgba(0,0,0,0.08)] outline-none backdrop-blur-[24px] sm:max-h-[calc(100dvh-6rem)] sm:max-w-[580px] sm:rounded-[14px]"
+            :style="
+              swipeTranslateY > 0
+                ? {
+                    transform: `translateY(${swipeTranslateY}px)`,
+                    transition: 'none',
+                  }
+                : isSwiping
+                  ? { transition: 'transform 0.25s ease' }
+                  : undefined
+            "
             @keydown="trapFocus"
           >
+            <!-- Grab handle (mobile sheet affordance) -->
+            <div
+              class="flex w-full flex-shrink-0 cursor-grab touch-none items-center justify-center py-2.5 sm:hidden"
+              @pointerdown="onSwipeStart"
+            >
+              <div class="h-[4px] w-8 rounded-full bg-black/15"></div>
+            </div>
+
             <!-- Scrollable content -->
             <div ref="scrollContainerRef" class="flex-1 overflow-y-auto overscroll-none">
               <!-- Photo gallery -->
@@ -85,9 +108,9 @@
                 <div
                   class="pointer-events-none sticky top-0 z-20 flex h-0 items-start justify-end gap-1.5 overflow-visible px-2.5"
                 >
-                  <div class="flex gap-1.5 pt-2.5">
+                  <div class="flex gap-1.5 pt-2.5 max-sm:gap-2 max-sm:pt-2">
                     <button
-                      class="pointer-events-auto relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
+                      class="pointer-events-auto relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55 max-sm:h-10 max-sm:w-10"
                       title="Copy link"
                       @click="copyLink"
                     >
@@ -120,7 +143,7 @@
                       </Transition>
                     </button>
                     <button
-                      class="pointer-events-auto relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
+                      class="pointer-events-auto relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55 max-sm:h-10 max-sm:w-10"
                       title="Show on map"
                       @click="showOnMap"
                     >
@@ -137,7 +160,7 @@
                       </svg>
                     </button>
                     <button
-                      class="pointer-events-auto relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55"
+                      class="pointer-events-auto relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-black/40 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55 max-sm:h-10 max-sm:w-10"
                       @click="close"
                     >
                       <svg
@@ -229,7 +252,9 @@
                 </button>
               </div>
 
-              <div class="flex flex-col gap-0 px-5 pt-4 pb-5">
+              <div
+                class="flex flex-col gap-0 px-5 pt-4 pb-5 max-sm:pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
+              >
                 <!-- Address + Price row -->
                 <div class="flex items-start justify-between gap-4">
                   <div class="min-w-0">
@@ -986,6 +1011,41 @@ watch(listing, (v) => {
   }
 });
 
+// Swipe-down to dismiss (mobile sheet gesture)
+const swipeTranslateY = ref(0);
+const isSwiping = ref(false);
+let swipeStartY = 0;
+
+function onSwipeStart(e: PointerEvent) {
+  // Only enable swipe when scrolled to top
+  if (scrollContainerRef.value && scrollContainerRef.value.scrollTop > 0) return;
+  swipeStartY = e.clientY;
+  isSwiping.value = true;
+  swipeTranslateY.value = 0;
+  const target = e.currentTarget as HTMLElement;
+  target.setPointerCapture(e.pointerId);
+  target.addEventListener("pointermove", onSwipeMove);
+  target.addEventListener("pointerup", onSwipeEnd);
+  target.addEventListener("pointercancel", onSwipeEnd);
+}
+
+function onSwipeMove(e: PointerEvent) {
+  const dy = e.clientY - swipeStartY;
+  swipeTranslateY.value = Math.max(0, dy);
+}
+
+function onSwipeEnd(e: PointerEvent) {
+  const target = e.currentTarget as HTMLElement;
+  target.removeEventListener("pointermove", onSwipeMove);
+  target.removeEventListener("pointerup", onSwipeEnd);
+  target.removeEventListener("pointercancel", onSwipeEnd);
+  if (swipeTranslateY.value > 120) {
+    close();
+  }
+  swipeTranslateY.value = 0;
+  isSwiping.value = false;
+}
+
 function trapFocus(e: KeyboardEvent) {
   if (e.key !== "Tab" || !modalRef.value) return;
   const focusable = modalRef.value.querySelectorAll<HTMLElement>(
@@ -1039,6 +1099,14 @@ function trapFocus(e: KeyboardEvent) {
   color: #666;
   cursor: pointer;
   transition: all 0.15s ease;
+}
+
+@media (max-width: 639px) {
+  .reaction-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
 }
 
 .reaction-btn:hover {
