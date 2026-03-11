@@ -1,5 +1,7 @@
 <template>
-  <div class="glass absolute bottom-3 left-3 z-1 min-w-40 font-sans text-[13px]">
+  <div
+    class="glass absolute bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-[calc(0.75rem+env(safe-area-inset-left))] z-1 min-w-40 font-sans text-[13px]"
+  >
     <button
       class="flex w-full cursor-pointer items-center justify-between px-4 py-2.5"
       :class="collapsed ? '' : 'pb-1'"
