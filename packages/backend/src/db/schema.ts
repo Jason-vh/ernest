@@ -123,11 +123,6 @@ export const listings = pgTable(
     routeFareharbor: jsonb("route_fareharbor").$type<RouteResult>(),
     routeAirwallex: jsonb("route_airwallex").$type<RouteResult>(),
 
-    // AI enrichment
-    aiPositives: jsonb("ai_positives").$type<string[]>(),
-    aiNegatives: jsonb("ai_negatives").$type<string[]>(),
-    aiDescription: text("ai_description"),
-
     // Notification tracking
     notifiedAt: timestamp("notified_at", { withTimezone: true }),
     telegramMessageId: integer("telegram_message_id"),
@@ -145,7 +140,7 @@ export const listings = pgTable(
 export type Listing = InferSelectModel<typeof listings>;
 export type NewListing = InferInsertModel<typeof listings>;
 
-export type JobType = "compute-routes" | "ai-enrich" | "telegram-notify";
+export type JobType = "compute-routes" | "telegram-notify";
 export type JobStatus = "pending" | "running" | "completed" | "failed" | "skipped";
 
 export const jobs = pgTable(

@@ -396,55 +396,6 @@
                 <!-- Divider -->
                 <div class="my-4 h-px bg-black/6"></div>
 
-                <!-- AI highlights card -->
-                <div
-                  v-if="
-                    (listing.aiPositives && listing.aiPositives.length > 0) ||
-                    (listing.aiNegatives && listing.aiNegatives.length > 0)
-                  "
-                  class="highlights-card"
-                >
-                  <div
-                    v-if="listing.aiPositives && listing.aiPositives.length > 0"
-                    class="flex flex-col gap-[5px]"
-                  >
-                    <div
-                      v-for="(item, i) in listing.aiPositives"
-                      :key="'pos-' + i"
-                      class="flex items-start gap-2 text-[13px] leading-[1.4]"
-                    >
-                      <span
-                        class="mt-[6px] h-[6px] w-[6px] flex-shrink-0 rounded-full bg-emerald-500"
-                      ></span>
-                      <span class="text-[#444]">{{ item }}</span>
-                    </div>
-                  </div>
-                  <div
-                    v-if="
-                      listing.aiPositives &&
-                      listing.aiPositives.length > 0 &&
-                      listing.aiNegatives &&
-                      listing.aiNegatives.length > 0
-                    "
-                    class="my-2.5 h-px bg-black/5"
-                  ></div>
-                  <div
-                    v-if="listing.aiNegatives && listing.aiNegatives.length > 0"
-                    class="flex flex-col gap-[5px]"
-                  >
-                    <div
-                      v-for="(item, i) in listing.aiNegatives"
-                      :key="'neg-' + i"
-                      class="flex items-start gap-2 text-[13px] leading-[1.4]"
-                    >
-                      <span
-                        class="mt-[6px] h-[6px] w-[6px] flex-shrink-0 rounded-full bg-amber-500"
-                      ></span>
-                      <span class="text-[#444]">{{ item }}</span>
-                    </div>
-                  </div>
-                </div>
-
                 <!-- Notes (read-only display) -->
                 <div v-if="otherNotes.length > 0" class="mt-4">
                   <div class="text-[11px] font-semibold uppercase tracking-wide text-[#888]">
@@ -459,31 +410,18 @@
                 </div>
 
                 <!-- Description -->
-                <div v-if="activeDescription" class="mt-4">
-                  <div class="flex items-center justify-between">
-                    <div class="text-[11px] font-semibold uppercase tracking-wide text-[#888]">
-                      Description
-                    </div>
-                    <button
-                      v-if="listing.aiDescription && listing.description"
-                      class="cursor-pointer border-none bg-transparent p-0 font-inherit text-[11px] font-medium text-[#999] underline decoration-[#ddd] underline-offset-2 transition-colors hover:text-[#666] hover:decoration-[#aaa]"
-                      @click="showOriginalDesc = !showOriginalDesc"
-                    >
-                      {{ showOriginalDesc ? "Show translated" : "Show original" }}
-                    </button>
+                <div v-if="listing.description" class="mt-4">
+                  <div class="text-[11px] font-semibold uppercase tracking-wide text-[#888]">
+                    Description
                   </div>
                   <p
                     class="m-0 mt-1.5 whitespace-pre-line text-[13px] leading-[1.6] text-[#555]"
-                    :class="{
-                      'line-clamp-6': !descExpanded && (showOriginalDesc || !listing.aiDescription),
-                    }"
+                    :class="{ 'line-clamp-6': !descExpanded }"
                   >
-                    {{ activeDescription }}
+                    {{ listing.description }}
                   </p>
                   <button
-                    v-if="
-                      activeDescription.length > 300 && (showOriginalDesc || !listing.aiDescription)
-                    "
+                    v-if="listing.description.length > 300"
                     class="mt-1.5 cursor-pointer border-none bg-transparent p-0 font-inherit text-[12px] font-medium text-[#999] underline decoration-[#ddd] underline-offset-2 transition-colors hover:text-[#666] hover:decoration-[#aaa]"
                     @click="descExpanded = !descExpanded"
                   >
@@ -660,7 +598,6 @@ const isCluster = computed(() => clusterListingIds.value.length > 1);
 const photoFullscreenOpen = ref(false);
 const initialPhotoIndex = ref<number | undefined>();
 const descExpanded = ref(false);
-const showOriginalDesc = ref(false);
 const modalRef = ref<HTMLDivElement>();
 const ownNoteText = ref("");
 const noteEditorOpen = ref(false);
@@ -786,14 +723,6 @@ const hasBuurtStats = computed(() => {
   );
 });
 
-const activeDescription = computed(() => {
-  if (!listing.value) return null;
-  if (showOriginalDesc.value || !listing.value.aiDescription) {
-    return listing.value.description;
-  }
-  return listing.value.aiDescription;
-});
-
 function formatPrice(price: number): string {
   return `\u20AC${price.toLocaleString("nl-NL")}`;
 }
@@ -913,7 +842,6 @@ watch(
     prevFundaId = newId;
 
     descExpanded.value = false;
-    showOriginalDesc.value = false;
     noteEditorOpen.value = false;
 
     // Scroll inner content back to top when switching listings
@@ -1005,13 +933,6 @@ function trapFocus(e: KeyboardEvent) {
 </script>
 
 <style scoped>
-.highlights-card {
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: #f7f7f6;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-}
-
 .notes-card {
   padding: 10px 14px;
   border-radius: 10px;

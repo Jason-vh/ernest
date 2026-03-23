@@ -108,25 +108,13 @@ export async function syncListings(incoming: NewListing[]): Promise<SyncResult> 
     .from(listings)
     .where(and(isActiveListing, isNull(listings.routeFareharbor)));
 
-  // Enqueue jobs for active listings needing AI enrichment
-  const needAi = await db
-    .select({ fundaId: listings.fundaId })
-    .from(listings)
-    .where(and(isActiveListing, isNull(listings.aiPositives)));
-
   const routeJobs = needRoutes.map((r) => ({
     type: "compute-routes" as const,
     fundaId: r.fundaId,
     maxAttempts: 3,
   }));
-  const aiJobs = needAi.map((r) => ({
-    type: "ai-enrich" as const,
-    fundaId: r.fundaId,
-    maxAttempts: 2,
-  }));
 
   const routesEnqueued = await enqueueMany(routeJobs);
-  const aiEnqueued = await enqueueMany(aiJobs);
 
-  return { upserted: incoming.length, disappeared, jobsEnqueued: routesEnqueued + aiEnqueued };
+  return { upserted: incoming.length, disappeared, jobsEnqueued: routesEnqueued };
 }

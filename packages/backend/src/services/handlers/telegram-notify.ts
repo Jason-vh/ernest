@@ -18,8 +18,6 @@ function buildCaption(listing: {
   hasBalcony: boolean | null;
   hasRoofTerrace: boolean | null;
   energyLabel: string | null;
-  aiPositives: string[] | null;
-  aiNegatives: string[] | null;
 }): string {
   const overbidPrice = Math.round(listing.price * 1.15);
 
@@ -36,24 +34,9 @@ function buildCaption(listing: {
   if (listing.hasBalcony) extras.push("Balcony");
   if (listing.hasRoofTerrace) extras.push("Roof terrace");
 
-  const positives = (listing.aiPositives ?? []).slice(0, 3);
-  const negatives = (listing.aiNegatives ?? []).slice(0, 2);
-
   const lines: string[] = [`<b>${escapeHtml(listing.address)}</b>`];
   lines.push(summaryParts.join(" \u00B7 "));
   if (extras.length > 0) lines.push(extras.join(" \u00B7 "));
-
-  if (positives.length > 0) {
-    lines.push("");
-    lines.push("<b>The good</b>");
-    for (const p of positives) lines.push(`- ${escapeHtml(p)}`);
-  }
-
-  if (negatives.length > 0) {
-    lines.push("");
-    lines.push("<b>The bad</b>");
-    for (const n of negatives) lines.push(`- ${escapeHtml(n)}`);
-  }
 
   return lines.join("\n");
 }
@@ -80,8 +63,6 @@ export async function handleTelegramNotify(job: Job): Promise<"completed" | "ski
       photos: listings.photos,
       status: listings.status,
       disappearedAt: listings.disappearedAt,
-      aiPositives: listings.aiPositives,
-      aiNegatives: listings.aiNegatives,
     })
     .from(listings)
     .where(eq(listings.fundaId, job.fundaId));

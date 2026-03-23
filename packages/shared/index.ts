@@ -55,12 +55,6 @@ export interface Listing {
   routeFareharbor: number | null;
   routeAirwallex: number | null;
 
-  /** AI-generated highlight bullet points */
-  aiPositives: string[] | null;
-  aiNegatives: string[] | null;
-  /** AI-cleaned English translation of description */
-  aiDescription: string | null;
-
   /** Whether this listing was manually added */
   manual: boolean;
 
