@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { listings } from "@/db/schema";
 import type { Job } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
-import { fetchGoogleRoute, OFFICES } from "@/services/google-routes";
+import { fetchGoogleRoute, AMSTERDAM_CENTRAAL } from "@/services/google-routes";
 
 export async function handleComputeRoutes(job: Job): Promise<"completed" | "skipped"> {
   // Fetch listing coords
@@ -11,7 +11,7 @@ export async function handleComputeRoutes(job: Job): Promise<"completed" | "skip
       fundaId: listings.fundaId,
       latitude: listings.latitude,
       longitude: listings.longitude,
-      routeFareharbor: listings.routeFareharbor,
+      routeCentraal: listings.routeCentraal,
     })
     .from(listings)
     .where(eq(listings.fundaId, job.fundaId));
@@ -20,23 +20,19 @@ export async function handleComputeRoutes(job: Job): Promise<"completed" | "skip
   const listing = rows[0];
 
   // Already has routes
-  if (listing.routeFareharbor !== null) return "skipped";
+  if (listing.routeCentraal !== null) return "skipped";
 
   const from = { lat: listing.latitude, lon: listing.longitude };
-  const fareharbor = await fetchGoogleRoute(from, OFFICES.fareharbor, true);
-  await new Promise((resolve) => setTimeout(resolve, 200));
-  const airwallex = await fetchGoogleRoute(from, OFFICES.airwallex, true);
+  const centraal = await fetchGoogleRoute(from, AMSTERDAM_CENTRAAL, true);
 
-  // If both routes are null (Google API down or missing key), throw so the job retries with backoff
-  if (fareharbor === null && airwallex === null) {
-    throw new Error("Google Routes API unreachable: both route requests returned null");
+  if (centraal === null) {
+    throw new Error("Google Routes API unreachable: route request returned null");
   }
 
   await db
     .update(listings)
     .set({
-      routeFareharbor: fareharbor,
-      routeAirwallex: airwallex,
+      routeCentraal: centraal,
       updatedAt: sql`now()`,
     })
     .where(eq(listings.fundaId, job.fundaId));

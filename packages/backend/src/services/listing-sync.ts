@@ -111,7 +111,7 @@ export async function syncListings(incoming: NewListing[]): Promise<SyncResult> 
   const needRoutes = await db
     .select({ fundaId: listings.fundaId })
     .from(listings)
-    .where(and(isActiveListing, isNull(listings.routeFareharbor)));
+    .where(and(isActiveListing, isNull(listings.routeCentraal)));
 
   const routeJobs = needRoutes.map((r) => ({
     type: "compute-routes" as const,

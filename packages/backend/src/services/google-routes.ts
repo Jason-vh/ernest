@@ -4,9 +4,9 @@ import { GOOGLE_MAPS_API_KEY } from "@/config";
 
 export type RouteResult = TransitRoute;
 
-export const OFFICES = {
-  fareharbor: { lat: 52.3599, lon: 4.8912 },
-  airwallex: { lat: 52.37, lon: 4.8878 },
+export const AMSTERDAM_CENTRAAL = {
+  lat: 52.3791283,
+  lon: 4.8980833,
 };
 
 // LRU cache keyed by rounded coordinates

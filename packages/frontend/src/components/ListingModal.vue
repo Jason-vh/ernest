@@ -631,7 +631,7 @@ import type { ReactionType } from "@ernest/shared";
 import { useListingStore } from "@/composables/useListingStore";
 import { useAuth } from "@/composables/useAuth";
 import { flyTo } from "@/composables/useMapPosition";
-import { OFFICES } from "@/geo/constants";
+import { AMSTERDAM_CENTRAAL } from "@/geo/constants";
 import PhotoGallery from "@/components/PhotoGallery.vue";
 import ListingMiniMap from "@/components/ListingMiniMap.vue";
 import fundaLogo from "@/assets/funda.svg";
@@ -788,27 +788,14 @@ const commuteEntries = computed(() => {
     return barSegments;
   }
 
-  if (listing.value.routeFareharbor) {
+  const centraalRoute = listing.value.routeCentraal;
+  if (centraalRoute) {
     entries.push({
-      mins: listing.value.routeFareharbor.duration,
-      barSegments: buildBarSegments(
-        listing.value.routeFareharbor.duration,
-        listing.value.routeFareharbor.segments || [],
-      ),
-      label: OFFICES.fareharbor.name,
+      mins: centraalRoute.duration,
+      barSegments: buildBarSegments(centraalRoute.duration, centraalRoute.segments || []),
+      label: AMSTERDAM_CENTRAAL.name,
     });
   }
-  if (listing.value.routeAirwallex) {
-    entries.push({
-      mins: listing.value.routeAirwallex.duration,
-      barSegments: buildBarSegments(
-        listing.value.routeAirwallex.duration,
-        listing.value.routeAirwallex.segments || [],
-      ),
-      label: OFFICES.airwallex.name,
-    });
-  }
-  if (entries.length === 2 && parseInt(listing.value.fundaId, 10) % 2 === 1) entries.reverse();
   return entries;
 });
 

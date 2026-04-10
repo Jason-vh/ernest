@@ -14,8 +14,7 @@ export interface TransitRoute {
 }
 
 export interface TransitRoutes {
-  fareharbor: TransitRoute | null;
-  airwallex: TransitRoute | null;
+  centraal: TransitRoute | null;
 }
 
 export type ReactionType = "favourite" | "discarded";
@@ -59,9 +58,8 @@ export interface Listing {
   status: string;
   offeredSince: string | null;
 
-  /** Cycling duration (in minutes) */
-  routeFareharbor: TransitRoute | null;
-  routeAirwallex: TransitRoute | null;
+  /** Public transit route to Amsterdam Centraal */
+  routeCentraal: TransitRoute | null;
 
   /** Collaborative reaction (null = unreviewed) */
   reaction: ReactionType | null;

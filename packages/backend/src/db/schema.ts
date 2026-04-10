@@ -120,9 +120,8 @@ export const listings = pgTable(
     offeredSince: text("offered_since"),
     disappearedAt: timestamp("disappeared_at", { withTimezone: true }),
 
-    // Pre-computed cycling routes
-    routeFareharbor: jsonb("route_fareharbor").$type<RouteResult>(),
-    routeAirwallex: jsonb("route_airwallex").$type<RouteResult>(),
+    // Pre-computed public transit route to Amsterdam Centraal
+    routeCentraal: jsonb("route_centraal").$type<RouteResult>(),
 
     // Notification tracking
     notifiedAt: timestamp("notified_at", { withTimezone: true }),
