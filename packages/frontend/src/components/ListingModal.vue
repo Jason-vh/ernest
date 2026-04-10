@@ -278,6 +278,7 @@
                   v-if="commuteEntries.length"
                   class="mt-4 flex flex-col gap-3.5 border-t border-black/6 pt-4"
                 >
+                  <div class="text-[11px] font-medium text-[#999]">arriving 9:00 Monday</div>
                   <div
                     v-for="entry in commuteEntries"
                     :key="entry.label"
