@@ -113,8 +113,6 @@ export function useFundaLayer(
   state: FundaState,
 ) {
   const {
-    favouriteIds,
-    discardedIds,
     lastViewedFundaId,
     fundaFavouriteVisible,
     fundaUnreviewedVisible,
@@ -133,20 +131,36 @@ export function useFundaLayer(
     // Re-apply paint properties so data-driven expressions (colocatedCount) evaluate
     updateFundaLayer();
 
-    // Update counts
-    fundaFavouriteCount.value = favouriteIds.value.size;
-    fundaDiscardedCount.value = discardedIds.value.size;
-    fundaUnreviewedCount.value =
-      listings.value.size - favouriteIds.value.size - discardedIds.value.size;
+    // Update counts for currently visible/filtered listings
+    let favouriteCount = 0;
+    let discardedCount = 0;
+    let unreviewedCount = 0;
+    for (const listing of listings.value.values()) {
+      if (listing.reaction === "favourite") favouriteCount++;
+      else if (listing.reaction === "discarded") discardedCount++;
+      else unreviewedCount++;
+    }
+    fundaFavouriteCount.value = favouriteCount;
+    fundaDiscardedCount.value = discardedCount;
+    fundaUnreviewedCount.value = unreviewedCount;
   }
 
   const initialGeoJSON = listingsToGeoJSON(listings.value);
-  fundaFavouriteCount.value = favouriteIds.value.size;
-  fundaDiscardedCount.value = discardedIds.value.size;
-  fundaUnreviewedCount.value =
-    listings.value.size - favouriteIds.value.size - discardedIds.value.size;
+  let initialFavouriteCount = 0;
+  let initialDiscardedCount = 0;
+  let initialUnreviewedCount = 0;
+  for (const listing of listings.value.values()) {
+    if (listing.reaction === "favourite") initialFavouriteCount++;
+    else if (listing.reaction === "discarded") initialDiscardedCount++;
+    else initialUnreviewedCount++;
+  }
+  fundaFavouriteCount.value = initialFavouriteCount;
+  fundaDiscardedCount.value = initialDiscardedCount;
+  fundaUnreviewedCount.value = initialUnreviewedCount;
 
   map.addSource("funda", { type: "geojson", data: initialGeoJSON });
+
+  watch(listings, refreshFundaSource, { deep: true });
 
   // --- Funda building highlights (below dots) ---
   map.addSource("funda-buildings", { type: "geojson", data: emptyFC });
