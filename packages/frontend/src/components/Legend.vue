@@ -23,6 +23,21 @@
     </button>
 
     <div v-show="!collapsed" class="flex flex-col gap-[5px] px-4 pb-3">
+      <div class="mb-1 flex flex-col gap-2">
+        <div class="flex items-center justify-between gap-3 text-[12px] text-[#444]">
+          <span class="font-[450]">minutes from Amsterdam C</span>
+          <span class="tabular-nums text-[#888]">{{ maxMinutesFromCentraal }}</span>
+        </div>
+        <input
+          v-model.number="maxMinutesFromCentraal"
+          type="range"
+          min="15"
+          max="120"
+          step="5"
+          class="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-black/10 accent-black"
+        />
+      </div>
+      <div class="my-0.5 h-px bg-[#e5e5e5]"></div>
       <div class="flex flex-col gap-[5px]">
         <button
           v-for="item in transit"
@@ -96,6 +111,7 @@ const {
   fundaFavouriteCount,
   fundaUnreviewedCount,
   fundaDiscardedCount,
+  maxMinutesFromCentraal,
   toggleTransit,
   toggleFundaFavourite,
   toggleFundaUnreviewed,

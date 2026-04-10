@@ -9,13 +9,80 @@ export const AMSTERDAM_CENTRAAL = {
   lon: 4.8980833,
 };
 
-// LRU cache keyed by rounded coordinates
+// LRU cache keyed by rounded coordinates and reference arrival time
 const CACHE_MAX = 500;
 const cache = new Map<string, RouteResult>();
 const r = (n: number) => n.toFixed(4);
+const AMSTERDAM_TIMEZONE = "Europe/Amsterdam";
 
-function cacheKey(from: { lat: number; lon: number }, to: { lat: number; lon: number }): string {
-  return `${r(from.lat)},${r(from.lon)}-${r(to.lat)},${r(to.lon)}`;
+function cacheKey(
+  from: { lat: number; lon: number },
+  to: { lat: number; lon: number },
+  arrivalTimeIso: string,
+): string {
+  return `${r(from.lat)},${r(from.lon)}-${r(to.lat)},${r(to.lon)}@${arrivalTimeIso}`;
+}
+
+function getAmsterdamDateParts(date: Date): {
+  year: number;
+  month: number;
+  day: number;
+  weekday: number;
+} {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: AMSTERDAM_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    weekday: "short",
+  });
+  const parts = formatter.formatToParts(date);
+  const year = Number(parts.find((part) => part.type === "year")?.value);
+  const month = Number(parts.find((part) => part.type === "month")?.value);
+  const day = Number(parts.find((part) => part.type === "day")?.value);
+  const weekdayShort = parts.find((part) => part.type === "weekday")?.value ?? "Mon";
+  const weekdayMap: Record<string, number> = {
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+    Sun: 7,
+  };
+  return { year, month, day, weekday: weekdayMap[weekdayShort] ?? 1 };
+}
+
+function getTimezoneOffsetMinutes(timeZone: string, date: Date): number {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    timeZoneName: "shortOffset",
+  });
+  const parts = formatter.formatToParts(date);
+  const offsetText = parts.find((part) => part.type === "timeZoneName")?.value ?? "GMT+0";
+  const match = offsetText.match(/^GMT([+-])(\d{1,2})(?::?(\d{2}))?$/);
+  if (!match) return 0;
+  const sign = match[1] === "-" ? -1 : 1;
+  const hours = Number(match[2]);
+  const minutes = Number(match[3] ?? "0");
+  return sign * (hours * 60 + minutes);
+}
+
+function getNextMondayArrivalTimeIso(): string {
+  const now = new Date();
+  const { year, month, day, weekday } = getAmsterdamDateParts(now);
+  const daysUntilNextMonday = (8 - weekday) % 7 || 7;
+
+  const localTargetUtcGuess = new Date(
+    Date.UTC(year, month - 1, day + daysUntilNextMonday, 9, 0, 0),
+  );
+  const offsetMinutes1 = getTimezoneOffsetMinutes(AMSTERDAM_TIMEZONE, localTargetUtcGuess);
+  const utcMillis1 = localTargetUtcGuess.getTime() - offsetMinutes1 * 60_000;
+  const target1 = new Date(utcMillis1);
+
+  const offsetMinutes2 = getTimezoneOffsetMinutes(AMSTERDAM_TIMEZONE, target1);
+  const utcMillis2 = localTargetUtcGuess.getTime() - offsetMinutes2 * 60_000;
+  return new Date(utcMillis2).toISOString();
 }
 
 function cacheGet(key: string): RouteResult | undefined {
@@ -43,7 +110,8 @@ export async function fetchGoogleRoute(
   to: { lat: number; lon: number },
   forceRefetch = false,
 ): Promise<RouteResult | null> {
-  const key = cacheKey(from, to);
+  const arrivalTimeIso = getNextMondayArrivalTimeIso();
+  const key = cacheKey(from, to, arrivalTimeIso);
   if (!forceRefetch) {
     const cached = cacheGet(key);
     if (cached) return cached;
@@ -71,6 +139,7 @@ export async function fetchGoogleRoute(
       },
       travelMode: "TRANSIT",
       computeAlternativeRoutes: false,
+      arrivalTime: arrivalTimeIso,
     }),
     signal: AbortSignal.timeout(10_000),
   });
