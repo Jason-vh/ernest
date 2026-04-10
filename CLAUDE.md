@@ -19,7 +19,8 @@ bun run typecheck        # Type-check both frontend and backend (see note below)
 bun run db:generate      # Generate Drizzle migration from schema changes
 bun run db:push          # Push schema directly to DB (dev shortcut)
 bun run db:studio        # Open Drizzle Studio (DB browser)
-bun run fetch-data       # Refetch isochrones + stations + buurten + funda from APIs
+bun run fetch-data       # Refetch transit + buurten + funda-related static data from APIs
+bun run fetch-transit    # Refetch train/metro/tram data (~40km around Amsterdam Centraal)
 bun run fetch-funda      # Run Funda fetch standalone (python3.13)
 bun run fetch-ferries    # Fetch ferry routes/stops from Overpass into data files
 ```

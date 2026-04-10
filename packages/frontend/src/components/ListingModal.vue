@@ -273,13 +273,68 @@
                   >{{ keyFacts }}
                 </div>
 
-                <!-- Cycling commute -->
-                <div v-if="commuteEntries.length" class="mt-1.5 text-[12px] text-[#aaa]">
-                  <template v-for="(entry, i) in commuteEntries" :key="entry.label">
-                    <template v-if="i > 0"> &middot; </template>
-                    <span class="tabular-nums text-[#888]">{{ entry.mins }} min</span>
-                    {{ entry.first ? "cycle to" : "to" }} {{ entry.label }}
-                  </template>
+                <!-- Transit commute -->
+                <div
+                  v-if="commuteEntries.length"
+                  class="mt-4 flex flex-col gap-3.5 border-t border-black/6 pt-4"
+                >
+                  <div
+                    v-for="entry in commuteEntries"
+                    :key="entry.label"
+                    class="flex flex-col gap-1.5 border-b border-black/5 pb-3.5 last:border-0 last:pb-0"
+                  >
+                    <div class="text-[13px] leading-none">
+                      <span class="font-semibold text-[#111]">{{ entry.mins }} minutes</span>
+                      <span class="font-medium text-[#444]"> to {{ entry.label }}</span>
+                    </div>
+
+                    <div
+                      v-if="entry.barSegments.length > 0"
+                      class="flex h-[20px] w-full overflow-hidden rounded-full border border-black/10 bg-[#f8f7f3] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]"
+                    >
+                      <div
+                        v-for="(seg, sIdx) in entry.barSegments"
+                        :key="sIdx"
+                        :style="{ width: `${(seg.durationMins / entry.mins) * 100}%` }"
+                        class="flex h-full flex-shrink-0 items-center justify-center overflow-hidden border-r border-white font-semibold whitespace-nowrap text-white last:border-r-0"
+                        :class="getModeBgClass(seg.mode)"
+                      >
+                        <template v-if="seg.mode === 'WALK'">
+                          <span
+                            v-if="seg.durationMins / entry.mins > 0.08"
+                            class="text-[10.5px] text-[#666]"
+                          >
+                            {{ seg.durationMins }}
+                          </span>
+                        </template>
+                        <template v-else-if="seg.mode === 'WAIT'">
+                          <div
+                            class="h-full w-full"
+                            style="
+                              background-image: repeating-linear-gradient(
+                                45deg,
+                                transparent,
+                                transparent 2px,
+                                rgba(0, 0, 0, 0.06) 2px,
+                                rgba(0, 0, 0, 0.06) 4px
+                              );
+                            "
+                          ></div>
+                        </template>
+                        <template v-else>
+                          <span v-if="seg.durationMins / entry.mins > 0.15" class="text-[10.5px]">
+                            {{ formatTransitLabel(seg) }} ({{ seg.durationMins }} mins)
+                          </span>
+                          <span
+                            v-else-if="seg.durationMins / entry.mins > 0.08"
+                            class="text-[10.5px]"
+                          >
+                            {{ seg.durationMins }}
+                          </span>
+                        </template>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Actions row + integrated note (logged-in users) -->
@@ -410,7 +465,7 @@
                 </div>
 
                 <!-- Description -->
-                <div v-if="listing.description" class="mt-4">
+                <div v-if="displayDescription" class="mt-4">
                   <div class="text-[11px] font-semibold uppercase tracking-wide text-[#888]">
                     Description
                   </div>
@@ -418,10 +473,10 @@
                     class="m-0 mt-1.5 whitespace-pre-line text-[13px] leading-[1.6] text-[#555]"
                     :class="{ 'line-clamp-6': !descExpanded }"
                   >
-                    {{ listing.description }}
+                    {{ displayDescription }}
                   </p>
                   <button
-                    v-if="listing.description.length > 300"
+                    v-if="displayDescription.length > 300"
                     class="mt-1.5 cursor-pointer border-none bg-transparent p-0 font-inherit text-[12px] font-medium text-[#999] underline decoration-[#ddd] underline-offset-2 transition-colors hover:text-[#666] hover:decoration-[#aaa]"
                     @click="descExpanded = !descExpanded"
                   >
@@ -676,23 +731,114 @@ const keyFacts = computed(() => {
 
 const commuteEntries = computed(() => {
   if (!listing.value) return [];
-  const entries: { mins: number; label: string; first: boolean }[] = [];
-  if (listing.value.routeFareharbor)
+  const entries: {
+    mins: number;
+    label: string;
+    barSegments: { mode: string; durationMins: number; line?: string }[];
+  }[] = [];
+
+  function buildBarSegments(
+    totalMins: number,
+    rawSegments: import("@ernest/shared").TransitSegment[],
+  ) {
+    // Keep all walk and transit segments, but distribute missing time as WAIT segments
+    let sum = 0;
+    for (const seg of rawSegments) sum += seg.durationMins;
+    let missing = Math.max(0, totalMins - sum);
+
+    const transitIndexes: number[] = [];
+    rawSegments.forEach((seg, i) => {
+      if (seg.mode !== "WALK") transitIndexes.push(i);
+    });
+
+    // If there are transit segments, put the wait time before them
+    const waitAmounts = Array.from({ length: rawSegments.length }).fill(0) as number[];
+    if (transitIndexes.length > 0 && missing > 0) {
+      const waitPer = Math.floor(missing / transitIndexes.length);
+      let remainder = missing % transitIndexes.length;
+      for (const i of transitIndexes) {
+        waitAmounts[i] = waitPer + (remainder > 0 ? 1 : 0);
+        if (remainder > 0) remainder--;
+      }
+    } else if (missing > 0) {
+      // No transit segments (pure walk?), just put all wait time at the end
+      waitAmounts.push(missing);
+    }
+
+    const barSegments: { mode: string; durationMins: number; line?: string }[] = [];
+    for (let i = 0; i < rawSegments.length; i++) {
+      if (waitAmounts[i] > 0) {
+        barSegments.push({ mode: "WAIT", durationMins: waitAmounts[i] });
+      }
+      // Combine adjacent walks (if any)
+      if (
+        rawSegments[i].mode === "WALK" &&
+        barSegments.length > 0 &&
+        barSegments[barSegments.length - 1].mode === "WALK"
+      ) {
+        barSegments[barSegments.length - 1].durationMins += rawSegments[i].durationMins;
+      } else {
+        barSegments.push({ ...rawSegments[i] });
+      }
+    }
+    if (waitAmounts.length > rawSegments.length && waitAmounts[rawSegments.length] > 0) {
+      barSegments.push({ mode: "WAIT", durationMins: waitAmounts[rawSegments.length] });
+    }
+
+    return barSegments;
+  }
+
+  if (listing.value.routeFareharbor) {
     entries.push({
-      mins: listing.value.routeFareharbor,
+      mins: listing.value.routeFareharbor.duration,
+      barSegments: buildBarSegments(
+        listing.value.routeFareharbor.duration,
+        listing.value.routeFareharbor.segments || [],
+      ),
       label: OFFICES.fareharbor.name,
-      first: false,
     });
-  if (listing.value.routeAirwallex)
+  }
+  if (listing.value.routeAirwallex) {
     entries.push({
-      mins: listing.value.routeAirwallex,
+      mins: listing.value.routeAirwallex.duration,
+      barSegments: buildBarSegments(
+        listing.value.routeAirwallex.duration,
+        listing.value.routeAirwallex.segments || [],
+      ),
       label: OFFICES.airwallex.name,
-      first: false,
     });
+  }
   if (entries.length === 2 && parseInt(listing.value.fundaId, 10) % 2 === 1) entries.reverse();
-  if (entries.length > 0) entries[0].first = true;
   return entries;
 });
+
+function getModeBgClass(mode: string) {
+  if (mode === "SUBWAY") return "bg-[#1560a8]"; // M52 blue
+  if (mode === "TRAM") return "bg-[#259b73]"; // Tram green
+  if (mode === "TRAIN") return "bg-[#5545a1]"; // Train purple
+  if (mode === "BUS") return "bg-[#da5c3a]"; // Bus orange
+  if (mode === "FERRY") return "bg-[#0891b2]"; // Cyan
+  if (mode === "WAIT") return "bg-[#f4f4ef]"; // Wait
+  return "bg-[#f4f4ef]"; // Walk
+}
+
+function formatTransitLabel(
+  seg:
+    | import("@ernest/shared").TransitSegment
+    | { mode: string; durationMins: number; line?: string },
+) {
+  if (seg.mode === "SUBWAY") return `M${seg.line || ""}`.trim();
+  if (seg.mode === "TRAIN") {
+    const l = seg.line?.toLowerCase() || "";
+    if (l.includes("sprinter")) return "Sprinter";
+    if (l.includes("intercity")) return "Intercity";
+    return "Train";
+  }
+  if (seg.mode === "TRAM") return "Tram";
+  if (seg.mode === "BUS") return "Bus";
+  if (seg.mode === "FERRY") return "Ferry";
+  return seg.mode;
+}
 
 const energyLabelBadge = computed(() => {
   if (!listing.value) return null;
@@ -721,6 +867,11 @@ const hasBuurtStats = computed(() => {
     l.buurtCrimesPer1000 != null ||
     l.buurtOwnerOccupiedPct != null
   );
+});
+
+const displayDescription = computed(() => {
+  if (!listing.value) return null;
+  return listing.value.descriptionEn ?? listing.value.description;
 });
 
 function formatPrice(price: number): string {

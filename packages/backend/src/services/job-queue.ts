@@ -5,7 +5,11 @@ import { eq, and, lt, sql } from "drizzle-orm";
 
 export type { JobType } from "@/db/schema";
 
-const JOB_TYPES: Set<string> = new Set<string>(["compute-routes", "telegram-notify"]);
+const JOB_TYPES: Set<string> = new Set<string>([
+  "compute-routes",
+  "telegram-notify",
+  "translate-description",
+]);
 const JOB_STATUSES: Set<string> = new Set<string>([
   "pending",
   "running",

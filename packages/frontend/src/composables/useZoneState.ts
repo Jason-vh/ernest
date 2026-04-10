@@ -1,7 +1,7 @@
 import { ref, watch } from "vue";
 
-export const ZONE_KEYS = ["10", "20", "30"] as const;
-export type ZoneKey = (typeof ZONE_KEYS)[number];
+export const ZONE_KEYS = [] as const;
+export type ZoneKey = string;
 
 export const TRANSIT_KEYS = ["train", "metro", "tram", "ferry"] as const;
 export type TransitKey = (typeof TRANSIT_KEYS)[number];
@@ -9,7 +9,7 @@ export type TransitKey = (typeof TRANSIT_KEYS)[number];
 const STORAGE_KEY = "ernest:legend";
 
 interface LegendState {
-  zones: Record<ZoneKey, boolean>;
+  zones: Record<string, boolean>;
   transit: Record<TransitKey, boolean>;
   fundaFav: boolean;
   fundaUnreviewed: boolean;
@@ -22,7 +22,7 @@ function allTrue<T extends string>(keys: readonly T[]): Record<T, boolean> {
 
 function readFromStorage(): LegendState {
   const defaults: LegendState = {
-    zones: allTrue(ZONE_KEYS),
+    zones: {},
     transit: allTrue(TRANSIT_KEYS),
     fundaFav: true,
     fundaUnreviewed: true,
@@ -68,7 +68,7 @@ const fundaFavouriteVisible = ref(saved.fundaFav);
 const fundaUnreviewedVisible = ref(saved.fundaUnreviewed);
 const fundaDiscardedVisible = ref(saved.fundaDiscarded);
 
-const hoveredZone = ref<ZoneKey | null>(null);
+const hoveredZone = ref<string | null>(null);
 const hoveredTransit = ref<TransitKey | null>(null);
 
 const fundaFavouriteCount = ref(0);
@@ -95,7 +95,7 @@ watch(
 );
 
 export function useZoneState() {
-  function toggleZone(zone: ZoneKey) {
+  function toggleZone(zone: string) {
     zoneVisibility.value = {
       ...zoneVisibility.value,
       [zone]: !zoneVisibility.value[zone],

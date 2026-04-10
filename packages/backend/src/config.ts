@@ -13,5 +13,7 @@ export const RP_ID = required("RP_ID");
 
 export const REFRESH_SECRET = required("REFRESH_SECRET");
 
-export const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? null;
-export const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID ?? null;
+export const TELEGRAM_BOT_TOKEN = null; // Disabled by agent
+export const TELEGRAM_CHAT_ID = null; // Disabled by agent
+export const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY ?? null;
+export const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? null;

@@ -14,7 +14,12 @@ def log_stderr(msg):
 
 
 def main():
-    geojson = fetch_and_build_geojson(log=log_stderr)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--limit", type=int, default=None)
+    args = parser.parse_args()
+
+    geojson = fetch_and_build_geojson(log=log_stderr, limit=args.limit)
     json.dump(geojson, sys.stdout)
 
 

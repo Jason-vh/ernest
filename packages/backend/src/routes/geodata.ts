@@ -4,15 +4,8 @@ import { timingSafeEqual, createHash } from "node:crypto";
 import path from "path";
 import { REFRESH_SECRET } from "@/config";
 import { db } from "@/db";
-import {
-  listings,
-  listingReactions,
-  listingNotes,
-  manualListings,
-  users,
-  type NewListing,
-} from "@/db/schema";
-import { isNull, and, or, eq, sql } from "drizzle-orm";
+import { listings, listingReactions, listingNotes, users, type NewListing } from "@/db/schema";
+import { isNull, and, or, eq } from "drizzle-orm";
 import { syncListings } from "@/services/listing-sync";
 import { setBuurtenData } from "@/services/buurt-matcher";
 import type { Listing, ListingNote } from "@ernest/shared";
@@ -27,12 +20,10 @@ const geodata = new Hono();
 
 const dataDir = path.resolve(import.meta.dir, "../../data");
 
-const isochronePath = path.join(dataDir, "isochrone.geojson");
 const stationsPath = path.join(dataDir, "stations.json");
 const linesPath = path.join(dataDir, "lines.geojson");
 const buurtenPath = path.join(dataDir, "buurten.geojson");
 
-let isochroneData: unknown = null;
 let stationsData: unknown = null;
 let linesData: unknown = null;
 let buurtenData: unknown = null;
@@ -78,6 +69,7 @@ async function queryFundaListings(): Promise<Listing[]> {
       houseType: listings.houseType,
       constructionYear: listings.constructionYear,
       description: listings.description,
+      descriptionEn: listings.descriptionEn,
       ownership: listings.ownership,
       vveCostsMonthly: listings.vveCostsMonthly,
       erfpachtCostsMonthly: listings.erfpachtCostsMonthly,
@@ -94,9 +86,8 @@ async function queryFundaListings(): Promise<Listing[]> {
       photos: listings.photos,
       status: listings.status,
       offeredSince: listings.offeredSince,
-      routeFareharbor: sql<number | null>`(${listings.routeFareharbor}->>'duration')::int`,
-      routeAirwallex: sql<number | null>`(${listings.routeAirwallex}->>'duration')::int`,
-      manual: listings.manual,
+      routeFareharbor: listings.routeFareharbor as any,
+      routeAirwallex: listings.routeAirwallex as any,
       reaction: listingReactions.reaction,
       reactionBy: reactionUser.username,
     })
@@ -152,14 +143,9 @@ export async function invalidateFundaCache() {
 }
 
 export async function loadData() {
-  const isoFile = Bun.file(isochronePath);
   const staFile = Bun.file(stationsPath);
   const linesFile = Bun.file(linesPath);
   const buurtenFile = Bun.file(buurtenPath);
-
-  if (await isoFile.exists()) {
-    isochroneData = await isoFile.json();
-  }
   if (await staFile.exists()) {
     stationsData = await staFile.json();
   }
@@ -180,12 +166,7 @@ export async function loadData() {
   }
 }
 
-geodata.get("/isochrone", (c) => {
-  if (!isochroneData) {
-    return c.json({ error: "Isochrone data not available. Run: bun run fetch-data" }, 503);
-  }
-  return c.json(isochroneData);
-});
+// /isochrone endpoint removed
 
 geodata.get("/stations", (c) => {
   if (!stationsData) {
@@ -246,6 +227,9 @@ geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 })
     return c.json({ error: "Invalid JSON body" }, 400);
   }
 
+  const limitParam = c.req.query("limit");
+  const limit = limitParam ? parseInt(limitParam, 10) : 0;
+
   if (
     typeof body !== "object" ||
     body === null ||
@@ -257,8 +241,13 @@ geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 })
     return c.json({ error: "Expected a GeoJSON FeatureCollection" }, 400);
   }
 
+  let features = body.features;
+  if (limit > 0) {
+    features = features.slice(0, limit);
+  }
+
   const incoming: NewListing[] = [];
-  for (const feature of body.features) {
+  for (const feature of features) {
     if (
       typeof feature !== "object" ||
       feature === null ||
@@ -311,7 +300,6 @@ geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 })
       photos,
       status: p.status || "Beschikbaar",
       offeredSince: p.offeredSince || null,
-      manual: p.manual ?? false,
     });
   }
 
@@ -328,66 +316,6 @@ geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 })
   await invalidateFundaCache();
 
   return c.json({ ok: true, received: incoming.length, ...stats });
-});
-
-geodata.get("/internal/manual-listings", async (c) => {
-  const auth = c.req.header("Authorization");
-  if (!auth || !safeCompare(auth, `Bearer ${REFRESH_SECRET}`)) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-
-  const rows = await db.select().from(manualListings).where(eq(manualListings.status, "pending"));
-
-  return c.json(rows);
-});
-
-geodata.post("/internal/manual-listings/complete", async (c) => {
-  const auth = c.req.header("Authorization");
-  if (!auth || !safeCompare(auth, `Bearer ${REFRESH_SECRET}`)) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-
-  let body: unknown;
-  try {
-    body = await c.req.json();
-  } catch {
-    return c.json({ error: "Invalid JSON body" }, 400);
-  }
-
-  if (
-    typeof body !== "object" ||
-    body === null ||
-    !("results" in body) ||
-    !Array.isArray(body.results)
-  ) {
-    return c.json({ error: "Expected { results: [...] }" }, 400);
-  }
-
-  const updates = body.results
-    .filter(
-      (r: unknown): r is { id: unknown; error?: string; fundaId?: string } =>
-        typeof r === "object" && r !== null && "id" in r,
-    )
-    .map((result) => {
-      const id = Number(result.id);
-      if (result.error) {
-        return db
-          .update(manualListings)
-          .set({ status: "failed", error: String(result.error) })
-          .where(eq(manualListings.id, id));
-      }
-      if (result.fundaId) {
-        return db
-          .update(manualListings)
-          .set({ status: "fetched", fundaId: String(result.fundaId) })
-          .where(eq(manualListings.id, id));
-      }
-      return null;
-    })
-    .filter(Boolean);
-  await Promise.all(updates);
-
-  return c.json({ ok: true });
 });
 
 export default geodata;

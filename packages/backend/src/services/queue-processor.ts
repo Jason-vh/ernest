@@ -1,6 +1,7 @@
 import { claimJob, completeJob, skipJob, failJob, enqueueMany } from "@/services/job-queue";
 import { handleComputeRoutes } from "@/services/handlers/compute-routes";
 import { handleTelegramNotify } from "@/services/handlers/telegram-notify";
+import { handleTranslateDescription } from "@/services/handlers/translate-description";
 import { invalidateFundaCache } from "@/routes/geodata";
 import { db } from "@/db";
 import { listings } from "@/db/schema";
@@ -12,11 +13,13 @@ type HandlerFn = (job: Job) => Promise<"completed" | "skipped">;
 const handlers: Record<string, HandlerFn> = {
   "compute-routes": handleComputeRoutes,
   "telegram-notify": handleTelegramNotify,
+  "translate-description": handleTranslateDescription,
 };
 
 const RATE_LIMITS: Record<string, number> = {
   "compute-routes": 200,
   "telegram-notify": 200,
+  "translate-description": 500,
 };
 
 async function maybeEnqueueNotification(fundaId: string): Promise<void> {

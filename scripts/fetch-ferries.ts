@@ -5,6 +5,7 @@
 import path from "path";
 
 const FERRY_COLOR = "#0891B2";
+const OVERPASS_USER_AGENT = "ernest-transit-fetcher/1.0 (+https://ernest.vhtm.eu)";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -25,7 +26,10 @@ out geom;
 
   const res = await fetch("https://overpass.kumi.systems/api/interpreter", {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "User-Agent": OVERPASS_USER_AGENT,
+    },
     body: `data=${encodeURIComponent(query)}`,
   });
 
@@ -98,7 +102,10 @@ out center;
 
   const res = await fetch("https://overpass.kumi.systems/api/interpreter", {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "User-Agent": OVERPASS_USER_AGENT,
+    },
     body: `data=${encodeURIComponent(query)}`,
   });
 

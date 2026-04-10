@@ -1,24 +1,6 @@
 import type { TransitStop } from "@/types/transit";
 import type { Listing, ReactionType } from "@ernest/shared";
 
-export interface ManualListingRow {
-  id: number;
-  url: string;
-  fundaId: string | null;
-  status: string;
-  error: string | null;
-  createdAt: string;
-  address: string | null;
-  price: number | null;
-  photos: string[] | null;
-}
-
-export async function fetchIsochrone(): Promise<GeoJSON.FeatureCollection> {
-  const res = await fetch("/api/isochrone");
-  if (!res.ok) throw new Error(`Failed to fetch isochrone: ${res.status}`);
-  return res.json();
-}
-
 export async function fetchStations(): Promise<TransitStop[]> {
   const res = await fetch("/api/stations");
   if (!res.ok) throw new Error(`Failed to fetch stations: ${res.status}`);
@@ -66,36 +48,5 @@ export async function putNote(fundaId: string, text: string): Promise<void> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error ?? `Failed to save note: ${res.status}`);
-  }
-}
-
-export async function addManualListing(url: string): Promise<ManualListingRow> {
-  const res = await fetch("/api/listings/manual", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ url }),
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error ?? `Failed to add listing: ${res.status}`);
-  }
-  return res.json();
-}
-
-export async function getManualListings(): Promise<ManualListingRow[]> {
-  const res = await fetch("/api/listings/manual", { credentials: "include" });
-  if (!res.ok) throw new Error(`Failed to fetch manual listings: ${res.status}`);
-  return res.json();
-}
-
-export async function removeManualListing(id: number): Promise<void> {
-  const res = await fetch(`/api/listings/manual/${id}`, {
-    method: "DELETE",
-    credentials: "include",
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error ?? `Failed to remove listing: ${res.status}`);
   }
 }

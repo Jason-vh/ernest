@@ -4,14 +4,14 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from "vue";
-import { fetchIsochrone, fetchStations, fetchLines, fetchFunda } from "@/api/client";
+import { fetchStations, fetchLines, fetchFunda } from "@/api/client";
 import { useZoneState } from "@/composables/useZoneState";
 import { useListingStore } from "@/composables/useListingStore";
 import { useMap } from "@/composables/useMap";
 import { setMap, flyTo } from "@/composables/useMapPosition";
 import { useOfficeMarkers } from "@/composables/useOfficeMarkers";
-import { useIsochroneLayers } from "@/composables/useIsochroneLayers";
 import { useTransitLayers } from "@/composables/useTransitLayers";
+import { useCommuteFilter } from "@/composables/useCommuteFilter";
 import { useFundaLayer } from "@/composables/useFundaLayer";
 import { useBuildingHighlightLayer } from "@/composables/useBuildingHighlightLayer";
 import { useMapPopups } from "@/composables/useMapPopups";
@@ -53,13 +53,8 @@ onMounted(async () => {
   map.on("load", async () => {
     // Fire all fetches simultaneously
     const fundaPromise = fetchFunda();
-    const [isochrone, stations, lines] = await Promise.all([
-      fetchIsochrone(),
-      fetchStations(),
-      fetchLines(),
-    ]);
+    const [stations, lines] = await Promise.all([fetchStations(), fetchLines()]);
 
-    useIsochroneLayers(map, isochrone, { zoneVisibility, hoveredZone });
     useTransitLayers(map, stations, lines, { transitVisibility, hoveredTransit });
 
     // Await funda (fetch was already fired in parallel, may already be resolved)
@@ -76,7 +71,9 @@ onMounted(async () => {
       }
     }
 
-    const { refreshFundaSource } = useFundaLayer(map, listings, {
+    const { filteredListings } = useCommuteFilter({ listings });
+
+    const { refreshFundaSource } = useFundaLayer(map, filteredListings, {
       favouriteIds,
       discardedIds,
       lastViewedFundaId,
@@ -96,7 +93,7 @@ onMounted(async () => {
 
     useMapPopups({
       map,
-      listings,
+      listings: filteredListings,
       selectListing,
       fundaFavouriteVisible,
       fundaUnreviewedVisible,

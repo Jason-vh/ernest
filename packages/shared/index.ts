@@ -1,14 +1,21 @@
-export interface CyclingRoute {
+export interface TransitSegment {
+  mode: "WALK" | "SUBWAY" | "TRAM" | "BUS" | "TRAIN" | "FERRY" | "TRANSIT";
+  durationMins: number;
+  line?: string;
+}
+
+export interface TransitRoute {
   duration: number;
   geometry: {
     type: "LineString";
     coordinates: [number, number][];
   };
+  segments: TransitSegment[];
 }
 
-export interface CyclingRoutes {
-  fareharbor: CyclingRoute | null;
-  airwallex: CyclingRoute | null;
+export interface TransitRoutes {
+  fareharbor: TransitRoute | null;
+  airwallex: TransitRoute | null;
 }
 
 export type ReactionType = "favourite" | "discarded";
@@ -34,6 +41,7 @@ export interface Listing {
   objectType: string | null;
   constructionYear: number | null;
   description: string | null;
+  descriptionEn: string | null;
   ownership: string | null;
   vveCostsMonthly: number | null;
   erfpachtCostsMonthly: number | null;
@@ -52,11 +60,8 @@ export interface Listing {
   offeredSince: string | null;
 
   /** Cycling duration (in minutes) */
-  routeFareharbor: number | null;
-  routeAirwallex: number | null;
-
-  /** Whether this listing was manually added */
-  manual: boolean;
+  routeFareharbor: TransitRoute | null;
+  routeAirwallex: TransitRoute | null;
 
   /** Collaborative reaction (null = unreviewed) */
   reaction: ReactionType | null;

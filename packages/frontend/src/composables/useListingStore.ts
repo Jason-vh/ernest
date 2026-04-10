@@ -2,10 +2,12 @@ import { ref, computed, watch } from "vue";
 import type { Listing, ReactionType, ListingNote } from "@ernest/shared";
 import { putReaction, putNote } from "@/api/client";
 
-const listings = ref<Map<string, Listing>>(new Map());
-const selectedFundaId = ref<string | null>(null);
-const clusterListingIds = ref<string[]>([]);
-const lastViewedFundaId = ref<string | null>(null);
+export type ListingId = string;
+
+const listings = ref<Map<ListingId, Listing>>(new Map());
+const selectedFundaId = ref<ListingId | null>(null);
+const clusterListingIds = ref<ListingId[]>([]);
+const lastViewedFundaId = ref<ListingId | null>(null);
 
 // Track when modal closes: record the last-viewed listing for map highlight
 watch(selectedFundaId, (newVal, oldVal) => {

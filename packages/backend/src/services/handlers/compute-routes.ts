@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { listings } from "@/db/schema";
 import type { Job } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
-import { fetchValhallaRoute, OFFICES } from "@/services/valhalla";
+import { fetchGoogleRoute, OFFICES } from "@/services/google-routes";
 
 export async function handleComputeRoutes(job: Job): Promise<"completed" | "skipped"> {
   // Fetch listing coords
@@ -23,13 +23,13 @@ export async function handleComputeRoutes(job: Job): Promise<"completed" | "skip
   if (listing.routeFareharbor !== null) return "skipped";
 
   const from = { lat: listing.latitude, lon: listing.longitude };
-  const fareharbor = await fetchValhallaRoute(from, OFFICES.fareharbor);
+  const fareharbor = await fetchGoogleRoute(from, OFFICES.fareharbor, true);
   await new Promise((resolve) => setTimeout(resolve, 200));
-  const airwallex = await fetchValhallaRoute(from, OFFICES.airwallex);
+  const airwallex = await fetchGoogleRoute(from, OFFICES.airwallex, true);
 
-  // If both routes are null (Valhalla down), throw so the job retries with backoff
+  // If both routes are null (Google API down or missing key), throw so the job retries with backoff
   if (fareharbor === null && airwallex === null) {
-    throw new Error("Valhalla unreachable: both route requests returned null");
+    throw new Error("Google Routes API unreachable: both route requests returned null");
   }
 
   await db

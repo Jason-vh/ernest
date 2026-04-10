@@ -8,11 +8,12 @@ from funda import Funda
 
 PRICE_MIN = 450000
 PRICE_MAX = 513000
-MIN_BEDROOMS = 2
+MIN_BEDROOMS = 3
 MIN_LIVING_AREA = 65
 ACCEPTABLE_LABELS = {"A+++", "A++", "A+", "A", "B", "C", "D", "unknown"}
 DETAIL_WORKERS = 8
-SEARCH_AREAS = ["amsterdam", "diemen", "duivendrecht", "amstelveen", "ouderkerk-aan-de-amstel"]
+SEARCH_LOCATION = "amsterdam"
+SEARCH_RADIUS_KM = 30
 
 
 def _parse_monthly_cost(value):
@@ -56,7 +57,7 @@ def _is_terminal_page_error(error):
     return "400" in str(error)
 
 
-def fetch_all_listings(log=print):
+def fetch_all_listings(log=print, limit=None):
     f = Funda(timeout=30)
     all_listings = []
     seen_ids = set()
@@ -69,7 +70,8 @@ def fetch_all_listings(log=print):
         log(f"  Fetching page {page}...")
         try:
             results = f.search_listing(
-                SEARCH_AREAS,
+                SEARCH_LOCATION,
+                radius_km=SEARCH_RADIUS_KM,
                 offering_type="buy",
                 price_min=PRICE_MIN,
                 price_max=PRICE_MAX,
@@ -101,6 +103,9 @@ def fetch_all_listings(log=print):
             if gid and gid not in seen_ids:
                 seen_ids.add(gid)
                 all_listings.append(listing)
+                if limit and len(all_listings) >= limit:
+                    log(f"  Reached limit of {limit} unique listings")
+                    return all_listings
         page += 1
         time.sleep(1)
 
@@ -168,34 +173,8 @@ def enrich_with_coordinates(listings, log=print):
 
 
 def _fetch_woz_values(details, known_ids=None, log=print):
-    """Fetch WOZ values sequentially with delays to avoid rate limiting."""
-    new_details = {
-        gid: d for gid, d in details.items()
-        if known_ids is None or gid not in known_ids
-    }
-    if not new_details:
-        return
-
-    log(f"  Fetching WOZ values for {len(new_details)} new listings (sequential)...")
-    fetched = 0
-    failed = 0
-    for gid, detail in new_details.items():
-        url = detail.get("url") or ""
-        if not url:
-            continue
-        try:
-            f = Funda(timeout=30)
-            history = f.get_price_history(url)
-            woz_entries = [e for e in history if e.get("source") == "WOZ"]
-            if woz_entries:
-                detail["_woz_value"] = woz_entries[-1].get("price")
-                fetched += 1
-        except Exception as e:
-            failed += 1
-            log(f"  Warning: failed to fetch WOZ for {gid}: {e}")
-        time.sleep(1.5)
-
-    log(f"  WOZ fetch done: {fetched} values, {failed} failures")
+    """WOZ fetching disabled to avoid rate limits and slow execution on large radiuses."""
+    return
 
 
 def to_geojson(listings, coords, details):
@@ -278,71 +257,10 @@ def to_geojson(listings, coords, details):
     return {"type": "FeatureCollection", "features": features}
 
 
-def fetch_single_listing(url_or_id, log=print):
-    """Fetch a single listing by URL or ID and return a GeoJSON feature with manual=True.
-
-    Accepts a Funda URL or numeric ID. Uses pyfunda's get_listing() directly
-    (which handles both URLs and IDs), then extracts the global_id from the
-    detail response to stay consistent with the bulk pipeline's fundaId format.
-    """
-    log(f"  Fetching single listing from {url_or_id}...")
-    try:
-        f = Funda(timeout=30)
-        detail = f.get_listing(url_or_id)
-    except Exception as e:
-        raise ValueError(f"Could not fetch listing {url_or_id}: {e}") from e
-
-    if not detail:
-        raise ValueError(f"Could not fetch listing {url_or_id}")
-
-    lat = detail.get("latitude")
-    lng = detail.get("longitude")
-    if lat is None or lng is None:
-        raise ValueError(f"No coordinates for listing {url_or_id}")
-
-    # Use global_id from the detail response (matches the bulk pipeline's fundaId)
-    gid = detail.get("global_id")
-    if not gid:
-        raise ValueError(f"No global_id in listing detail for {url_or_id}")
-    gid = str(gid)
-
-    # Fetch WOZ value
-    _fetch_woz_values({gid: detail}, log=log)
-
-    # Build a synthetic listing dict for to_geojson compatibility
-    listing = {
-        "global_id": gid,
-        "price": detail.get("price"),
-        "title": detail.get("title") or "",
-        "bedrooms": detail.get("bedrooms"),
-        "living_area": detail.get("living_area"),
-        "energy_label": detail.get("energy_label") or None,
-        "object_type": detail.get("object_type") or None,
-        "construction_year": detail.get("construction_year"),
-        "postcode": detail.get("postcode") or None,
-        "neighbourhood": detail.get("neighbourhood") or None,
-        "has_garden": detail.get("has_garden"),
-        "has_balcony": detail.get("has_balcony"),
-        "has_roof_terrace": detail.get("has_roof_terrace"),
-        "detail_url": "",
-    }
-
-    coords = {gid: (lat, lng)}
-    details = {gid: detail}
-    geojson = to_geojson([listing], coords, details)
-
-    if not geojson["features"]:
-        raise ValueError(f"Could not build GeoJSON feature for {gid}")
-
-    feature = geojson["features"][0]
-    feature["properties"]["manual"] = True
-    return feature
-
-
-def fetch_and_build_geojson(known_ids=None, log=print):
+def fetch_and_build_geojson(known_ids=None, limit=None, log=print):
     """Full pipeline: fetch, filter, enrich, convert to GeoJSON."""
     log("Fetching Funda listings...")
-    listings = fetch_all_listings(log)
+    listings = fetch_all_listings(log, limit=limit)
     filtered = filter_listings(listings, log)
     coords, details = enrich_with_coordinates(filtered, log=log)
     _fetch_woz_values(details, known_ids=known_ids, log=log)

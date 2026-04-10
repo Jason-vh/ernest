@@ -99,6 +99,20 @@
       "when": 1774271445531,
       "tag": "0013_lame_alex_power",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1775835662599,
+      "tag": "0014_ordinary_maelstrom",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1775836800000,
+      "tag": "0015_steady_mandrill",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,5 @@
 import {
   pgTable,
-  serial,
   text,
   integer,
   boolean,
@@ -13,7 +12,7 @@ import {
   customType,
 } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
-import type { RouteResult } from "@/services/valhalla";
+import type { RouteResult } from "@/services/google-routes";
 import type { AuthenticatorTransportFuture } from "@simplewebauthn/server";
 
 const bytea = customType<{ data: Uint8Array; driverValue: Buffer }>({
@@ -87,6 +86,8 @@ export const listings = pgTable(
     houseType: text("house_type"),
     constructionYear: integer("construction_year"),
     description: text("description"),
+    descriptionEn: text("description_en"),
+    descriptionEnSourceHash: text("description_en_source_hash"),
 
     // Ownership
     ownership: text("ownership"),
@@ -127,9 +128,6 @@ export const listings = pgTable(
     notifiedAt: timestamp("notified_at", { withTimezone: true }),
     telegramMessageId: integer("telegram_message_id"),
 
-    // Manual listing flag
-    manual: boolean("manual").notNull().default(false),
-
     // Timestamps
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -140,7 +138,7 @@ export const listings = pgTable(
 export type Listing = InferSelectModel<typeof listings>;
 export type NewListing = InferInsertModel<typeof listings>;
 
-export type JobType = "compute-routes" | "telegram-notify";
+export type JobType = "compute-routes" | "telegram-notify" | "translate-description";
 export type JobStatus = "pending" | "running" | "completed" | "failed" | "skipped";
 
 export const jobs = pgTable(
@@ -200,16 +198,3 @@ export type ListingReaction = InferSelectModel<typeof listingReactions>;
 export type NewListingReaction = InferInsertModel<typeof listingReactions>;
 export type ListingNote = InferSelectModel<typeof listingNotes>;
 export type NewListingNote = InferInsertModel<typeof listingNotes>;
-
-export const manualListings = pgTable("manual_listings", {
-  id: serial("id").primaryKey(),
-  url: text("url").notNull().unique(),
-  fundaId: text("funda_id"),
-  status: text("status").notNull().default("pending"),
-  error: text("error"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  createdBy: text("created_by").notNull(),
-});
-
-export type ManualListing = InferSelectModel<typeof manualListings>;
-export type NewManualListing = InferInsertModel<typeof manualListings>;

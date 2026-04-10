@@ -25,32 +25,6 @@
     <div v-show="!collapsed" class="flex flex-col gap-[5px] px-4 pb-3">
       <div class="flex flex-col gap-[5px]">
         <button
-          v-for="item in zones"
-          :key="item.key"
-          :aria-pressed="zoneVisibility[item.key]"
-          class="flex cursor-pointer items-center gap-2.5 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 transition-colors hover:bg-black/5"
-          @click="toggleZone(item.key)"
-        >
-          <span
-            class="h-3 w-5 shrink-0 rounded-sm border-[1.5px] transition-all duration-200"
-            :class="zoneVisibility[item.key] ? '' : 'scale-75 opacity-25'"
-            :style="{
-              backgroundColor: item.color + '40',
-              borderColor: item.color + '99',
-            }"
-          ></span>
-          <span
-            class="font-[450] transition-opacity"
-            :class="
-              zoneVisibility[item.key] ? 'text-[#444]' : 'text-[#444] opacity-35 line-through'
-            "
-            >{{ item.label }}</span
-          >
-        </button>
-      </div>
-      <div class="my-0.5 h-px bg-[#e5e5e5]"></div>
-      <div class="flex flex-col gap-[5px]">
-        <button
           v-for="item in transit"
           :key="item.key"
           :aria-pressed="transitVisibility[item.key]"
@@ -115,7 +89,6 @@ const collapsed = ref(stored !== null ? stored === "true" : isSmallScreen);
 watch(collapsed, (v) => localStorage.setItem(STORAGE_KEY, String(v)));
 
 const {
-  zoneVisibility,
   transitVisibility,
   fundaFavouriteVisible,
   fundaUnreviewedVisible,
@@ -123,18 +96,11 @@ const {
   fundaFavouriteCount,
   fundaUnreviewedCount,
   fundaDiscardedCount,
-  toggleZone,
   toggleTransit,
   toggleFundaFavourite,
   toggleFundaUnreviewed,
   toggleFundaDiscarded,
 } = useZoneState();
-
-const zones: { key: ZoneKey; label: string; color: string }[] = [
-  { key: "10", label: "10 mins cycle", color: "#22c55e" },
-  { key: "20", label: "20 mins cycle", color: "#f59e0b" },
-  { key: "30", label: "30 mins cycle", color: "#ef4444" },
-];
 
 const transit: { key: TransitKey; label: string; color: string }[] = [
   { key: "train", label: "train stations", color: "#003DA5" },

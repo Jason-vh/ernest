@@ -1,8 +1,13 @@
 import { db } from "@/db";
 import { listings, type NewListing } from "@/db/schema";
+import { ANTHROPIC_API_KEY } from "@/config";
 import { isNull, notInArray, and, or, eq, sql } from "drizzle-orm";
 import { enqueueMany } from "@/services/job-queue";
 import { matchBuurt, type BuurtStats } from "@/services/buurt-matcher";
+import {
+  hasMeaningfulDescription,
+  hashDescription,
+} from "@/services/listing-description-translation";
 
 /** Listing is active: not disappeared and status is available */
 const isActiveListing = and(
@@ -42,6 +47,14 @@ async function upsertListing(listing: NewListing, buurt: BuurtStats | null) {
         houseType: listing.houseType,
         constructionYear: listing.constructionYear,
         description: listing.description,
+        descriptionEn: sql`CASE
+          WHEN excluded.description IS DISTINCT FROM ${listings.description} THEN NULL
+          ELSE ${listings.descriptionEn}
+        END`,
+        descriptionEnSourceHash: sql`CASE
+          WHEN excluded.description IS DISTINCT FROM ${listings.description} THEN NULL
+          ELSE ${listings.descriptionEnSourceHash}
+        END`,
         ownership: listing.ownership,
         vveCostsMonthly: listing.vveCostsMonthly,
         erfpachtCostsMonthly: listing.erfpachtCostsMonthly,
@@ -57,8 +70,6 @@ async function upsertListing(listing: NewListing, buurt: BuurtStats | null) {
         offeredSince: listing.offeredSince,
         disappearedAt: null,
         updatedAt: sql`now()`,
-        // Only set manual to true, never overwrite back to false
-        ...(listing.manual ? { manual: true } : {}),
         ...buurtFields,
       },
     });
@@ -78,7 +89,7 @@ export async function syncListings(incoming: NewListing[]): Promise<SyncResult> 
     const [{ count: activeCount }] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(listings)
-      .where(and(isNull(listings.disappearedAt), eq(listings.manual, false)));
+      .where(isNull(listings.disappearedAt));
 
     const MIN_RATIO = 0.5;
     if (activeCount === 0 || incoming.length >= activeCount * MIN_RATIO) {
@@ -86,13 +97,7 @@ export async function syncListings(incoming: NewListing[]): Promise<SyncResult> 
       const result = await db
         .update(listings)
         .set({ disappearedAt: sql`now()`, updatedAt: sql`now()` })
-        .where(
-          and(
-            isNull(listings.disappearedAt),
-            eq(listings.manual, false),
-            notInArray(listings.fundaId, incomingIds),
-          ),
-        )
+        .where(and(isNull(listings.disappearedAt), notInArray(listings.fundaId, incomingIds)))
         .returning({ fundaId: listings.fundaId });
       disappeared = result.length;
     } else {
@@ -116,5 +121,34 @@ export async function syncListings(incoming: NewListing[]): Promise<SyncResult> 
 
   const routesEnqueued = await enqueueMany(routeJobs);
 
-  return { upserted: incoming.length, disappeared, jobsEnqueued: routesEnqueued };
+  let translatedEnqueued = 0;
+  if (ANTHROPIC_API_KEY) {
+    const candidates = await db
+      .select({
+        fundaId: listings.fundaId,
+        description: listings.description,
+        descriptionEnSourceHash: listings.descriptionEnSourceHash,
+      })
+      .from(listings)
+      .where(isActiveListing);
+
+    const translateJobs = candidates
+      .filter((listing) => {
+        if (!hasMeaningfulDescription(listing.description)) return false;
+        return listing.descriptionEnSourceHash !== hashDescription(listing.description);
+      })
+      .map((listing) => ({
+        type: "translate-description" as const,
+        fundaId: listing.fundaId,
+        maxAttempts: 3,
+      }));
+
+    translatedEnqueued = await enqueueMany(translateJobs);
+  }
+
+  return {
+    upserted: incoming.length,
+    disappeared,
+    jobsEnqueued: routesEnqueued + translatedEnqueued,
+  };
 }
