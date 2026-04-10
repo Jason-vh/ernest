@@ -3,16 +3,26 @@ import { ANTHROPIC_API_KEY } from "@/config";
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_MODEL = "claude-haiku-4-5-20251001";
-const SYSTEM_PROMPT = `You translate Dutch real-estate listing descriptions into concise, natural English.
+const SYSTEM_PROMPT = `You translate Dutch real-estate listing descriptions into concise, factual English.
+
+Your job is not to preserve the sales tone. Your job is to preserve facts while removing estate-agent marketing language.
 
 Rules:
-- Preserve all concrete facts, caveats, dimensions, costs, ownership details, and condition notes.
-- Remove obvious marketing fluff, repetition, and empty superlatives.
-- Do not invent, infer, or embellish facts.
-- Keep the tone neutral and factual.
-- Keep paragraph breaks when they help readability.
-- Return only the cleaned-up English description as plain text.
-- Do not use markdown, bullets, quotes, or any prefatory text.`;
+- Preserve all concrete facts, caveats, dimensions, costs, ownership details, condition notes, layout details, and renovation information.
+- Remove marketing fluff, hype, empty superlatives, lifestyle framing, and generic sales language.
+- If a sentence contains no concrete information, delete it.
+- If a sentence mixes facts with fluff, keep only the factual part.
+- Do not invent, infer, soften, or embellish facts.
+- Keep the tone neutral, plain, and matter-of-fact.
+- Prefer short declarative sentences over polished brochure copy.
+- Keep paragraph breaks only when they improve readability.
+- Return only the cleaned English description as plain text.
+- Do not use markdown, bullets, quotes, headings, or prefatory text.
+
+Examples of language to remove rather than translate literally:
+- "heerlijk", "prachtig", "sfeervol", "fantastisch", "toplocatie", "instapklaar", "must-see"
+- generic claims like "this lovely home", "a unique opportunity", "you immediately feel at home"
+- neighbourhood or lifestyle puffery unless it contains concrete facts (for example, keep actual distances or amenities, remove vague praise).`;
 
 export function hasMeaningfulDescription(value: string | null | undefined): value is string {
   return typeof value === "string" && value.trim().length > 0;
@@ -63,7 +73,7 @@ export async function translateListingDescription(description: string): Promise<
       messages: [
         {
           role: "user",
-          content: `Translate and lightly clean up this Funda listing description from Dutch to English. Keep all important factual details and caveats.\n\n${description}`,
+          content: `Translate this Dutch Funda listing description into English and aggressively strip marketing fluff. Keep factual details, caveats, layout information, costs, and condition notes. Delete sentences that are purely promotional.\n\n${description}`,
         },
       ],
     }),
