@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 import { cors } from "hono/cors";
 import { compress } from "hono/compress";
 import { secureHeaders } from "hono/secure-headers";
@@ -49,6 +50,10 @@ startQueueProcessor();
 
 // Global error handler
 app.onError((err, c) => {
+  if (err instanceof HTTPException) {
+    return err.getResponse();
+  }
+
   console.error("Unhandled error:", err);
   return c.json({ error: "Internal server error" }, 500);
 });

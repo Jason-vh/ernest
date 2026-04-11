@@ -214,109 +214,117 @@ geodata.get("/internal/known-listings", async (c) => {
   return c.json(rows.map((r) => r.fundaId));
 });
 
-geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 }), async (c) => {
-  const auth = c.req.header("Authorization");
-  if (!auth || !safeCompare(auth, `Bearer ${REFRESH_SECRET}`)) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
+geodata.post(
+  "/internal/refresh-funda",
+  bodyLimit({
+    maxSize: 25 * 1024 * 1024,
+    onError: (c) => c.json({ error: "Refresh payload too large" }, 413),
+  }),
+  async (c) => {
+    const auth = c.req.header("Authorization");
+    if (!auth || !safeCompare(auth, `Bearer ${REFRESH_SECRET}`)) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
 
-  let body: unknown;
-  try {
-    body = await c.req.json();
-  } catch {
-    return c.json({ error: "Invalid JSON body" }, 400);
-  }
+    let body: unknown;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json({ error: "Invalid JSON body" }, 400);
+    }
 
-  const limitParam = c.req.query("limit");
-  const limit = limitParam ? parseInt(limitParam, 10) : 0;
+    const limitParam = c.req.query("limit");
+    const limit = limitParam ? parseInt(limitParam, 10) : 0;
 
-  if (
-    typeof body !== "object" ||
-    body === null ||
-    !("type" in body) ||
-    body.type !== "FeatureCollection" ||
-    !("features" in body) ||
-    !Array.isArray(body.features)
-  ) {
-    return c.json({ error: "Expected a GeoJSON FeatureCollection" }, 400);
-  }
-
-  let features = body.features;
-  if (limit > 0) {
-    features = features.slice(0, limit);
-  }
-
-  const incoming: NewListing[] = [];
-  for (const feature of features) {
     if (
-      typeof feature !== "object" ||
-      feature === null ||
-      !("properties" in feature) ||
-      !("geometry" in feature)
+      typeof body !== "object" ||
+      body === null ||
+      !("type" in body) ||
+      body.type !== "FeatureCollection" ||
+      !("features" in body) ||
+      !Array.isArray(body.features)
     ) {
-      continue;
+      return c.json({ error: "Expected a GeoJSON FeatureCollection" }, 400);
     }
-    const p = feature.properties;
-    const geom = feature.geometry;
-    if (!p || !geom || geom.type !== "Point" || !Array.isArray(geom.coordinates)) continue;
 
-    const fundaId = p.fundaId;
-    if (!fundaId) continue;
+    let features = body.features;
+    if (limit > 0) {
+      features = features.slice(0, limit);
+    }
 
-    let photos: string[] = [];
-    if (typeof p.photos === "string") {
-      try {
-        photos = JSON.parse(p.photos);
-      } catch {
-        photos = [];
+    const incoming: NewListing[] = [];
+    for (const feature of features) {
+      if (
+        typeof feature !== "object" ||
+        feature === null ||
+        !("properties" in feature) ||
+        !("geometry" in feature)
+      ) {
+        continue;
       }
-    } else if (Array.isArray(p.photos)) {
-      photos = p.photos;
+      const p = feature.properties;
+      const geom = feature.geometry;
+      if (!p || !geom || geom.type !== "Point" || !Array.isArray(geom.coordinates)) continue;
+
+      const fundaId = p.fundaId;
+      if (!fundaId) continue;
+
+      let photos: string[] = [];
+      if (typeof p.photos === "string") {
+        try {
+          photos = JSON.parse(p.photos);
+        } catch {
+          photos = [];
+        }
+      } else if (Array.isArray(p.photos)) {
+        photos = p.photos;
+      }
+
+      incoming.push({
+        fundaId: String(fundaId),
+        url: p.url || "",
+        address: p.address || "",
+        postcode: p.postcode || null,
+        city: p.city || null,
+        neighbourhood: p.neighbourhood || null,
+        price: Number(p.price) || 0,
+        bedrooms: Number(p.bedrooms) || 0,
+        livingArea: Number(p.livingArea) || 0,
+        energyLabel: p.energyLabel || null,
+        objectType: p.objectType || null,
+        houseType: p.houseType || null,
+        constructionYear: p.constructionYear ? Number(p.constructionYear) : null,
+        description: p.description || null,
+        ownership: p.ownership || null,
+        vveCostsMonthly: p.vveCostsMonthly != null ? Number(p.vveCostsMonthly) : null,
+        erfpachtCostsMonthly:
+          p.erfpachtCostsMonthly != null ? Number(p.erfpachtCostsMonthly) : null,
+        wozValue: p.wozValue != null ? Number(p.wozValue) : null,
+        hasGarden: p.hasGarden ?? null,
+        hasBalcony: p.hasBalcony ?? null,
+        hasRoofTerrace: p.hasRoofTerrace ?? null,
+        latitude: geom.coordinates[1],
+        longitude: geom.coordinates[0],
+        photos,
+        status: p.status || "Beschikbaar",
+        offeredSince: p.offeredSince || null,
+      });
     }
 
-    incoming.push({
-      fundaId: String(fundaId),
-      url: p.url || "",
-      address: p.address || "",
-      postcode: p.postcode || null,
-      city: p.city || null,
-      neighbourhood: p.neighbourhood || null,
-      price: Number(p.price) || 0,
-      bedrooms: Number(p.bedrooms) || 0,
-      livingArea: Number(p.livingArea) || 0,
-      energyLabel: p.energyLabel || null,
-      objectType: p.objectType || null,
-      houseType: p.houseType || null,
-      constructionYear: p.constructionYear ? Number(p.constructionYear) : null,
-      description: p.description || null,
-      ownership: p.ownership || null,
-      vveCostsMonthly: p.vveCostsMonthly != null ? Number(p.vveCostsMonthly) : null,
-      erfpachtCostsMonthly: p.erfpachtCostsMonthly != null ? Number(p.erfpachtCostsMonthly) : null,
-      wozValue: p.wozValue != null ? Number(p.wozValue) : null,
-      hasGarden: p.hasGarden ?? null,
-      hasBalcony: p.hasBalcony ?? null,
-      hasRoofTerrace: p.hasRoofTerrace ?? null,
-      latitude: geom.coordinates[1],
-      longitude: geom.coordinates[0],
-      photos,
-      status: p.status || "Beschikbaar",
-      offeredSince: p.offeredSince || null,
-    });
-  }
+    console.log(
+      `Funda refresh: ${incoming.length} listings received from ${body.features.length} features`,
+    );
 
-  console.log(
-    `Funda refresh: ${incoming.length} listings received from ${body.features.length} features`,
-  );
+    const stats = await syncListings(incoming);
+    console.log(
+      `Funda sync: ${stats.upserted} upserted, ${stats.disappeared} disappeared, ${stats.jobsEnqueued} jobs enqueued`,
+    );
 
-  const stats = await syncListings(incoming);
-  console.log(
-    `Funda sync: ${stats.upserted} upserted, ${stats.disappeared} disappeared, ${stats.jobsEnqueued} jobs enqueued`,
-  );
+    // Rebuild cache immediately so next GET /funda is instant
+    await invalidateFundaCache();
 
-  // Rebuild cache immediately so next GET /funda is instant
-  await invalidateFundaCache();
-
-  return c.json({ ok: true, received: incoming.length, ...stats });
-});
+    return c.json({ ok: true, received: incoming.length, ...stats });
+  },
+);
 
 export default geodata;
