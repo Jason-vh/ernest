@@ -1,4 +1,5 @@
 import maplibregl from "maplibre-gl";
+import { getEstimatedClosingPrice } from "@ernest/shared";
 import type { Listing } from "@ernest/shared";
 
 function createCell(url: string): HTMLDivElement {
@@ -57,7 +58,10 @@ export function useMapPopups(deps: PopupDeps) {
     const p = feature.properties ?? {};
 
     const listPrice = Number(p.price);
-    const overbidPrice = Math.round(listPrice * 1.15);
+    const overbidPrice =
+      typeof p.url === "string"
+        ? (getEstimatedClosingPrice(listPrice, p.url) ?? listPrice)
+        : listPrice;
     const fmtOverbid = `\u20AC${overbidPrice.toLocaleString("nl-NL")}`;
     const fmtList = `\u20AC${listPrice.toLocaleString("nl-NL")}`;
     const details = [

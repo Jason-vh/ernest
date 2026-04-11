@@ -6,6 +6,7 @@ import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, ORIGIN } from "@/config";
 import { telegramApi } from "@/services/telegram";
 import { isTelegramNotificationEligible } from "@/services/telegram-notification-rules";
 import type { RouteResult } from "@/services/google-routes";
+import { getEstimatedClosingPrice } from "@ernest/shared";
 
 function formatPrice(price: number): string {
   return `\u20AC${price.toLocaleString("nl-NL")}`;
@@ -14,6 +15,7 @@ function formatPrice(price: number): string {
 function buildCaption(listing: {
   address: string;
   city: string | null;
+  url: string;
   price: number;
   livingArea: number;
   constructionYear: number | null;
@@ -23,7 +25,7 @@ function buildCaption(listing: {
   energyLabel: string | null;
   routeCentraal: RouteResult | null;
 }): string {
-  const overbidPrice = Math.round(listing.price * 1.15);
+  const overbidPrice = getEstimatedClosingPrice(listing.price, listing.url) ?? listing.price;
 
   // Summary line: price · area
   const summaryParts: string[] = [formatPrice(overbidPrice), `${listing.livingArea} m\u00B2`];
@@ -64,6 +66,7 @@ export async function handleTelegramNotify(job: Job): Promise<"completed" | "ski
       fundaId: listings.fundaId,
       address: listings.address,
       city: listings.city,
+      url: listings.url,
       price: listings.price,
       livingArea: listings.livingArea,
       constructionYear: listings.constructionYear,

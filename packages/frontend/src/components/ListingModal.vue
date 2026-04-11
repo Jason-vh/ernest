@@ -636,6 +636,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from "vue";
+import { getEstimatedClosingPrice } from "@ernest/shared";
 import type { ReactionType } from "@ernest/shared";
 import { useListingStore } from "@/composables/useListingStore";
 import { useAuth } from "@/composables/useAuth";
@@ -676,7 +677,7 @@ let prevFundaId: string | null = null;
 
 const overbidPrice = computed(() => {
   if (!listing.value) return 0;
-  return Math.round(listing.value.price * 1.15);
+  return getEstimatedClosingPrice(listing.value.price, listing.value.url) ?? listing.value.price;
 });
 
 const monthlyMortgage = computed(() => {
