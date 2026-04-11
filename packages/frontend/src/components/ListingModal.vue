@@ -256,6 +256,9 @@
                     <div class="mt-0.5 text-[11px] text-[#999]">
                       asking {{ formatPrice(listing.price) }}
                     </div>
+                    <div v-if="overbidRatePct !== null" class="mt-0.5 text-[11px] text-[#999]">
+                      incl. {{ formatPct(overbidRatePct) }} local overbid
+                    </div>
                   </div>
                 </div>
 
@@ -640,7 +643,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from "vue";
-import { getEstimatedClosingPrice } from "@ernest/shared";
+import { getEstimatedClosingPrice, getOverbidRatePctForUrl } from "@ernest/shared";
 import type { ReactionType } from "@ernest/shared";
 import { useListingStore } from "@/composables/useListingStore";
 import { useAuth } from "@/composables/useAuth";
@@ -678,6 +681,11 @@ let linkCopiedTimer: ReturnType<typeof setTimeout> | null = null;
 let saveDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 let savedFadeTimer: ReturnType<typeof setTimeout> | null = null;
 let prevFundaId: string | null = null;
+
+const overbidRatePct = computed(() => {
+  if (!listing.value) return null;
+  return getOverbidRatePctForUrl(listing.value.url);
+});
 
 const overbidPrice = computed(() => {
   if (!listing.value) return 0;
@@ -877,6 +885,13 @@ const displayDescription = computed(() => {
 
 function formatPrice(price: number): string {
   return `\u20AC${price.toLocaleString("nl-NL")}`;
+}
+
+function formatPct(value: number): string {
+  return `${value.toLocaleString("nl-NL", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}%`;
 }
 
 function copyLink() {
