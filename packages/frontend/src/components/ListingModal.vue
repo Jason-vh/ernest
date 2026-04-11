@@ -286,15 +286,19 @@
                   v-if="commuteEntries.length"
                   class="mt-4 flex flex-col gap-3.5 border-t border-black/6 pt-4"
                 >
-                  <div class="text-[11px] font-medium text-[#999]">arriving 9:00 Monday</div>
                   <div
                     v-for="entry in commuteEntries"
                     :key="entry.label"
                     class="flex flex-col gap-1.5 border-b border-black/5 pb-3.5 last:border-0 last:pb-0"
                   >
-                    <div class="text-[13px] leading-none">
-                      <span class="font-semibold text-[#111]">{{ entry.mins }} minutes</span>
-                      <span class="font-medium text-[#444]"> to {{ entry.label }}</span>
+                    <div class="flex items-baseline justify-between gap-3 text-[13px] leading-none">
+                      <div>
+                        <span class="font-semibold text-[#111]">{{ entry.mins }} minutes</span>
+                        <span class="font-medium text-[#444]"> to {{ entry.label }}</span>
+                      </div>
+                      <div class="text-right text-[10px] font-normal whitespace-nowrap text-[#aaa]">
+                        arriving 9:00 Monday
+                      </div>
                     </div>
 
                     <div
