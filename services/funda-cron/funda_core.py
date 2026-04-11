@@ -148,7 +148,6 @@ def fetch_all_listings(log=print, limit=None):
                 offering_type="buy",
                 price_min=PRICE_MIN,
                 price_max=PRICE_MAX,
-                construction_type="resale",
                 page=page,
             )
         except Exception as e:
