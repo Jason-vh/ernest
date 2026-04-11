@@ -3,17 +3,22 @@
 import json
 import re
 import time
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from funda import Funda
 
 PRICE_MIN = 450000
-PRICE_MAX = 513000
+PRICE_MAX = 600000
+MAX_ESTIMATED_CLOSING_PRICE = 590000
 MIN_BEDROOMS = 3
 MIN_LIVING_AREA = 65
 ACCEPTABLE_LABELS = {"A+++", "A++", "A+", "A", "B", "C", "D", "unknown"}
 DETAIL_WORKERS = 8
 SEARCH_LOCATION = "amsterdam"
 SEARCH_RADIUS_KM = 30
+OVERBID_RATES_PATH = Path(__file__).resolve().parents[2] / "packages" / "shared" / "overbid-rates.json"
+with OVERBID_RATES_PATH.open() as f:
+    OVERBID_RATE_PCT_BY_CITY_SLUG = json.load(f)
 
 
 def _parse_monthly_cost(value):
@@ -55,6 +60,46 @@ def _is_terminal_page_error(error):
 
     # Fallback for wrapped exceptions that only expose status in text.
     return "400" in str(error)
+
+
+def _extract_city_slug_from_url(url):
+    if not isinstance(url, str):
+        return None
+
+    match = re.search(r"/koop/([^/]+)/", url)
+    if not match:
+        return None
+
+    slug = match.group(1).strip()
+    return slug or None
+
+
+def _build_listing_url(listing, detail):
+    if detail:
+        detail_url = detail.get("url")
+        if isinstance(detail_url, str) and detail_url.strip():
+            return detail_url.strip()
+
+    listing_detail_url = listing.get("detail_url")
+    if isinstance(listing_detail_url, str) and listing_detail_url.strip():
+        return f"https://www.funda.nl{listing_detail_url}"
+
+    return None
+
+
+def _estimate_closing_price(price, url):
+    if price is None:
+        return None
+
+    slug = _extract_city_slug_from_url(url)
+    if slug is None:
+        return None
+
+    rate_pct = OVERBID_RATE_PCT_BY_CITY_SLUG.get(slug)
+    if not isinstance(rate_pct, (int, float)):
+        return None
+
+    return round(price * (1 + rate_pct / 100))
 
 
 def fetch_all_listings(log=print, limit=None):
@@ -116,6 +161,10 @@ def fetch_all_listings(log=print, limit=None):
 def filter_listings(listings, log=print):
     filtered = []
     for listing in listings:
+        price = listing.get("price")
+        if price is None or price > MAX_ESTIMATED_CLOSING_PRICE:
+            continue
+
         bedrooms = listing.get("bedrooms")
         if bedrooms is None or bedrooms < MIN_BEDROOMS:
             continue
@@ -130,7 +179,7 @@ def filter_listings(listings, log=print):
 
         filtered.append(listing)
 
-    log(f"  {len(filtered)} listings after filtering")
+    log(f"  {len(filtered)} listings after basic filtering")
     return filtered
 
 
@@ -190,6 +239,30 @@ def _extract_city(listing, detail):
                 return city
 
     return None
+
+
+def filter_affordable_listings(listings, details, log=print):
+    filtered = []
+    missing_rate_count = 0
+
+    for listing in listings:
+        price = listing.get("price")
+        url = _build_listing_url(listing, details.get(listing.get("global_id")))
+        estimated_closing_price = _estimate_closing_price(price, url)
+
+        if estimated_closing_price is None:
+            missing_rate_count += 1
+            address = listing.get("title") or listing.get("global_id") or "unknown listing"
+            log(f"  Warning: missing overbid rate for {address}, skipping listing")
+            continue
+
+        if estimated_closing_price <= MAX_ESTIMATED_CLOSING_PRICE:
+            filtered.append(listing)
+
+    log(f"  {len(filtered)} listings after affordability filtering")
+    if missing_rate_count > 0:
+        log(f"  Skipped {missing_rate_count} listings with unknown overbid rates")
+    return filtered
 
 
 def to_geojson(listings, coords, details):
@@ -281,7 +354,8 @@ def fetch_and_build_geojson(known_ids=None, limit=None, log=print):
     listings = fetch_all_listings(log, limit=limit)
     filtered = filter_listings(listings, log)
     coords, details = enrich_with_coordinates(filtered, log=log)
+    affordable = filter_affordable_listings(filtered, details, log=log)
     _fetch_woz_values(details, known_ids=known_ids, log=log)
-    geojson = to_geojson(filtered, coords, details)
+    geojson = to_geojson(affordable, coords, details)
     log(f"  {len(geojson['features'])} features with coordinates")
     return geojson
