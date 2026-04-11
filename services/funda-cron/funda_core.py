@@ -16,6 +16,7 @@ ACCEPTABLE_LABELS = {"A+++", "A++", "A+", "A", "B", "C", "D", "unknown"}
 DETAIL_WORKERS = 8
 SEARCH_LOCATION = "amsterdam"
 SEARCH_RADIUS_KM = 30
+EXCLUDED_CONSTRUCTION_TYPES = {"newly_built"}
 OVERBID_RATES_PATH = Path(__file__).resolve().parents[2] / "packages" / "shared" / "overbid-rates.json"
 with OVERBID_RATES_PATH.open() as f:
     OVERBID_RATE_PCT_BY_CITY_SLUG = json.load(f)
@@ -102,6 +103,10 @@ def _estimate_closing_price(price, url):
     return round(price * (1 + rate_pct / 100))
 
 
+def _is_excluded_construction_type(value):
+    return isinstance(value, str) and value.strip().lower() in EXCLUDED_CONSTRUCTION_TYPES
+
+
 def fetch_all_listings(log=print, limit=None):
     f = Funda(timeout=30)
     all_listings = []
@@ -120,6 +125,7 @@ def fetch_all_listings(log=print, limit=None):
                 offering_type="buy",
                 price_min=PRICE_MIN,
                 price_max=PRICE_MAX,
+                construction_type="resale",
                 page=page,
             )
         except Exception as e:
@@ -175,6 +181,9 @@ def filter_listings(listings, log=print):
 
         energy_label = listing.get("energy_label") or ""
         if energy_label not in ACCEPTABLE_LABELS:
+            continue
+
+        if _is_excluded_construction_type(listing.get("construction_type")):
             continue
 
         filtered.append(listing)
@@ -246,8 +255,12 @@ def filter_affordable_listings(listings, details, log=print):
     missing_rate_count = 0
 
     for listing in listings:
+        detail = details.get(listing.get("global_id"))
+        if detail and _is_excluded_construction_type(detail.get("construction_type")):
+            continue
+
         price = listing.get("price")
-        url = _build_listing_url(listing, details.get(listing.get("global_id")))
+        url = _build_listing_url(listing, detail)
         estimated_closing_price = _estimate_closing_price(price, url)
 
         if estimated_closing_price is None:
