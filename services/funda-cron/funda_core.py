@@ -1,6 +1,7 @@
 """Shared Funda listing fetch, filter, and GeoJSON conversion logic."""
 
 import json
+import os
 import re
 import time
 from pathlib import Path
@@ -17,7 +18,29 @@ DETAIL_WORKERS = 8
 SEARCH_LOCATION = "amsterdam"
 SEARCH_RADIUS_KM = 30
 EXCLUDED_CONSTRUCTION_TYPES = {"newly_built"}
-OVERBID_RATES_PATH = Path(__file__).resolve().parents[2] / "packages" / "shared" / "overbid-rates.json"
+
+
+def _find_overbid_rates_path():
+    env_path = os.environ.get("OVERBID_RATES_PATH")
+    if env_path:
+        path = Path(env_path).expanduser()
+        if path.is_file():
+            return path
+
+    here = Path(__file__).resolve()
+    candidates = [here.with_name("overbid-rates.json")]
+    candidates.extend(parent / "packages" / "shared" / "overbid-rates.json" for parent in here.parents)
+
+    for path in candidates:
+        if path.is_file():
+            return path
+
+    raise FileNotFoundError(
+        "Could not find overbid-rates.json. Set OVERBID_RATES_PATH or place the file next to funda_core.py."
+    )
+
+
+OVERBID_RATES_PATH = _find_overbid_rates_path()
 with OVERBID_RATES_PATH.open() as f:
     OVERBID_RATE_PCT_BY_CITY_SLUG = json.load(f)
 
