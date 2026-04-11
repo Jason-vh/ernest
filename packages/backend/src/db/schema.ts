@@ -77,6 +77,7 @@ export const listings = pgTable(
     // Core property data
     address: text("address").notNull(),
     postcode: text("postcode"),
+    city: text("city"),
     neighbourhood: text("neighbourhood"),
     price: integer("price").notNull(),
     bedrooms: integer("bedrooms").notNull(),

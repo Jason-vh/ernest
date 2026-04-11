@@ -177,6 +177,21 @@ def _fetch_woz_values(details, known_ids=None, log=print):
     return
 
 
+def _extract_city(listing, detail):
+    candidates = [
+        (detail.get("city") if detail else None),
+        listing.get("city"),
+    ]
+
+    for candidate in candidates:
+        if isinstance(candidate, str):
+            city = candidate.strip()
+            if city:
+                return city
+
+    return None
+
+
 def to_geojson(listings, coords, details):
     features = []
     for listing in listings:
@@ -220,6 +235,8 @@ def to_geojson(listings, coords, details):
             if detail_url:
                 url = f"https://www.funda.nl{detail_url}"
 
+        city = _extract_city(listing, detail)
+
         features.append(
             {
                 "type": "Feature",
@@ -235,6 +252,7 @@ def to_geojson(listings, coords, details):
                     "houseType": (detail.get("house_type") or None) if detail else None,
                     "constructionYear": listing.get("construction_year"),
                     "postcode": listing.get("postcode") or None,
+                    "city": city,
                     "neighbourhood": listing.get("neighbourhood") or None,
                     "description": (detail.get("description") or "") if detail else "",
                     "offeredSince": (detail.get("publication_date") if detail else None)

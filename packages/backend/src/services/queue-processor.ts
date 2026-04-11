@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { listings } from "@/db/schema";
 import type { Job } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { isTelegramNotificationEligible } from "@/services/telegram-notification-rules";
 
 type HandlerFn = (job: Job) => Promise<"completed" | "skipped">;
 
@@ -26,12 +27,18 @@ async function maybeEnqueueNotification(fundaId: string): Promise<void> {
   const rows = await db
     .select({
       notifiedAt: listings.notifiedAt,
+      status: listings.status,
+      disappearedAt: listings.disappearedAt,
+      routeCentraal: listings.routeCentraal,
     })
     .from(listings)
     .where(eq(listings.fundaId, fundaId));
 
   if (rows.length === 0) return;
-  if (rows[0].notifiedAt !== null) return;
+
+  const listing = rows[0];
+  if (listing.notifiedAt !== null) return;
+  if (!isTelegramNotificationEligible(listing)) return;
 
   await enqueueMany([{ type: "telegram-notify", fundaId, maxAttempts: 3 }]);
 }

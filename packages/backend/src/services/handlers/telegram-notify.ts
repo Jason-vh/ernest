@@ -4,6 +4,8 @@ import type { Job } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, ORIGIN } from "@/config";
 import { telegramApi } from "@/services/telegram";
+import { isTelegramNotificationEligible } from "@/services/telegram-notification-rules";
+import type { RouteResult } from "@/services/google-routes";
 
 function formatPrice(price: number): string {
   return `\u20AC${price.toLocaleString("nl-NL")}`;
@@ -11,6 +13,7 @@ function formatPrice(price: number): string {
 
 function buildCaption(listing: {
   address: string;
+  city: string | null;
   price: number;
   livingArea: number;
   constructionYear: number | null;
@@ -18,6 +21,7 @@ function buildCaption(listing: {
   hasBalcony: boolean | null;
   hasRoofTerrace: boolean | null;
   energyLabel: string | null;
+  routeCentraal: RouteResult | null;
 }): string {
   const overbidPrice = Math.round(listing.price * 1.15);
 
@@ -34,7 +38,14 @@ function buildCaption(listing: {
   if (listing.hasBalcony) extras.push("Balcony");
   if (listing.hasRoofTerrace) extras.push("Roof terrace");
 
+  const locationParts: string[] = [];
+  if (listing.city) locationParts.push(listing.city);
+  if (listing.routeCentraal !== null) {
+    locationParts.push(`${listing.routeCentraal.duration} min to Amsterdam Centraal`);
+  }
+
   const lines: string[] = [`<b>${escapeHtml(listing.address)}</b>`];
+  if (locationParts.length > 0) lines.push(escapeHtml(locationParts.join(" \u00B7 ")));
   lines.push(summaryParts.join(" \u00B7 "));
   if (extras.length > 0) lines.push(extras.join(" \u00B7 "));
 
@@ -51,8 +62,8 @@ export async function handleTelegramNotify(job: Job): Promise<"completed" | "ski
   const rows = await db
     .select({
       fundaId: listings.fundaId,
-      url: listings.url,
       address: listings.address,
+      city: listings.city,
       price: listings.price,
       livingArea: listings.livingArea,
       constructionYear: listings.constructionYear,
@@ -63,6 +74,7 @@ export async function handleTelegramNotify(job: Job): Promise<"completed" | "ski
       photos: listings.photos,
       status: listings.status,
       disappearedAt: listings.disappearedAt,
+      routeCentraal: listings.routeCentraal,
     })
     .from(listings)
     .where(eq(listings.fundaId, job.fundaId));
@@ -70,9 +82,7 @@ export async function handleTelegramNotify(job: Job): Promise<"completed" | "ski
   if (rows.length === 0) return "skipped";
   const listing = rows[0];
 
-  // Skip if listing is no longer active
-  if (listing.disappearedAt !== null) return "skipped";
-  if (listing.status !== "Beschikbaar" && listing.status !== "") return "skipped";
+  if (!isTelegramNotificationEligible(listing)) return "skipped";
 
   const caption = buildCaption(listing);
   const photos = listing.photos ?? [];

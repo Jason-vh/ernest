@@ -278,6 +278,7 @@ geodata.post("/internal/refresh-funda", bodyLimit({ maxSize: 10 * 1024 * 1024 })
       url: p.url || "",
       address: p.address || "",
       postcode: p.postcode || null,
+      city: p.city || null,
       neighbourhood: p.neighbourhood || null,
       price: Number(p.price) || 0,
       bedrooms: Number(p.bedrooms) || 0,

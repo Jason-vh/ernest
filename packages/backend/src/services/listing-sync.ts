@@ -38,6 +38,7 @@ async function upsertListing(listing: NewListing, buurt: BuurtStats | null) {
         url: listing.url,
         address: listing.address,
         postcode: listing.postcode,
+        ...(listing.city != null ? { city: listing.city } : {}),
         neighbourhood: listing.neighbourhood,
         price: listing.price,
         bedrooms: listing.bedrooms,
