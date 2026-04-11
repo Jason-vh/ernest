@@ -60,6 +60,7 @@ async function queryFundaListings(): Promise<Listing[]> {
       url: listings.url,
       address: listings.address,
       postcode: listings.postcode,
+      city: listings.city,
       neighbourhood: listings.neighbourhood,
       price: listings.price,
       bedrooms: listings.bedrooms,

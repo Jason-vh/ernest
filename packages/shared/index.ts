@@ -32,6 +32,7 @@ export interface Listing {
   url: string;
   address: string;
   postcode: string | null;
+  city: string | null;
   neighbourhood: string | null;
   price: number;
   bedrooms: number;

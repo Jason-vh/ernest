@@ -236,9 +236,17 @@
                     <h2 class="m-0 text-[17px] font-semibold leading-tight text-[#1a1a1a]">
                       {{ listing.address }}
                     </h2>
-                    <p v-if="listing.neighbourhood" class="m-0 mt-1 text-[13px] text-[#888]">
-                      {{ listing.neighbourhood
-                      }}<span v-if="listing.postcode"> &middot; {{ listing.postcode }}</span>
+                    <p
+                      v-if="listing.neighbourhood || listing.city || listing.postcode"
+                      class="m-0 mt-1 text-[13px] text-[#888]"
+                    >
+                      <span v-if="listing.neighbourhood">{{ listing.neighbourhood }}</span>
+                      <span v-if="listing.neighbourhood && listing.city"> &middot; </span>
+                      <span v-if="listing.city">{{ listing.city }}</span>
+                      <span v-if="(listing.neighbourhood || listing.city) && listing.postcode">
+                        &middot;
+                      </span>
+                      <span v-if="listing.postcode">{{ listing.postcode }}</span>
                     </p>
                   </div>
                   <div class="flex-shrink-0 text-right">
