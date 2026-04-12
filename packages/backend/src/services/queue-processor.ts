@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { listings } from "@/db/schema";
 import type { Job } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { TelegramRateLimitError } from "@/services/telegram";
 import { isTelegramNotificationEligible } from "@/services/telegram-notification-rules";
 
 type HandlerFn = (job: Job) => Promise<"completed" | "skipped">;
@@ -19,7 +20,7 @@ const handlers: Record<string, HandlerFn> = {
 
 const RATE_LIMITS: Record<string, number> = {
   "compute-routes": 200,
-  "telegram-notify": 200,
+  "telegram-notify": 1500,
   "translate-description": 500,
 };
 
@@ -48,6 +49,7 @@ export function startQueueProcessor(): void {
 
   const poll = async () => {
     let completedSinceFlush = 0;
+    const blockedUntil: Record<string, number> = {};
 
     for (;;) {
       // eslint-disable-line no-await-in-loop -- sequential poll loop
@@ -70,6 +72,11 @@ export function startQueueProcessor(): void {
           continue;
         }
 
+        const blockUntil = blockedUntil[job.type] ?? 0;
+        if (blockUntil > Date.now()) {
+          await new Promise((resolve) => setTimeout(resolve, blockUntil - Date.now())); // eslint-disable-line no-await-in-loop
+        }
+
         try {
           const result = await handler(job); // eslint-disable-line no-await-in-loop
           if (result === "completed") {
@@ -86,11 +93,24 @@ export function startQueueProcessor(): void {
             console.log(`Job ${job.type}/${job.fundaId}: skipped`);
           }
         } catch (err) {
-          const message = err instanceof Error ? err.message : String(err);
-          await failJob(job.id, message); // eslint-disable-line no-await-in-loop
-          console.warn(
-            `Job ${job.type}/${job.fundaId}: failed (attempt ${job.attempts}) — ${message}`,
-          );
+          if (err instanceof TelegramRateLimitError) {
+            const retryAfterSec = err.retryAfterSec + 1;
+            blockedUntil[job.type] = Date.now() + retryAfterSec * 1000;
+            // eslint-disable-next-line no-await-in-loop
+            await failJob(job.id, err.message, {
+              retryAfterSec,
+              consumeAttempt: false,
+            });
+            console.warn(
+              `Job ${job.type}/${job.fundaId}: rate limited by Telegram, retrying in ${retryAfterSec}s`,
+            );
+          } else {
+            const message = err instanceof Error ? err.message : String(err);
+            await failJob(job.id, message); // eslint-disable-line no-await-in-loop
+            console.warn(
+              `Job ${job.type}/${job.fundaId}: failed (attempt ${job.attempts}) — ${message}`,
+            );
+          }
         }
 
         // Flush cache every 5 completed jobs

@@ -111,8 +111,14 @@ export async function skipJob(id: string, reason: string): Promise<void> {
     .where(eq(jobs.id, id));
 }
 
-export async function failJob(id: string, error: string): Promise<void> {
+interface FailJobOptions {
+  retryAfterSec?: number;
+  consumeAttempt?: boolean;
+}
+
+export async function failJob(id: string, error: string, options?: FailJobOptions): Promise<void> {
   const truncated = error.slice(0, 1000);
+  const consumeAttempt = options?.consumeAttempt ?? true;
 
   // Fetch current state
   const rows = await db
@@ -123,13 +129,16 @@ export async function failJob(id: string, error: string): Promise<void> {
   if (rows.length === 0) return;
   const job = rows[0];
 
-  if (job.attempts < job.maxAttempts) {
+  const attempts = consumeAttempt ? job.attempts : Math.max(0, job.attempts - 1);
+
+  if (attempts < job.maxAttempts) {
     // Exponential backoff: 30s, 120s, 480s
-    const delaySec = 30 * Math.pow(4, job.attempts - 1);
+    const delaySec = options?.retryAfterSec ?? 30 * Math.pow(4, Math.max(0, job.attempts - 1));
     await db
       .update(jobs)
       .set({
         status: "pending",
+        attempts,
         lastError: truncated,
         runAfter: sql`now() + (${delaySec} * interval '1 second')`,
         updatedAt: sql`now()`,
