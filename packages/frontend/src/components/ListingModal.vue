@@ -1,8 +1,19 @@
 <template>
   <Teleport to="body">
+    <Transition name="photo-viewer">
+      <PhotoViewer
+        v-if="listing && photoFullscreenOpen"
+        :key="listing.fundaId"
+        :photos="listing.photos"
+        :initial-index="photoViewerIndex"
+        @close="closePhotoViewer"
+        @select="onPhotoViewerSelect"
+      />
+    </Transition>
+
     <Transition name="listing-modal">
       <div
-        v-if="listing"
+        v-if="listing && !photoFullscreenOpen"
         class="fixed inset-0 z-100 flex flex-col items-center justify-end bg-black/20 backdrop-blur-[6px] sm:justify-center"
         @click.self="close"
       >
@@ -153,11 +164,7 @@
                     </button>
                   </div>
                 </div>
-                <PhotoGallery
-                  :photos="listing.photos"
-                  :initial-fullscreen-index="initialPhotoIndex"
-                  @fullscreen-change="onFullscreenChange"
-                />
+                <PhotoGallery :photos="listing.photos" @open-photo="openPhotoViewer" />
               </div>
 
               <!-- Top bar fallback when no photos -->
@@ -650,6 +657,7 @@ import { useAuth } from "@/composables/useAuth";
 import { flyTo } from "@/composables/useMapPosition";
 import { AMSTERDAM_CENTRAAL } from "@/geo/constants";
 import PhotoGallery from "@/components/PhotoGallery.vue";
+import PhotoViewer from "@/components/PhotoViewer.vue";
 import ListingMiniMap from "@/components/ListingMiniMap.vue";
 import fundaLogo from "@/assets/funda.svg";
 
@@ -668,7 +676,7 @@ const { user } = useAuth();
 const listing = selectedListing;
 const isCluster = computed(() => clusterListingIds.value.length > 1);
 const photoFullscreenOpen = ref(false);
-const initialPhotoIndex = ref<number | undefined>();
+const photoViewerIndex = ref(0);
 const descExpanded = ref(false);
 const modalRef = ref<HTMLDivElement>();
 const ownNoteText = ref("");
@@ -932,8 +940,7 @@ function showOnMap() {
   flyTo(longitude, latitude);
 }
 
-function onFullscreenChange(index: number | null) {
-  photoFullscreenOpen.value = index != null;
+function updatePhotoUrl(index: number | null) {
   const params = new URLSearchParams(window.location.search);
   if (index != null) {
     params.set("photo", String(index));
@@ -943,6 +950,25 @@ function onFullscreenChange(index: number | null) {
   const search = params.toString();
   const url = search ? `${window.location.pathname}?${search}` : window.location.pathname;
   history.replaceState(null, "", url);
+}
+
+function openPhotoViewer(index: number) {
+  photoViewerIndex.value = index;
+  photoFullscreenOpen.value = true;
+  updatePhotoUrl(index);
+}
+
+function closePhotoViewer() {
+  photoFullscreenOpen.value = false;
+  updatePhotoUrl(null);
+  nextTick(() => {
+    modalRef.value?.focus();
+  });
+}
+
+function onPhotoViewerSelect(index: number) {
+  photoViewerIndex.value = index;
+  updatePhotoUrl(index);
 }
 
 // Find own note and track if it changed
@@ -1018,10 +1044,16 @@ watch(
     const photoParam = new URLSearchParams(window.location.search).get("photo");
     if (v && photoParam != null) {
       const idx = parseInt(photoParam, 10);
-      initialPhotoIndex.value =
-        !Number.isNaN(idx) && idx >= 0 && idx < v.photos.length ? idx : undefined;
+      if (!Number.isNaN(idx) && idx >= 0 && idx < v.photos.length) {
+        photoViewerIndex.value = idx;
+        photoFullscreenOpen.value = true;
+      } else {
+        photoViewerIndex.value = 0;
+        photoFullscreenOpen.value = false;
+      }
     } else {
-      initialPhotoIndex.value = undefined;
+      photoViewerIndex.value = 0;
+      photoFullscreenOpen.value = false;
     }
     noteSaving.value = false;
     noteSaved.value = false;
@@ -1048,7 +1080,7 @@ watch(
 // Focus the modal panel itself when it opens (keeps focus trap working without
 // showing a visible focus ring on the first button/image)
 watch(listing, (v, oldV) => {
-  if (v && !oldV) {
+  if (v && !oldV && !photoFullscreenOpen.value) {
     nextTick(() => {
       modalRef.value?.focus();
     });
@@ -1057,8 +1089,9 @@ watch(listing, (v, oldV) => {
 
 // Global keyboard listener (Escape to close, Left/Right for cluster nav)
 function onGlobalKeydown(e: KeyboardEvent) {
+  if (photoFullscreenOpen.value) return;
   if (e.key === "Escape") close();
-  if (isCluster.value && !photoFullscreenOpen.value) {
+  if (isCluster.value) {
     if (e.key === "ArrowLeft") navigateCluster(-1);
     if (e.key === "ArrowRight") navigateCluster(1);
   }
@@ -1232,5 +1265,15 @@ function trapFocus(e: KeyboardEvent) {
     transform: scale(0.96) translateY(8px);
     opacity: 0;
   }
+}
+
+.photo-viewer-enter-active,
+.photo-viewer-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.photo-viewer-enter-from,
+.photo-viewer-leave-to {
+  opacity: 0;
 }
 </style>

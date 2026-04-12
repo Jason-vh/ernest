@@ -1,6 +1,6 @@
 <template>
   <!-- Single photo: full-width hero -->
-  <button v-if="photos.length === 1" class="hero-single" @click="openFullscreen(0)">
+  <button v-if="photos.length === 1" class="hero-single" @click="emit('open-photo', 0)">
     <img :src="photos[0]" alt="Photo 1" />
   </button>
 
@@ -9,7 +9,11 @@
     <div class="masonry-track">
       <template v-for="(col, ci) in columns" :key="ci">
         <!-- Single full-height photo -->
-        <button v-if="col.length === 1" class="masonry-full" @click="openFullscreen(col[0].index)">
+        <button
+          v-if="col.length === 1"
+          class="masonry-full"
+          @click="emit('open-photo', col[0].index)"
+        >
           <img :src="col[0].src" :alt="`Photo ${col[0].index + 1}`" loading="lazy" />
         </button>
         <!-- Pair of half-height photos stacked -->
@@ -18,7 +22,7 @@
             v-for="item in col"
             :key="item.index"
             class="masonry-half"
-            @click="openFullscreen(item.index)"
+            @click="emit('open-photo', item.index)"
           >
             <img :src="item.src" :alt="`Photo ${item.index + 1}`" loading="lazy" />
           </button>
@@ -26,105 +30,18 @@
       </template>
     </div>
   </div>
-
-  <!-- Fullscreen overlay -->
-  <Teleport to="body">
-    <Transition name="fullscreen">
-      <div v-if="fullscreenOpen" class="fixed inset-0 z-200 bg-black/92">
-        <!-- Embla carousel -->
-        <div ref="emblaRef" class="h-full w-full overflow-hidden">
-          <div class="embla__container">
-            <div v-for="(src, i) in photos" :key="i" class="embla__slide" @click="closeFullscreen">
-              <img
-                :src="src"
-                :alt="`Photo ${i + 1}`"
-                class="max-h-[90vh] max-w-[92vw] rounded-sm object-contain"
-                @click.stop
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Close -->
-        <button
-          class="absolute top-4 right-4 z-10 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-none bg-white/12 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
-          @click="closeFullscreen"
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
-        </button>
-
-        <!-- Nav arrows -->
-        <button
-          v-if="canScrollPrev"
-          class="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
-          @click.stop="scrollPrev"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </button>
-        <button
-          v-if="canScrollNext"
-          class="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
-          @click.stop="scrollNext"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M9 18l6-6-6-6" />
-          </svg>
-        </button>
-
-        <!-- Counter -->
-        <div
-          class="absolute bottom-5 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/50 px-3.5 py-1.5 text-[13px] tabular-nums text-white/80 backdrop-blur-sm"
-        >
-          {{ selectedIndex + 1 }} / {{ photos.length }}
-        </div>
-      </div>
-    </Transition>
-  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
-import EmblaCarousel, { type EmblaCarouselType } from "embla-carousel";
+import { computed } from "vue";
 
 interface PhotoItem {
   src: string;
   index: number;
 }
 
-const props = defineProps<{ photos: string[]; initialFullscreenIndex?: number }>();
-const emit = defineEmits<{ "fullscreen-change": [index: number | null] }>();
-
-const emblaRef = ref<HTMLDivElement>();
-const fullscreenOpen = ref(false);
-const selectedIndex = ref(0);
-const canScrollPrev = ref(false);
-const canScrollNext = ref(false);
-let embla: EmblaCarouselType | null = null;
+const props = defineProps<{ photos: string[] }>();
+const emit = defineEmits<{ "open-photo": [index: number] }>();
 
 // Group photos into columns: full (1 photo) | pair (2 photos) | full | pair ...
 const columns = computed(() => {
@@ -145,73 +62,6 @@ const columns = computed(() => {
     isFull = !isFull;
   }
   return cols;
-});
-
-function updateScrollState() {
-  if (!embla) return;
-  selectedIndex.value = embla.selectedScrollSnap();
-  canScrollPrev.value = embla.canScrollPrev();
-  canScrollNext.value = embla.canScrollNext();
-  emit("fullscreen-change", selectedIndex.value);
-}
-
-function scrollPrev() {
-  embla?.scrollPrev();
-}
-
-function scrollNext() {
-  embla?.scrollNext();
-}
-
-function onKeydown(e: KeyboardEvent) {
-  if (!fullscreenOpen.value || !embla) return;
-  if (e.key === "ArrowLeft") embla.scrollPrev();
-  else if (e.key === "ArrowRight") embla.scrollNext();
-  else if (e.key === "Escape") {
-    e.stopImmediatePropagation();
-    closeFullscreen();
-  }
-}
-
-document.addEventListener("keydown", onKeydown);
-onBeforeUnmount(() => {
-  document.removeEventListener("keydown", onKeydown);
-  embla?.destroy();
-});
-
-let previouslyFocused: HTMLElement | null = null;
-
-function openFullscreen(index: number) {
-  previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-  selectedIndex.value = index;
-  fullscreenOpen.value = true;
-  emit("fullscreen-change", index);
-  nextTick(() => {
-    if (!emblaRef.value) return;
-    embla = EmblaCarousel(emblaRef.value, { loop: false, startIndex: index });
-    embla.on("select", updateScrollState);
-    updateScrollState();
-  });
-}
-
-function closeFullscreen() {
-  embla?.destroy();
-  embla = null;
-  fullscreenOpen.value = false;
-  emit("fullscreen-change", null);
-  nextTick(() => {
-    if (previouslyFocused) {
-      previouslyFocused.focus();
-    } else {
-      document.querySelector<HTMLElement>("[role='dialog']")?.focus();
-    }
-  });
-}
-
-onMounted(() => {
-  if (props.initialFullscreenIndex != null) {
-    openFullscreen(props.initialFullscreenIndex);
-  }
 });
 </script>
 
@@ -313,28 +163,5 @@ onMounted(() => {
 
 .masonry-half:hover img {
   filter: brightness(0.92);
-}
-
-.embla__container {
-  display: flex;
-  height: 100%;
-}
-
-.embla__slide {
-  flex: 0 0 100%;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.fullscreen-enter-active,
-.fullscreen-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.fullscreen-enter-from,
-.fullscreen-leave-to {
-  opacity: 0;
 }
 </style>
