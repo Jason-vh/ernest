@@ -22,7 +22,6 @@ function buildCaption(listing: {
   hasGarden: boolean | null;
   hasBalcony: boolean | null;
   hasRoofTerrace: boolean | null;
-  energyLabel: string | null;
   routeCentraal: RouteResult | null;
 }): string {
   const overbidPrice = getEstimatedClosingPrice(listing.price, listing.url) ?? listing.price;
@@ -33,20 +32,19 @@ function buildCaption(listing: {
   // Extra facts
   const extras: string[] = [];
   if (listing.constructionYear) extras.push(String(listing.constructionYear));
-  if (listing.energyLabel && listing.energyLabel !== "unknown") {
-    extras.push(`Label ${listing.energyLabel}`);
-  }
   if (listing.hasGarden) extras.push("Garden");
   if (listing.hasBalcony) extras.push("Balcony");
   if (listing.hasRoofTerrace) extras.push("Roof terrace");
 
+  const firstLineParts: string[] = [listing.address];
+  if (listing.city) firstLineParts.push(listing.city);
+
   const locationParts: string[] = [];
-  if (listing.city) locationParts.push(listing.city);
   if (listing.routeCentraal !== null) {
     locationParts.push(`${listing.routeCentraal.duration} min to Amsterdam Centraal`);
   }
 
-  const lines: string[] = [`<b>${escapeHtml(listing.address)}</b>`];
+  const lines: string[] = [`<b>${escapeHtml(firstLineParts.join(" \u00B7 "))}</b>`];
   if (locationParts.length > 0) lines.push(escapeHtml(locationParts.join(" \u00B7 ")));
   lines.push(summaryParts.join(" \u00B7 "));
   if (extras.length > 0) lines.push(extras.join(" \u00B7 "));
@@ -73,7 +71,6 @@ export async function handleTelegramNotify(job: Job): Promise<"completed" | "ski
       hasGarden: listings.hasGarden,
       hasBalcony: listings.hasBalcony,
       hasRoofTerrace: listings.hasRoofTerrace,
-      energyLabel: listings.energyLabel,
       photos: listings.photos,
       status: listings.status,
       disappearedAt: listings.disappearedAt,
