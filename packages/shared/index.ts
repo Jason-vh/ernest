@@ -42,6 +42,7 @@ export interface ListingViewingInfo {
 
 export interface ActivityListing {
   fundaId: string;
+  url: string;
   address: string;
   city: string | null;
   price: number;

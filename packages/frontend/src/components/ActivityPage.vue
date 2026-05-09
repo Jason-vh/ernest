@@ -62,7 +62,7 @@
                   <div class="mt-0.5 truncate text-[12px] text-[#888]">
                     <span v-if="item.city">{{ item.city }}</span>
                     <span v-if="item.city"> &middot; </span>
-                    <span>{{ formatPrice(item.price) }}</span>
+                    <span>{{ formatPrice(estimatedPrice(item)) }}</span>
                   </div>
                   <div
                     v-if="item.reaction || item.viewing"
@@ -133,6 +133,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import type { ActivityListing } from "@ernest/shared";
+import { getEstimatedClosingPrice } from "@ernest/shared";
 import { fetchActivity } from "@/api/client";
 
 const items = ref<ActivityListing[]>([]);
@@ -176,6 +177,10 @@ function formatViewing(iso: string): string {
 
 function formatPrice(price: number): string {
   return `€${price.toLocaleString("nl-NL")}`;
+}
+
+function estimatedPrice(item: ActivityListing): number {
+  return getEstimatedClosingPrice(item.price, item.url) ?? item.price;
 }
 
 function dayKey(iso: string): string {
