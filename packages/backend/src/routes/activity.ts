@@ -1,115 +1,73 @@
 import { Hono } from "hono";
 import { eq, isNull, and, or, desc } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import { listings, listingReactions, listingViewings, users } from "@/db/schema";
-import type { ActivityEvent } from "@ernest/shared";
+import type { ActivityListing, ReactionType } from "@ernest/shared";
 
 const activity = new Hono();
 
-const FEED_LIMIT = 200;
-
-function firstPhoto(photos: string[] | null | undefined): string | null {
-  if (!photos || photos.length === 0) return null;
-  return photos[0];
-}
+const FEED_LIMIT = 100;
 
 activity.get("/", async (c) => {
-  const activeListing = and(
-    isNull(listings.disappearedAt),
-    or(eq(listings.status, "Beschikbaar"), eq(listings.status, "")),
-  );
+  const reactionUser = alias(users, "reaction_user");
+  const viewingUser = alias(users, "viewing_user");
 
-  const listedRows = await db
+  const rows = await db
     .select({
       fundaId: listings.fundaId,
       address: listings.address,
       city: listings.city,
       price: listings.price,
       photos: listings.photos,
-      at: listings.createdAt,
+      createdAt: listings.createdAt,
+      reactionType: listingReactions.reaction,
+      reactionBy: reactionUser.username,
+      reactionAt: listingReactions.changedAt,
+      viewingScheduledAt: listingViewings.scheduledAt,
+      viewingBy: viewingUser.username,
+      viewingUpdatedAt: listingViewings.updatedAt,
     })
     .from(listings)
-    .where(activeListing)
+    .leftJoin(listingReactions, eq(listings.fundaId, listingReactions.fundaId))
+    .leftJoin(reactionUser, eq(listingReactions.changedBy, reactionUser.id))
+    .leftJoin(listingViewings, eq(listings.fundaId, listingViewings.fundaId))
+    .leftJoin(viewingUser, eq(listingViewings.scheduledBy, viewingUser.id))
+    .where(
+      and(
+        isNull(listings.disappearedAt),
+        or(eq(listings.status, "Beschikbaar"), eq(listings.status, "")),
+      ),
+    )
     .orderBy(desc(listings.createdAt))
     .limit(FEED_LIMIT);
 
-  const favouriteRows = await db
-    .select({
-      fundaId: listings.fundaId,
-      address: listings.address,
-      city: listings.city,
-      price: listings.price,
-      photos: listings.photos,
-      at: listingReactions.changedAt,
-      by: users.username,
-    })
-    .from(listingReactions)
-    .innerJoin(listings, eq(listingReactions.fundaId, listings.fundaId))
-    .innerJoin(users, eq(listingReactions.changedBy, users.id))
-    .where(and(activeListing, eq(listingReactions.reaction, "favourite")))
-    .orderBy(desc(listingReactions.changedAt))
-    .limit(FEED_LIMIT);
+  const items: ActivityListing[] = rows.map((r) => ({
+    fundaId: r.fundaId,
+    address: r.address,
+    city: r.city,
+    price: r.price,
+    photo: r.photos && r.photos.length > 0 ? r.photos[0] : null,
+    createdAt: r.createdAt.toISOString(),
+    reaction:
+      r.reactionType && r.reactionBy && r.reactionAt
+        ? {
+            type: r.reactionType as ReactionType,
+            by: r.reactionBy,
+            at: r.reactionAt.toISOString(),
+          }
+        : null,
+    viewing:
+      r.viewingScheduledAt && r.viewingBy
+        ? {
+            scheduledAt: r.viewingScheduledAt.toISOString(),
+            by: r.viewingBy,
+            at: (r.viewingUpdatedAt ?? r.viewingScheduledAt).toISOString(),
+          }
+        : null,
+  }));
 
-  const viewingRows = await db
-    .select({
-      fundaId: listings.fundaId,
-      address: listings.address,
-      city: listings.city,
-      price: listings.price,
-      photos: listings.photos,
-      at: listingViewings.updatedAt,
-      by: users.username,
-      scheduledAt: listingViewings.scheduledAt,
-    })
-    .from(listingViewings)
-    .innerJoin(listings, eq(listingViewings.fundaId, listings.fundaId))
-    .innerJoin(users, eq(listingViewings.scheduledBy, users.id))
-    .where(activeListing)
-    .orderBy(desc(listingViewings.updatedAt))
-    .limit(FEED_LIMIT);
-
-  const events: ActivityEvent[] = [];
-
-  for (const r of listedRows) {
-    events.push({
-      type: "listed",
-      at: r.at.toISOString(),
-      fundaId: r.fundaId,
-      address: r.address,
-      city: r.city,
-      price: r.price,
-      photo: firstPhoto(r.photos),
-    });
-  }
-  for (const r of favouriteRows) {
-    events.push({
-      type: "favourited",
-      at: r.at.toISOString(),
-      fundaId: r.fundaId,
-      address: r.address,
-      city: r.city,
-      price: r.price,
-      photo: firstPhoto(r.photos),
-      by: r.by,
-    });
-  }
-  for (const r of viewingRows) {
-    events.push({
-      type: "viewing-scheduled",
-      at: r.at.toISOString(),
-      fundaId: r.fundaId,
-      address: r.address,
-      city: r.city,
-      price: r.price,
-      photo: firstPhoto(r.photos),
-      by: r.by,
-      scheduledAt: r.scheduledAt.toISOString(),
-    });
-  }
-
-  events.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
-
-  return c.json(events.slice(0, FEED_LIMIT));
+  return c.json(items);
 });
 
 export default activity;

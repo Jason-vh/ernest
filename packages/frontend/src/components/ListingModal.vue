@@ -530,7 +530,7 @@
                     <input
                       v-model="viewingDateInput"
                       type="datetime-local"
-                      class="mt-2 w-full rounded-lg border border-black/10 bg-white/80 px-3 py-2 font-inherit text-[13px] text-[#333] outline-none focus:border-black/20 focus:bg-white"
+                      class="viewing-date-input mt-2 block w-full min-w-0 max-w-full rounded-lg border border-black/10 bg-white/80 px-3 py-2 font-inherit text-[14px] text-[#333] outline-none focus:border-black/20 focus:bg-white"
                     />
                     <textarea
                       v-model="viewingNoteInput"
@@ -1370,6 +1370,19 @@ function trapFocus(e: KeyboardEvent) {
   background: rgba(220, 38, 38, 0.1);
   color: #b91c1c;
   border-color: rgba(220, 38, 38, 0.2);
+}
+
+/* Reset iOS Safari's oversized native datetime-local rendering */
+.viewing-date-input {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  line-height: 1.4;
+}
+
+.viewing-date-input::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.4em;
 }
 
 .reaction-btn {

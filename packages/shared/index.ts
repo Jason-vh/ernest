@@ -40,37 +40,25 @@ export interface ListingViewingInfo {
   updatedAt: string;
 }
 
-export type ActivityEvent =
-  | {
-      type: "listed";
-      at: string;
-      fundaId: string;
-      address: string;
-      city: string | null;
-      price: number;
-      photo: string | null;
-    }
-  | {
-      type: "favourited";
-      at: string;
-      fundaId: string;
-      address: string;
-      city: string | null;
-      price: number;
-      photo: string | null;
-      by: string;
-    }
-  | {
-      type: "viewing-scheduled";
-      at: string;
-      fundaId: string;
-      address: string;
-      city: string | null;
-      price: number;
-      photo: string | null;
-      by: string;
-      scheduledAt: string;
-    };
+export interface ActivityListing {
+  fundaId: string;
+  address: string;
+  city: string | null;
+  price: number;
+  photo: string | null;
+  /** When the listing first appeared in our system */
+  createdAt: string;
+  reaction: {
+    type: ReactionType;
+    by: string;
+    at: string;
+  } | null;
+  viewing: {
+    scheduledAt: string;
+    by: string;
+    at: string;
+  } | null;
+}
 
 /** The shape returned by GET /api/funda — all listing fields except lifecycle timestamps. */
 export interface Listing {
