@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import { useRoute } from "vue-router";
 import Legend from "@/components/Legend.vue";
 
@@ -40,9 +40,17 @@ import AuthButton from "@/components/AuthButton.vue";
 import AuthModal from "@/components/AuthModal.vue";
 import ListingModal from "@/components/ListingModal.vue";
 import { useAuth } from "@/composables/useAuth";
+import { useListingStore } from "@/composables/useListingStore";
 
 const route = useRoute();
 const { showAuthModal } = useAuth();
+const { syncFromUrl } = useListingStore();
 
 const isMapRoute = computed(() => route.path === "/");
+
+// Sync the listing modal when navigating between routes (e.g. activity → map)
+watch(
+  () => route.fullPath,
+  () => syncFromUrl(),
+);
 </script>

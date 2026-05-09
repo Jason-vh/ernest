@@ -139,6 +139,26 @@ window.addEventListener("popstate", () => {
   pushedState = false;
 });
 
+/**
+ * Sync the store from the current URL — for vue-router navigations
+ * (e.g. clicking a listing on the activity page) that don't go through
+ * selectListing/popstate.
+ */
+function syncFromUrl() {
+  const param = new URLSearchParams(window.location.search).get("listing");
+  if (param) {
+    if (selectedFundaId.value !== param) {
+      selectedFundaId.value = param;
+      // Re-arm the deep-link so MapView flies to the listing on next mount
+      deepLinkedId = param;
+      pushedState = false;
+    }
+  } else if (selectedFundaId.value !== null) {
+    selectedFundaId.value = null;
+    pushedState = false;
+  }
+}
+
 function setListings(items: Listing[]) {
   const map = new Map<string, Listing>();
   for (const item of items) {
@@ -313,5 +333,6 @@ export function useListingStore() {
     setViewing,
     clearViewing,
     findColocatedIds,
+    syncFromUrl,
   };
 }
