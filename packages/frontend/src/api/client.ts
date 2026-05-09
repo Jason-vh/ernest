@@ -1,5 +1,5 @@
 import type { TransitStop } from "@/types/transit";
-import type { ActivityListing, Listing, ReactionType } from "@ernest/shared";
+import type { ActivityListing, Listing, ReactionType, UpcomingViewing } from "@ernest/shared";
 
 export async function fetchStations(): Promise<TransitStop[]> {
   const res = await fetch("/api/stations");
@@ -82,5 +82,11 @@ export async function deleteViewing(fundaId: string): Promise<void> {
 export async function fetchActivity(): Promise<ActivityListing[]> {
   const res = await fetch("/api/activity");
   if (!res.ok) throw new Error(`Failed to fetch activity: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchUpcomingViewings(): Promise<UpcomingViewing[]> {
+  const res = await fetch("/api/viewings/upcoming");
+  if (!res.ok) throw new Error(`Failed to fetch upcoming viewings: ${res.status}`);
   return res.json();
 }

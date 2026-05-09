@@ -10,6 +10,7 @@ import geodata, { loadData } from "@/routes/geodata";
 import auth from "@/routes/auth";
 import listingsRouter from "@/routes/listings";
 import activity from "@/routes/activity";
+import viewings from "@/routes/viewings";
 import { initDb } from "@/db";
 import { resetStaleJobs } from "@/services/job-queue";
 import { startQueueProcessor } from "@/services/queue-processor";
@@ -65,6 +66,7 @@ app.route("/api", geodata);
 app.route("/api/auth", auth);
 app.route("/api/listings", listingsRouter);
 app.route("/api/activity", activity);
+app.route("/api/viewings", viewings);
 
 // Serve frontend static files in production
 const distDir = path.resolve(import.meta.dir, "../../frontend/dist");

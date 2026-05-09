@@ -40,6 +40,18 @@ export interface ListingViewingInfo {
   updatedAt: string;
 }
 
+export interface UpcomingViewing {
+  fundaId: string;
+  url: string;
+  address: string;
+  city: string | null;
+  price: number;
+  photo: string | null;
+  scheduledAt: string;
+  note: string | null;
+  scheduledBy: string;
+}
+
 export interface ActivityListing {
   fundaId: string;
   url: string;

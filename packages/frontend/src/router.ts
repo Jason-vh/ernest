@@ -11,6 +11,10 @@ const router = createRouter({
       component: () => import("@/components/ActivityPage.vue"),
     },
     {
+      path: "/viewings",
+      component: () => import("@/components/ViewingsPage.vue"),
+    },
+    {
       path: "/manage",
       component: () => import("@/components/ManagePage.vue"),
       beforeEnter: async () => {
