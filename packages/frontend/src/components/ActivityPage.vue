@@ -42,15 +42,19 @@
                 v-for="item in group.items"
                 :key="item.fundaId"
                 :to="{ path: '/', query: { listing: item.fundaId } }"
-                class="flex items-start gap-3 border-b border-black/5 px-4 py-3 no-underline last:border-0 transition-colors hover:bg-black/3"
+                class="activity-row flex items-start gap-3 border-b border-black/5 px-4 py-3 no-underline last:border-0 transition-colors hover:bg-black/3"
+                :class="{
+                  'activity-row--favourited': item.reaction?.type === 'favourite',
+                  'activity-row--discarded': item.reaction?.type === 'discarded',
+                }"
               >
                 <div
-                  class="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-[#eee] bg-cover bg-center"
+                  class="activity-photo h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-[#eee] bg-cover bg-center"
                   :style="item.photo ? { backgroundImage: `url(${item.photo})` } : null"
                 ></div>
                 <div class="min-w-0 flex-1">
                   <div class="flex items-baseline justify-between gap-2 text-[13px] leading-snug">
-                    <span class="truncate font-semibold text-[#222]">{{ item.address }}</span>
+                    <span class="activity-address truncate font-semibold">{{ item.address }}</span>
                     <span class="flex-shrink-0 text-[11px] text-[#999]">{{
                       formatTime(item.createdAt)
                     }}</span>
@@ -210,3 +214,52 @@ const groups = computed(() => {
   return Array.from(map.values());
 });
 </script>
+
+<style scoped>
+.activity-row {
+  position: relative;
+}
+
+.activity-address {
+  color: #222;
+}
+
+/* Favourited: warm tint, accent stripe, bolder text */
+.activity-row--favourited {
+  background: linear-gradient(to right, rgba(244, 63, 94, 0.05), transparent 40%);
+}
+
+.activity-row--favourited::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #f43f5e;
+}
+
+.activity-row--favourited .activity-address {
+  color: #111;
+  font-weight: 700;
+}
+
+/* Discarded: greyscale photo, muted text */
+.activity-row--discarded {
+  opacity: 0.5;
+}
+
+.activity-row--discarded .activity-photo {
+  filter: grayscale(1);
+}
+
+.activity-row--discarded .activity-address {
+  color: #888;
+  text-decoration: line-through;
+  text-decoration-color: rgba(0, 0, 0, 0.3);
+}
+
+.activity-row--discarded:hover {
+  opacity: 0.75;
+}
+</style>
