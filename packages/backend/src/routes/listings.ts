@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { eq, and } from "drizzle-orm";
 import type { AppEnv } from "@/types";
 import { db } from "@/db";
-import { listings, listingReactions, listingNotes } from "@/db/schema";
+import { listings, listingReactions, listingNotes, listingViewings } from "@/db/schema";
 import { requireAuth, csrfCheck } from "@/auth/middleware";
 import { invalidateFundaCache } from "@/routes/geodata";
 import { telegramApi } from "@/services/telegram";
@@ -120,6 +120,60 @@ listingsRouter.put("/:fundaId/note", requireAuth, async (c) => {
         },
       });
   }
+
+  await invalidateFundaCache();
+  return c.json({ ok: true });
+});
+
+listingsRouter.put("/:fundaId/viewing", requireAuth, async (c) => {
+  const fundaId = c.req.param("fundaId");
+  const body = await c.req.json<{ scheduledAt: string; note?: string | null }>();
+
+  const scheduledAtDate = new Date(body.scheduledAt);
+  if (Number.isNaN(scheduledAtDate.getTime())) {
+    return c.json({ error: "Invalid scheduledAt — must be an ISO date string" }, 400);
+  }
+
+  const note = typeof body.note === "string" ? body.note.trim() : "";
+  const noteValue = note === "" ? null : note;
+
+  const [existing] = await db
+    .select({ fundaId: listings.fundaId })
+    .from(listings)
+    .where(eq(listings.fundaId, fundaId))
+    .limit(1);
+  if (!existing) {
+    return c.json({ error: "Listing not found" }, 404);
+  }
+
+  const user = c.get("user")!;
+
+  await db
+    .insert(listingViewings)
+    .values({
+      fundaId,
+      scheduledAt: scheduledAtDate,
+      note: noteValue,
+      scheduledBy: user.sub,
+    })
+    .onConflictDoUpdate({
+      target: listingViewings.fundaId,
+      set: {
+        scheduledAt: scheduledAtDate,
+        note: noteValue,
+        scheduledBy: user.sub,
+        updatedAt: new Date(),
+      },
+    });
+
+  await invalidateFundaCache();
+  return c.json({ ok: true });
+});
+
+listingsRouter.delete("/:fundaId/viewing", requireAuth, async (c) => {
+  const fundaId = c.req.param("fundaId");
+
+  await db.delete(listingViewings).where(eq(listingViewings.fundaId, fundaId));
 
   await invalidateFundaCache();
   return c.json({ ok: true });

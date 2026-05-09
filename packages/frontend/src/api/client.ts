@@ -1,5 +1,5 @@
 import type { TransitStop } from "@/types/transit";
-import type { Listing, ReactionType } from "@ernest/shared";
+import type { ActivityEvent, Listing, ReactionType } from "@ernest/shared";
 
 export async function fetchStations(): Promise<TransitStop[]> {
   const res = await fetch("/api/stations");
@@ -49,4 +49,38 @@ export async function putNote(fundaId: string, text: string): Promise<void> {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error ?? `Failed to save note: ${res.status}`);
   }
+}
+
+export async function putViewing(
+  fundaId: string,
+  scheduledAt: string,
+  note: string | null,
+): Promise<void> {
+  const res = await fetch(`/api/listings/${encodeURIComponent(fundaId)}/viewing`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ scheduledAt, note }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Failed to save viewing: ${res.status}`);
+  }
+}
+
+export async function deleteViewing(fundaId: string): Promise<void> {
+  const res = await fetch(`/api/listings/${encodeURIComponent(fundaId)}/viewing`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Failed to cancel viewing: ${res.status}`);
+  }
+}
+
+export async function fetchActivity(): Promise<ActivityEvent[]> {
+  const res = await fetch("/api/activity");
+  if (!res.ok) throw new Error(`Failed to fetch activity: ${res.status}`);
+  return res.json();
 }

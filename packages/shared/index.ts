@@ -33,6 +33,45 @@ export interface ListingNote {
   updatedAt: string;
 }
 
+export interface ListingViewingInfo {
+  scheduledAt: string;
+  note: string | null;
+  scheduledBy: string;
+  updatedAt: string;
+}
+
+export type ActivityEvent =
+  | {
+      type: "listed";
+      at: string;
+      fundaId: string;
+      address: string;
+      city: string | null;
+      price: number;
+      photo: string | null;
+    }
+  | {
+      type: "favourited";
+      at: string;
+      fundaId: string;
+      address: string;
+      city: string | null;
+      price: number;
+      photo: string | null;
+      by: string;
+    }
+  | {
+      type: "viewing-scheduled";
+      at: string;
+      fundaId: string;
+      address: string;
+      city: string | null;
+      price: number;
+      photo: string | null;
+      by: string;
+      scheduledAt: string;
+    };
+
 /** The shape returned by GET /api/funda — all listing fields except lifecycle timestamps. */
 export interface Listing {
   fundaId: string;
@@ -75,4 +114,6 @@ export interface Listing {
   reactionBy: string | null;
   /** Notes from all users */
   notes: ListingNote[];
+  /** Scheduled viewing (one per listing, null if none) */
+  viewing: ListingViewingInfo | null;
 }

@@ -471,6 +471,86 @@
                   </span>
                 </div>
 
+                <!-- Viewing -->
+                <div v-if="listing.viewing || user" class="mt-3">
+                  <div
+                    v-if="listing.viewing && !viewingEditorOpen"
+                    class="viewing-card flex items-start justify-between gap-3"
+                  >
+                    <div class="min-w-0">
+                      <div
+                        class="text-[11px] font-semibold uppercase tracking-wide text-emerald-700"
+                      >
+                        Viewing scheduled
+                      </div>
+                      <div class="mt-1 text-[13px] font-medium text-[#222]">
+                        {{ formatViewingDate(listing.viewing.scheduledAt) }}
+                      </div>
+                      <div class="mt-0.5 text-[11px] text-[#888]">
+                        by {{ listing.viewing.scheduledBy }}
+                      </div>
+                      <p
+                        v-if="listing.viewing.note"
+                        class="m-0 mt-1.5 whitespace-pre-line text-[13px] leading-[1.5] text-[#444]"
+                      >
+                        {{ listing.viewing.note }}
+                      </p>
+                    </div>
+                    <div v-if="user" class="flex flex-shrink-0 flex-col gap-1.5">
+                      <button class="viewing-btn" @click="openViewingEditor">Edit</button>
+                      <button class="viewing-btn viewing-btn--danger" @click="cancelViewing">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    v-else-if="user && !listing.viewing && !viewingEditorOpen"
+                    class="viewing-cta"
+                    @click="openViewingEditor"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <rect x="3" y="4" width="18" height="18" rx="2" />
+                      <path d="M16 2v4M8 2v4M3 10h18" />
+                    </svg>
+                    Schedule viewing
+                  </button>
+
+                  <div v-if="viewingEditorOpen" class="viewing-card mt-1">
+                    <div class="text-[11px] font-semibold uppercase tracking-wide text-[#888]">
+                      {{ listing.viewing ? "Edit viewing" : "Schedule viewing" }}
+                    </div>
+                    <input
+                      v-model="viewingDateInput"
+                      type="datetime-local"
+                      class="mt-2 w-full rounded-lg border border-black/10 bg-white/80 px-3 py-2 font-inherit text-[13px] text-[#333] outline-none focus:border-black/20 focus:bg-white"
+                    />
+                    <textarea
+                      v-model="viewingNoteInput"
+                      rows="2"
+                      placeholder="Optional note (agent, contact, etc.)"
+                      class="mt-2 w-full resize-none rounded-lg border border-black/10 bg-white/80 px-3 py-2 font-inherit text-[13px] text-[#333] outline-none placeholder:text-[#bbb] focus:border-black/20 focus:bg-white"
+                    ></textarea>
+                    <div class="mt-2 flex items-center justify-end gap-1.5">
+                      <button class="viewing-btn" @click="closeViewingEditor">Cancel</button>
+                      <button
+                        class="viewing-btn viewing-btn--primary"
+                        :disabled="!viewingDateInput"
+                        @click="saveViewing"
+                      >
+                        {{ listing.viewing ? "Update" : "Schedule" }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Divider -->
                 <div class="my-4 h-px bg-black/6"></div>
 
@@ -667,6 +747,8 @@ const {
   dismissModal,
   setReaction,
   saveNote,
+  setViewing,
+  clearViewing,
   clusterListingIds,
   currentClusterIndex,
   navigateCluster,
@@ -681,6 +763,9 @@ const descExpanded = ref(false);
 const modalRef = ref<HTMLDivElement>();
 const ownNoteText = ref("");
 const noteEditorOpen = ref(false);
+const viewingEditorOpen = ref(false);
+const viewingDateInput = ref("");
+const viewingNoteInput = ref("");
 const noteSaving = ref(false);
 const noteSaved = ref(false);
 const scrollContainerRef = ref<HTMLDivElement>();
@@ -989,6 +1074,80 @@ const otherNotes = computed(() => {
   return listing.value.notes.filter((n) => n.userId !== user.value!.id);
 });
 
+function toIsoFromLocalInput(local: string): string {
+  // datetime-local value is "YYYY-MM-DDTHH:MM" interpreted as local time
+  return new Date(local).toISOString();
+}
+
+function toLocalInputFromIso(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
+    d.getHours(),
+  )}:${pad(d.getMinutes())}`;
+}
+
+const viewingDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+function formatViewingDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return viewingDateFormatter.format(d);
+}
+
+function defaultViewingDateInput(): string {
+  // Default to tomorrow 14:00 local
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  d.setHours(14, 0, 0, 0);
+  return toLocalInputFromIso(d.toISOString());
+}
+
+function openViewingEditor() {
+  if (!listing.value) return;
+  const v = listing.value.viewing;
+  viewingDateInput.value = v ? toLocalInputFromIso(v.scheduledAt) : defaultViewingDateInput();
+  viewingNoteInput.value = v?.note ?? "";
+  viewingEditorOpen.value = true;
+}
+
+function closeViewingEditor() {
+  viewingEditorOpen.value = false;
+}
+
+async function saveViewing() {
+  if (!listing.value || !user.value || !viewingDateInput.value) return;
+  let iso: string;
+  try {
+    iso = toIsoFromLocalInput(viewingDateInput.value);
+  } catch {
+    return;
+  }
+  const note = viewingNoteInput.value.trim();
+  try {
+    await setViewing(listing.value.fundaId, iso, note === "" ? null : note, user.value.username);
+    viewingEditorOpen.value = false;
+  } catch {
+    // optimistic update already rolled back; keep editor open so the user can retry
+  }
+}
+
+async function cancelViewing() {
+  if (!listing.value) return;
+  try {
+    await clearViewing(listing.value.fundaId);
+  } catch {
+    // rollback already happened
+  }
+}
+
 function toggleReaction(reaction: ReactionType) {
   if (!listing.value || !user.value) return;
   const newReaction = listing.value.reaction === reaction ? null : reaction;
@@ -1036,6 +1195,9 @@ watch(
 
     descExpanded.value = false;
     noteEditorOpen.value = false;
+    viewingEditorOpen.value = false;
+    viewingDateInput.value = "";
+    viewingNoteInput.value = "";
 
     // Scroll inner content back to top when switching listings
     scrollContainerRef.value?.scrollTo({ top: 0 });
@@ -1145,6 +1307,69 @@ function trapFocus(e: KeyboardEvent) {
   border-radius: 10px;
   background: rgba(139, 92, 246, 0.06);
   border: 1px solid rgba(139, 92, 246, 0.12);
+}
+
+.viewing-card {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.07);
+  border: 1px solid rgba(16, 185, 129, 0.18);
+}
+
+.viewing-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px dashed rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.06);
+  color: #047857;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.viewing-cta:hover {
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.viewing-btn {
+  padding: 4px 10px;
+  border-radius: 7px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.viewing-btn:hover {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.viewing-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.viewing-btn--primary {
+  background: #047857;
+  border-color: #047857;
+  color: white;
+}
+
+.viewing-btn--primary:hover {
+  background: #065f46;
+}
+
+.viewing-btn--danger:hover {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.2);
 }
 
 .reaction-btn {

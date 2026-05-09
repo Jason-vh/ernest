@@ -1,6 +1,6 @@
 import { ref, computed, watch } from "vue";
 import type { Listing, ReactionType, ListingNote } from "@ernest/shared";
-import { putReaction, putNote } from "@/api/client";
+import { putReaction, putNote, putViewing, deleteViewing } from "@/api/client";
 
 export type ListingId = string;
 
@@ -228,6 +228,57 @@ async function saveNote(fundaId: string, text: string, user: { id: string; usern
   }
 }
 
+async function setViewing(
+  fundaId: string,
+  scheduledAt: string,
+  note: string | null,
+  username: string,
+) {
+  const listing = listings.value.get(fundaId);
+  if (!listing) return;
+
+  const prev = listing.viewing;
+  const optimistic = {
+    scheduledAt,
+    note,
+    scheduledBy: username,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const newMap = new Map(listings.value);
+  newMap.set(fundaId, { ...listing, viewing: optimistic });
+  listings.value = newMap;
+
+  try {
+    await putViewing(fundaId, scheduledAt, note);
+  } catch {
+    const rollbackMap = new Map(listings.value);
+    rollbackMap.set(fundaId, { ...listing, viewing: prev });
+    listings.value = rollbackMap;
+    throw new Error("Failed to save viewing");
+  }
+}
+
+async function clearViewing(fundaId: string) {
+  const listing = listings.value.get(fundaId);
+  if (!listing) return;
+
+  const prev = listing.viewing;
+
+  const newMap = new Map(listings.value);
+  newMap.set(fundaId, { ...listing, viewing: null });
+  listings.value = newMap;
+
+  try {
+    await deleteViewing(fundaId);
+  } catch {
+    const rollbackMap = new Map(listings.value);
+    rollbackMap.set(fundaId, { ...listing, viewing: prev });
+    listings.value = rollbackMap;
+    throw new Error("Failed to cancel viewing");
+  }
+}
+
 function findColocatedIds(fundaId: string): string[] {
   const target = listings.value.get(fundaId);
   if (!target) return [];
@@ -259,6 +310,8 @@ export function useListingStore() {
     setListings,
     setReaction,
     saveNote,
+    setViewing,
+    clearViewing,
     findColocatedIds,
   };
 }

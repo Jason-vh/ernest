@@ -4,8 +4,16 @@ import { timingSafeEqual, createHash } from "node:crypto";
 import path from "path";
 import { REFRESH_SECRET } from "@/config";
 import { db } from "@/db";
-import { listings, listingReactions, listingNotes, users, type NewListing } from "@/db/schema";
+import {
+  listings,
+  listingReactions,
+  listingNotes,
+  listingViewings,
+  users,
+  type NewListing,
+} from "@/db/schema";
 import { isNull, and, or, eq } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { syncListings } from "@/services/listing-sync";
 import { setBuurtenData } from "@/services/buurt-matcher";
 import type { Listing, ListingNote } from "@ernest/shared";
@@ -51,8 +59,9 @@ async function ensureFundaCache(): Promise<void> {
 }
 
 async function queryFundaListings(): Promise<Listing[]> {
-  // Alias for the user who set the reaction
-  const reactionUser = users;
+  // Aliases so we can join users twice (reaction + viewing scheduler)
+  const reactionUser = alias(users, "reaction_user");
+  const viewingUser = alias(users, "viewing_user");
 
   const rows = await db
     .select({
@@ -90,10 +99,16 @@ async function queryFundaListings(): Promise<Listing[]> {
       routeCentraal: listings.routeCentraal as any,
       reaction: listingReactions.reaction,
       reactionBy: reactionUser.username,
+      viewingScheduledAt: listingViewings.scheduledAt,
+      viewingNote: listingViewings.note,
+      viewingBy: viewingUser.username,
+      viewingUpdatedAt: listingViewings.updatedAt,
     })
     .from(listings)
     .leftJoin(listingReactions, eq(listings.fundaId, listingReactions.fundaId))
     .leftJoin(reactionUser, eq(listingReactions.changedBy, reactionUser.id))
+    .leftJoin(listingViewings, eq(listings.fundaId, listingViewings.fundaId))
+    .leftJoin(viewingUser, eq(listingViewings.scheduledBy, viewingUser.id))
     .where(
       and(
         isNull(listings.disappearedAt),
@@ -126,13 +141,24 @@ async function queryFundaListings(): Promise<Listing[]> {
     notesByFundaId.set(note.fundaId, arr);
   }
 
-  return rows.map((row) =>
-    Object.assign(row, {
-      reaction: (row.reaction as Listing["reaction"]) ?? null,
-      reactionBy: row.reactionBy ?? null,
-      notes: notesByFundaId.get(row.fundaId) ?? [],
-    }),
-  );
+  return rows.map((row) => {
+    const { viewingScheduledAt, viewingNote, viewingBy, viewingUpdatedAt, ...rest } = row;
+    const viewing: Listing["viewing"] =
+      viewingScheduledAt && viewingBy
+        ? {
+            scheduledAt: viewingScheduledAt.toISOString(),
+            note: viewingNote ?? null,
+            scheduledBy: viewingBy,
+            updatedAt: (viewingUpdatedAt ?? viewingScheduledAt).toISOString(),
+          }
+        : null;
+    return Object.assign(rest, {
+      reaction: (rest.reaction as Listing["reaction"]) ?? null,
+      reactionBy: rest.reactionBy ?? null,
+      notes: notesByFundaId.get(rest.fundaId) ?? [],
+      viewing,
+    });
+  });
 }
 
 export async function invalidateFundaCache() {

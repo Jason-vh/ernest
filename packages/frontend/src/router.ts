@@ -7,6 +7,10 @@ const router = createRouter({
   routes: [
     { path: "/", component: MapView },
     {
+      path: "/activity",
+      component: () => import("@/components/ActivityPage.vue"),
+    },
+    {
       path: "/manage",
       component: () => import("@/components/ManagePage.vue"),
       beforeEnter: async () => {

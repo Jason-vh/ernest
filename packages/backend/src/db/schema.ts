@@ -198,3 +198,19 @@ export type ListingReaction = InferSelectModel<typeof listingReactions>;
 export type NewListingReaction = InferInsertModel<typeof listingReactions>;
 export type ListingNote = InferSelectModel<typeof listingNotes>;
 export type NewListingNote = InferInsertModel<typeof listingNotes>;
+
+export const listingViewings = pgTable("listing_viewings", {
+  fundaId: text("funda_id")
+    .primaryKey()
+    .references(() => listings.fundaId, { onDelete: "cascade" }),
+  scheduledAt: timestamp("scheduled_at", { withTimezone: true }).notNull(),
+  note: text("note"),
+  scheduledBy: text("scheduled_by")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type ListingViewing = InferSelectModel<typeof listingViewings>;
+export type NewListingViewing = InferInsertModel<typeof listingViewings>;
