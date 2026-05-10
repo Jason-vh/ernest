@@ -7,12 +7,19 @@ const VIEWING_DURATION_MINS = 30;
 interface ViewingPayload {
   fundaId: string;
   address: string;
+  postcode: string | null;
+  city: string | null;
   scheduledAt: Date;
   note: string | null;
 }
 
 function buildTitle(address: string): string {
   return `viewing // ${address}`;
+}
+
+function buildLocation(p: ViewingPayload): string {
+  // Full postal address so the event's location resolves in Google Maps
+  return [p.address, p.postcode, p.city].filter(Boolean).join(", ");
 }
 
 function buildDescription(p: ViewingPayload): string {
@@ -78,7 +85,7 @@ export async function createCalendarEvent(p: ViewingPayload): Promise<string | n
     scheduledAt: p.scheduledAt.toISOString(),
     durationMins: VIEWING_DURATION_MINS,
     description: buildDescription(p),
-    location: p.address,
+    location: buildLocation(p),
     attendees: ATTENDEES,
   });
   if (!result) return null;
@@ -97,7 +104,7 @@ export async function updateCalendarEvent(eventId: string, p: ViewingPayload): P
     scheduledAt: p.scheduledAt.toISOString(),
     durationMins: VIEWING_DURATION_MINS,
     description: buildDescription(p),
-    location: p.address,
+    location: buildLocation(p),
     attendees: ATTENDEES,
   });
 }

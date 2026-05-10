@@ -144,7 +144,12 @@ listingsRouter.put("/:fundaId/viewing", requireAuth, async (c) => {
   const noteValue = note === "" ? null : note;
 
   const [existing] = await db
-    .select({ fundaId: listings.fundaId, address: listings.address })
+    .select({
+      fundaId: listings.fundaId,
+      address: listings.address,
+      postcode: listings.postcode,
+      city: listings.city,
+    })
     .from(listings)
     .where(eq(listings.fundaId, fundaId))
     .limit(1);
@@ -164,6 +169,8 @@ listingsRouter.put("/:fundaId/viewing", requireAuth, async (c) => {
   const payload = {
     fundaId,
     address: existing.address,
+    postcode: existing.postcode,
+    city: existing.city,
     scheduledAt: scheduledAtDate,
     note: noteValue,
   };
