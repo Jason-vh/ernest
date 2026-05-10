@@ -12,7 +12,7 @@ interface ViewingPayload {
 }
 
 function buildTitle(address: string): string {
-  return `viewing @ ${address}`;
+  return `viewing // ${address}`;
 }
 
 function buildDescription(p: ViewingPayload): string {
