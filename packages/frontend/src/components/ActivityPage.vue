@@ -26,10 +26,29 @@
 
     <div class="flex-1 overflow-y-auto">
       <div class="mx-auto w-full max-w-[640px] px-4 py-6">
+        <div
+          v-if="!loading && !error && items.length > 0"
+          class="mb-4 flex flex-wrap items-center gap-1.5"
+        >
+          <button
+            v-for="filter in filterDefs"
+            :key="filter.key"
+            class="filter-chip"
+            :class="[`filter-chip--${filter.key}`, { 'filter-chip--off': !enabled[filter.key] }]"
+            @click="toggle(filter.key)"
+          >
+            {{ filter.label }}
+            <span class="filter-chip-count">{{ counts[filter.key] }}</span>
+          </button>
+        </div>
+
         <div v-if="loading" class="text-center text-[13px] text-[#888]">Loading...</div>
         <div v-else-if="error" class="text-center text-[13px] text-red-600">{{ error }}</div>
         <div v-else-if="items.length === 0" class="text-center text-[13px] text-[#888]">
           No listings yet.
+        </div>
+        <div v-else-if="filteredItems.length === 0" class="text-center text-[13px] text-[#888]">
+          Nothing matches the current filters.
         </div>
 
         <div v-else class="flex flex-col gap-6">
@@ -149,6 +168,47 @@ const items = ref<ActivityListing[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
+type FilterKey = "liked" | "discarded" | "viewing" | "untouched";
+
+const filterDefs: { key: FilterKey; label: string }[] = [
+  { key: "liked", label: "Liked" },
+  { key: "discarded", label: "Discarded" },
+  { key: "viewing", label: "Viewing" },
+  { key: "untouched", label: "Untouched" },
+];
+
+const enabled = ref<Record<FilterKey, boolean>>({
+  liked: true,
+  discarded: true,
+  viewing: true,
+  untouched: true,
+});
+
+function toggle(key: FilterKey) {
+  enabled.value = { ...enabled.value, [key]: !enabled.value[key] };
+}
+
+function categoriesOf(item: ActivityListing): FilterKey[] {
+  const cats: FilterKey[] = [];
+  if (item.reaction?.type === "favourite") cats.push("liked");
+  if (item.reaction?.type === "discarded") cats.push("discarded");
+  if (item.viewing) cats.push("viewing");
+  if (cats.length === 0) cats.push("untouched");
+  return cats;
+}
+
+const counts = computed(() => {
+  const c: Record<FilterKey, number> = { liked: 0, discarded: 0, viewing: 0, untouched: 0 };
+  for (const item of items.value) {
+    for (const cat of categoriesOf(item)) c[cat]++;
+  }
+  return c;
+});
+
+const filteredItems = computed(() =>
+  items.value.filter((item) => categoriesOf(item).some((c) => enabled.value[c])),
+);
+
 onMounted(async () => {
   try {
     items.value = await fetchActivity();
@@ -231,7 +291,7 @@ function dayLabel(iso: string): string {
 
 const groups = computed(() => {
   const map = new Map<string, { label: string; items: ActivityListing[] }>();
-  for (const item of items.value) {
+  for (const item of filteredItems.value) {
     const key = dayKey(item.lastActivityAt);
     let group = map.get(key);
     if (!group) {
@@ -290,5 +350,58 @@ const groups = computed(() => {
 
 .activity-row--discarded:hover {
   opacity: 0.75;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.filter-chip-count {
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.filter-chip--liked {
+  background: rgba(244, 63, 94, 0.1);
+  color: #be123c;
+}
+
+.filter-chip--discarded {
+  background: rgba(0, 0, 0, 0.05);
+  color: #555;
+}
+
+.filter-chip--viewing {
+  background: rgba(16, 185, 129, 0.1);
+  color: #047857;
+}
+
+.filter-chip--untouched {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
+.filter-chip--off {
+  background: transparent !important;
+  color: #aaa !important;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.filter-chip--off .filter-chip-count {
+  background: rgba(0, 0, 0, 0.04);
+  color: #bbb;
 }
 </style>
