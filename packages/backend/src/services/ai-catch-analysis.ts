@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import sharp from "sharp";
 import { ANTHROPIC_API_KEY } from "@/config";
 import type { Listing as DbListing } from "@/db/schema";
 import type { ListingCatchConcern, ListingCatchSeverity } from "@ernest/shared";
@@ -10,17 +11,47 @@ const PHOTO_CAP = 60;
 
 /**
  * Anthropic enforces a 2000-pixel max dimension when sending many images.
- * Funda originals are larger (e.g. 2160×1439), so we route every photo through
- * weserv.nl, a free image-proxy/resize CDN. Anthropic fetches the resized
- * variant directly. The proxy doesn't enlarge smaller images, and `fit=inside`
- * preserves aspect ratio without cropping.
+ * Funda originals are larger (e.g. 2160×1439), so we fetch each photo, resize
+ * it to ≤1500px on the longest edge, and send as base64. We do this in-process
+ * rather than via a public image proxy because Anthropic's image fetcher gets
+ * 403'd by every proxy we've tried.
  */
 const RESIZE_LONG_EDGE = 1500;
 
-function resizedPhotoUrl(url: string): string {
-  const stripped = url.replace(/^https?:\/\//, "");
-  const encoded = encodeURIComponent(stripped);
-  return `https://images.weserv.nl/?url=${encoded}&w=${RESIZE_LONG_EDGE}&h=${RESIZE_LONG_EDGE}&fit=inside&output=jpg`;
+interface ResizedImage {
+  mediaType: "image/jpeg";
+  data: string;
+}
+
+async function fetchAndResize(url: string): Promise<ResizedImage | null> {
+  let response: Response;
+  try {
+    response = await fetch(url);
+  } catch (err) {
+    console.warn(`Photo fetch failed (${url}):`, err);
+    return null;
+  }
+  if (!response.ok) {
+    console.warn(`Photo fetch ${response.status} (${url})`);
+    return null;
+  }
+  const buffer = Buffer.from(await response.arrayBuffer());
+  try {
+    const resized = await sharp(buffer)
+      .rotate()
+      .resize({
+        width: RESIZE_LONG_EDGE,
+        height: RESIZE_LONG_EDGE,
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .jpeg({ quality: 85 })
+      .toBuffer();
+    return { mediaType: "image/jpeg", data: resized.toString("base64") };
+  } catch (err) {
+    console.warn(`Photo resize failed (${url}):`, err);
+    return null;
+  }
 }
 
 const SYSTEM_PROMPT = `You review Funda listings on behalf of a buyer who is NOT the agent's customer. The agent is selling. You are not.
@@ -189,9 +220,16 @@ export async function analyzeListingCatch(listing: DbListing): Promise<ListingCa
 
   const photos = (listing.photos ?? []).slice(0, PHOTO_CAP);
 
-  const userContent: unknown[] = photos.map((url) => ({
+  const resized = await Promise.all(photos.map(fetchAndResize));
+  const validPhotos = resized.filter((p): p is ResizedImage => p !== null);
+
+  if (validPhotos.length === 0) {
+    throw new Error(`No photos could be fetched/resized for analysis (had ${photos.length} URLs)`);
+  }
+
+  const userContent: unknown[] = validPhotos.map((p) => ({
     type: "image",
-    source: { type: "url", url: resizedPhotoUrl(url) },
+    source: { type: "base64", media_type: p.mediaType, data: p.data },
   }));
   userContent.push({ type: "text", text: buildContextBlock(listing) });
 
