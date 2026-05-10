@@ -334,16 +334,6 @@
                     Looking for things the agent isn't telling you…
                   </div>
 
-                  <div v-else-if="catchError" class="text-[12px] text-red-700">
-                    Analysis failed.
-                    <button
-                      class="ml-1 cursor-pointer border-none bg-transparent p-0 font-inherit text-[12px] underline hover:no-underline"
-                      @click="reanalyzeCatch"
-                    >
-                      Try again
-                    </button>
-                  </div>
-
                   <ul
                     v-else-if="listing.aiCatch && listing.aiCatch.length > 0"
                     class="m-0 flex list-none flex-col gap-1.5 p-0"
@@ -1153,14 +1143,9 @@ const catchAnalyzing = computed(() =>
   listing.value ? analyzingCatchIds.value.has(listing.value.fundaId) : false,
 );
 
-const catchError = computed(() =>
-  listing.value ? (catchErrors.value.get(listing.value.fundaId) ?? null) : null,
-);
-
 const catchSectionVisible = computed(() => {
   if (!listing.value) return false;
   if (catchAnalyzing.value) return true;
-  if (catchError.value) return true;
   const c = listing.value.aiCatch;
   if (c != null && c.length > 0) return true;
   return false;
