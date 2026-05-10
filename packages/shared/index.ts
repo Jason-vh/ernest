@@ -40,6 +40,13 @@ export interface ListingViewingInfo {
   updatedAt: string;
 }
 
+export type ListingCatchSeverity = "low" | "medium" | "high";
+
+export interface ListingCatchConcern {
+  severity: ListingCatchSeverity;
+  flag: string;
+}
+
 export interface UpcomingViewing {
   fundaId: string;
   url: string;
@@ -117,4 +124,6 @@ export interface Listing {
   notes: ListingNote[];
   /** Scheduled viewing (one per listing, null if none) */
   viewing: ListingViewingInfo | null;
+  /** Skeptical AI analysis. null = not analyzed yet. [] = analyzed, no concerns. */
+  aiCatch: ListingCatchConcern[] | null;
 }

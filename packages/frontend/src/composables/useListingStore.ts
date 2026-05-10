@@ -1,6 +1,12 @@
 import { ref, computed, watch } from "vue";
 import type { Listing, ReactionType, ListingNote } from "@ernest/shared";
-import { putReaction, putNote, putViewing, deleteViewing } from "@/api/client";
+import {
+  putReaction,
+  putNote,
+  putViewing,
+  deleteViewing,
+  analyzeCatch as apiAnalyzeCatch,
+} from "@/api/client";
 
 export type ListingId = string;
 
@@ -279,6 +285,46 @@ async function setViewing(
   }
 }
 
+const analyzingCatchIds = ref<Set<string>>(new Set());
+const catchErrors = ref<Map<string, string>>(new Map());
+
+async function analyzeCatch(fundaId: string) {
+  const listing = listings.value.get(fundaId);
+  if (!listing) return;
+  if (analyzingCatchIds.value.has(fundaId)) return;
+
+  // Optimistic: mark as analyzing
+  const newSet = new Set(analyzingCatchIds.value);
+  newSet.add(fundaId);
+  analyzingCatchIds.value = newSet;
+
+  // Clear any previous error for this listing
+  if (catchErrors.value.has(fundaId)) {
+    const newErrors = new Map(catchErrors.value);
+    newErrors.delete(fundaId);
+    catchErrors.value = newErrors;
+  }
+
+  try {
+    const concerns = await apiAnalyzeCatch(fundaId);
+    const current = listings.value.get(fundaId);
+    if (current) {
+      const newMap = new Map(listings.value);
+      newMap.set(fundaId, { ...current, aiCatch: concerns });
+      listings.value = newMap;
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Analysis failed";
+    const newErrors = new Map(catchErrors.value);
+    newErrors.set(fundaId, message);
+    catchErrors.value = newErrors;
+  } finally {
+    const cleared = new Set(analyzingCatchIds.value);
+    cleared.delete(fundaId);
+    analyzingCatchIds.value = cleared;
+  }
+}
+
 async function clearViewing(fundaId: string) {
   const listing = listings.value.get(fundaId);
   if (!listing) return;
@@ -334,5 +380,8 @@ export function useListingStore() {
     clearViewing,
     findColocatedIds,
     syncFromUrl,
+    analyzeCatch,
+    analyzingCatchIds,
+    catchErrors,
   };
 }

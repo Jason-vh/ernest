@@ -97,6 +97,7 @@ async function queryFundaListings(): Promise<Listing[]> {
       status: listings.status,
       offeredSince: listings.offeredSince,
       routeCentraal: listings.routeCentraal as any,
+      aiCatch: listings.aiCatch,
       reaction: listingReactions.reaction,
       reactionBy: reactionUser.username,
       viewingScheduledAt: listingViewings.scheduledAt,

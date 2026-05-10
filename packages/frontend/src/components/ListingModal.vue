@@ -291,6 +291,78 @@
                   >{{ keyFacts }}
                 </div>
 
+                <!-- "What's the catch?" — skeptical AI analysis -->
+                <div v-if="catchSectionVisible" class="mt-4 border-t border-black/6 pt-4">
+                  <div class="mb-2 flex items-baseline justify-between gap-2">
+                    <div class="text-[11px] font-semibold uppercase tracking-wide text-[#888]">
+                      What's the catch?
+                    </div>
+                    <button
+                      v-if="user && listing.aiCatch !== null && !catchAnalyzing"
+                      class="cursor-pointer border-none bg-transparent p-0 font-inherit text-[10px] uppercase tracking-wide text-[#aaa] transition-colors hover:text-[#666]"
+                      title="Re-run analysis"
+                      @click="reanalyzeCatch"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+
+                  <div
+                    v-if="catchAnalyzing"
+                    class="flex items-center gap-2 text-[12px] text-[#888]"
+                  >
+                    <svg
+                      class="h-3.5 w-3.5 animate-spin text-[#aaa]"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-opacity="0.25"
+                        stroke-width="3"
+                      />
+                      <path
+                        d="M22 12a10 10 0 0 1-10 10"
+                        stroke="currentColor"
+                        stroke-width="3"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                    Looking for things the agent isn't telling you…
+                  </div>
+
+                  <div v-else-if="catchError" class="text-[12px] text-red-700">
+                    Analysis failed.
+                    <button
+                      class="ml-1 cursor-pointer border-none bg-transparent p-0 font-inherit text-[12px] underline hover:no-underline"
+                      @click="reanalyzeCatch"
+                    >
+                      Try again
+                    </button>
+                  </div>
+
+                  <ul
+                    v-else-if="listing.aiCatch && listing.aiCatch.length > 0"
+                    class="m-0 flex list-none flex-col gap-1.5 p-0"
+                  >
+                    <li
+                      v-for="(concern, idx) in listing.aiCatch"
+                      :key="idx"
+                      class="flex items-start gap-2 text-[13px] leading-snug"
+                    >
+                      <span
+                        class="catch-dot mt-1.5 flex-shrink-0"
+                        :class="catchDotClass(concern.severity)"
+                        :title="concern.severity"
+                      ></span>
+                      <span class="text-[#444]">{{ concern.flag }}</span>
+                    </li>
+                  </ul>
+                </div>
+
                 <!-- Transit commute -->
                 <div
                   v-if="commuteEntries.length"
@@ -752,6 +824,9 @@ const {
   clusterListingIds,
   currentClusterIndex,
   navigateCluster,
+  analyzeCatch,
+  analyzingCatchIds,
+  catchErrors,
 } = useListingStore();
 const { user } = useAuth();
 
@@ -1074,6 +1149,34 @@ const otherNotes = computed(() => {
   return listing.value.notes.filter((n) => n.userId !== user.value!.id);
 });
 
+const catchAnalyzing = computed(() =>
+  listing.value ? analyzingCatchIds.value.has(listing.value.fundaId) : false,
+);
+
+const catchError = computed(() =>
+  listing.value ? (catchErrors.value.get(listing.value.fundaId) ?? null) : null,
+);
+
+const catchSectionVisible = computed(() => {
+  if (!listing.value) return false;
+  if (catchAnalyzing.value) return true;
+  if (catchError.value) return true;
+  const c = listing.value.aiCatch;
+  if (c != null && c.length > 0) return true;
+  return false;
+});
+
+function catchDotClass(severity: string): string {
+  if (severity === "high") return "catch-dot--high";
+  if (severity === "medium") return "catch-dot--medium";
+  return "catch-dot--low";
+}
+
+function reanalyzeCatch() {
+  if (!listing.value) return;
+  void analyzeCatch(listing.value.fundaId);
+}
+
 function toIsoFromLocalInput(local: string): string {
   // datetime-local value is "YYYY-MM-DDTHH:MM" interpreted as local time
   return new Date(local).toISOString();
@@ -1198,6 +1301,18 @@ watch(
     viewingEditorOpen.value = false;
     viewingDateInput.value = "";
     viewingNoteInput.value = "";
+
+    // Lazy-trigger AI catch analysis when an authed user opens an unanalyzed listing
+    if (
+      v &&
+      user.value &&
+      v.aiCatch === null &&
+      (v.status === "Beschikbaar" || v.status === "") &&
+      !analyzingCatchIds.value.has(v.fundaId) &&
+      !catchErrors.value.has(v.fundaId)
+    ) {
+      void analyzeCatch(v.fundaId);
+    }
 
     // Scroll inner content back to top when switching listings
     scrollContainerRef.value?.scrollTo({ top: 0 });
@@ -1370,6 +1485,28 @@ function trapFocus(e: KeyboardEvent) {
   background: rgba(220, 38, 38, 0.1);
   color: #b91c1c;
   border-color: rgba(220, 38, 38, 0.2);
+}
+
+.catch-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.catch-dot--high {
+  background: #dc2626;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.18);
+}
+
+.catch-dot--medium {
+  background: #d97706;
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.18);
+}
+
+.catch-dot--low {
+  background: #9ca3af;
+  box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.18);
 }
 
 /* Reset iOS Safari's oversized native datetime-local rendering */

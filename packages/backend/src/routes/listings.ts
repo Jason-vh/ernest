@@ -1,12 +1,13 @@
 import { Hono } from "hono";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import type { AppEnv } from "@/types";
 import { db } from "@/db";
 import { listings, listingReactions, listingNotes, listingViewings } from "@/db/schema";
 import { requireAuth, csrfCheck } from "@/auth/middleware";
 import { invalidateFundaCache } from "@/routes/geodata";
 import { telegramApi } from "@/services/telegram";
-import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID } from "@/config";
+import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, ANTHROPIC_API_KEY } from "@/config";
+import { analyzeListingCatch, hashCatchSource } from "@/services/ai-catch-analysis";
 
 const listingsRouter = new Hono<AppEnv>();
 
@@ -177,6 +178,50 @@ listingsRouter.delete("/:fundaId/viewing", requireAuth, async (c) => {
 
   await invalidateFundaCache();
   return c.json({ ok: true });
+});
+
+listingsRouter.post("/:fundaId/catch", requireAuth, async (c) => {
+  if (!ANTHROPIC_API_KEY) {
+    return c.json({ error: "Catch analysis unavailable (no API key)" }, 503);
+  }
+
+  const fundaId = c.req.param("fundaId");
+  const force = c.req.query("force") === "1";
+
+  const [listing] = await db.select().from(listings).where(eq(listings.fundaId, fundaId)).limit(1);
+  if (!listing) {
+    return c.json({ error: "Listing not found" }, 404);
+  }
+  if (listing.disappearedAt !== null) {
+    return c.json({ error: "Listing no longer active" }, 410);
+  }
+
+  const expectedHash = hashCatchSource(listing);
+  if (!force && listing.aiCatch != null && listing.aiCatchSourceHash === expectedHash) {
+    return c.json({ aiCatch: listing.aiCatch, cached: true });
+  }
+
+  let concerns;
+  try {
+    concerns = await analyzeListingCatch(listing);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn(`Catch analysis failed for ${fundaId}: ${message}`);
+    return c.json({ error: "Analysis failed", detail: message }, 502);
+  }
+
+  await db
+    .update(listings)
+    .set({
+      aiCatch: concerns,
+      aiCatchSourceHash: expectedHash,
+      updatedAt: sql`now()`,
+    })
+    .where(eq(listings.fundaId, fundaId));
+
+  await invalidateFundaCache();
+
+  return c.json({ aiCatch: concerns, cached: false });
 });
 
 export default listingsRouter;

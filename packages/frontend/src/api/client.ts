@@ -1,5 +1,11 @@
 import type { TransitStop } from "@/types/transit";
-import type { ActivityListing, Listing, ReactionType, UpcomingViewing } from "@ernest/shared";
+import type {
+  ActivityListing,
+  Listing,
+  ListingCatchConcern,
+  ReactionType,
+  UpcomingViewing,
+} from "@ernest/shared";
 
 export async function fetchStations(): Promise<TransitStop[]> {
   const res = await fetch("/api/stations");
@@ -83,6 +89,20 @@ export async function fetchActivity(): Promise<ActivityListing[]> {
   const res = await fetch("/api/activity");
   if (!res.ok) throw new Error(`Failed to fetch activity: ${res.status}`);
   return res.json();
+}
+
+export async function analyzeCatch(fundaId: string): Promise<ListingCatchConcern[]> {
+  const res = await fetch(`/api/listings/${encodeURIComponent(fundaId)}/catch`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Failed to analyze listing: ${res.status}`);
+  }
+  const json = (await res.json()) as { aiCatch: ListingCatchConcern[] };
+  return json.aiCatch;
 }
 
 export async function fetchUpcomingViewings(): Promise<UpcomingViewing[]> {

@@ -90,6 +90,10 @@ export const listings = pgTable(
     descriptionEn: text("description_en"),
     descriptionEnSourceHash: text("description_en_source_hash"),
 
+    // Skeptical "what's the catch?" analysis
+    aiCatch: jsonb("ai_catch").$type<{ severity: "low" | "medium" | "high"; flag: string }[]>(),
+    aiCatchSourceHash: text("ai_catch_source_hash"),
+
     // Ownership
     ownership: text("ownership"),
 
