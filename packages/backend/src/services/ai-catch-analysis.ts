@@ -10,13 +10,17 @@ const ANTHROPIC_MODEL = "claude-sonnet-4-6";
 const PHOTO_CAP = 60;
 
 /**
- * Anthropic enforces a 2000-pixel max dimension when sending many images.
- * Funda originals are larger (e.g. 2160×1439), so we fetch each photo, resize
- * it to ≤1500px on the longest edge, and send as base64. We do this in-process
- * rather than via a public image proxy because Anthropic's image fetcher gets
- * 403'd by every proxy we've tried.
+ * Anthropic enforces a 2000-pixel max dimension when sending many images and
+ * charges vision tokens roughly proportional to (width × height). Funda
+ * originals are ~2160×1439 and a typical listing has 40+ photos, so without
+ * shrinking we'd burn through the per-minute token quota in 2-3 analyses.
+ *
+ * 1024px on the long edge keeps the model's ability to spot missing rooms,
+ * cropped angles, and overall composition while halving the token cost
+ * compared to 1500px. We do the resize in-process because Anthropic's
+ * image fetcher gets 403'd by every public image proxy we tried.
  */
-const RESIZE_LONG_EDGE = 1500;
+const RESIZE_LONG_EDGE = 1024;
 
 interface ResizedImage {
   mediaType: "image/jpeg";
@@ -264,6 +268,15 @@ export async function analyzeListingCatch(listing: DbListing): Promise<ListingCa
   if (typeof json !== "object" || json === null || !("content" in json)) {
     throw new Error("Anthropic response missing content");
   }
+
+  // Log token usage so we can see how close we run to per-minute caps
+  if ("usage" in json && typeof json.usage === "object" && json.usage !== null) {
+    const usage = json.usage as Record<string, unknown>;
+    console.log(
+      `Catch analysis ${listing.fundaId}: ${validPhotos.length} photos, input=${usage.input_tokens} output=${usage.output_tokens}`,
+    );
+  }
+
   const content = (json as { content: unknown }).content;
   if (!Array.isArray(content) || content.length === 0) {
     throw new Error("Anthropic response content is empty");
