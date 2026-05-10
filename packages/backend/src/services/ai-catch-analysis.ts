@@ -74,7 +74,14 @@ Discipline:
 
 Dutch listing copy often uses words that mask concerns. When you encounter them, reason about what specific concern they may be hiding rather than treating them at face value. Do not mechanically flag them — only flag if the surrounding context suggests the concern is real.
 
-Each flag is one sentence in plain English, naming the specific evidence. The buyer is reading on a phone — be terse.`;
+Flag style:
+- Hard limit: 15 words per flag. Aim for 8-12.
+- Telegraphic: name the evidence, then the concern. Fragments are fine.
+- No hedging words ("appears to", "suggests", "may indicate", "could be"). State the observation.
+- No image numbers, no "the photo shows" preamble. Just the finding.
+
+Good: "Kitchen photo crops out everything but the sink corner."
+Bad: "One of the kitchen photos appears to be cropped in a way that suggests the rest of the kitchen may be deliberately hidden from view."`;
 
 const RESPONSE_SCHEMA = {
   type: "object",
