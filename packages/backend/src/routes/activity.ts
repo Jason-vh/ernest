@@ -66,7 +66,8 @@ activity.get("/", async (c) => {
     price: r.price,
     photo: r.photos && r.photos.length > 0 ? r.photos[0] : null,
     createdAt: r.createdAt.toISOString(),
-    lastActivityAt: r.lastActivityAt.toISOString(),
+    // GREATEST returns a string from postgres-js; coerce to Date for ISO formatting
+    lastActivityAt: new Date(r.lastActivityAt as unknown as string | Date).toISOString(),
     reaction:
       r.reactionType && r.reactionBy && r.reactionAt
         ? {
