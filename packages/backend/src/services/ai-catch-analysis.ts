@@ -10,6 +10,24 @@ const ANTHROPIC_MODEL = "claude-sonnet-4-6";
 const PHOTO_CAP = 60;
 
 /**
+ * Sample photos to analyse: first 5 + last 3 + every 3rd in between.
+ * Funda listings order photos consistently (exterior → main rooms → bedrooms
+ * → bathrooms → extras → certificates), so this preserves coverage of the key
+ * shots while skipping near-duplicate angles in the middle. ≤8 photos: return
+ * all of them.
+ */
+function selectPhotosForAnalysis(photos: string[]): string[] {
+  if (photos.length <= 8) return photos;
+  const first = photos.slice(0, 5);
+  const last = photos.slice(-3);
+  const middle: string[] = [];
+  for (let i = 5; i < photos.length - 3; i += 3) {
+    middle.push(photos[i]);
+  }
+  return [...first, ...middle, ...last];
+}
+
+/**
  * Anthropic enforces a 2000-pixel max dimension when sending many images and
  * charges vision tokens roughly proportional to (width × height). Funda
  * originals are ~2160×1439 and a typical listing has 40+ photos, so without
@@ -108,11 +126,12 @@ const RESPONSE_SCHEMA = {
  * Used to skip re-analysis when nothing material has changed.
  */
 export function hashCatchSource(listing: DbListing): string {
-  const photoUrls = (listing.photos ?? []).slice(0, PHOTO_CAP);
+  const allPhotos = (listing.photos ?? []).slice(0, PHOTO_CAP);
+  const selectedPhotos = selectPhotosForAnalysis(allPhotos);
   const parts = [
     listing.description ?? "",
     listing.descriptionEn ?? "",
-    photoUrls.join("|"),
+    selectedPhotos.join("|"),
     String(listing.price),
     String(listing.bedrooms),
     String(listing.livingArea),
@@ -229,7 +248,8 @@ export async function analyzeListingCatch(listing: DbListing): Promise<ListingCa
     throw new Error("ANTHROPIC_API_KEY is not configured");
   }
 
-  const photos = (listing.photos ?? []).slice(0, PHOTO_CAP);
+  const allPhotos = (listing.photos ?? []).slice(0, PHOTO_CAP);
+  const photos = selectPhotosForAnalysis(allPhotos);
 
   const resized = await Promise.all(photos.map(fetchAndResize));
   const validPhotos = resized.filter((p): p is ResizedImage => p !== null);
@@ -280,7 +300,7 @@ export async function analyzeListingCatch(listing: DbListing): Promise<ListingCa
   if ("usage" in json && typeof json.usage === "object" && json.usage !== null) {
     const usage = json.usage as Record<string, unknown>;
     console.log(
-      `Catch analysis ${listing.fundaId}: ${validPhotos.length} photos, input=${usage.input_tokens} output=${usage.output_tokens}`,
+      `Catch analysis ${listing.fundaId}: ${validPhotos.length}/${allPhotos.length} photos, input=${usage.input_tokens} output=${usage.output_tokens}`,
     );
   }
 
