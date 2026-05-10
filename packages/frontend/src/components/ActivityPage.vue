@@ -159,10 +159,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import type { ActivityListing } from "@ernest/shared";
 import { getEstimatedClosingPrice } from "@ernest/shared";
 import { fetchActivity } from "@/api/client";
+
+const FILTER_STORAGE_KEY = "ernest:activityFilters";
 
 const items = ref<ActivityListing[]>([]);
 const loading = ref(true);
@@ -177,12 +179,37 @@ const filterDefs: { key: FilterKey; label: string }[] = [
   { key: "untouched", label: "Untouched" },
 ];
 
-const enabled = ref<Record<FilterKey, boolean>>({
-  liked: true,
-  discarded: true,
-  viewing: true,
-  untouched: true,
-});
+function readFilters(): Record<FilterKey, boolean> {
+  const defaults: Record<FilterKey, boolean> = {
+    liked: true,
+    discarded: true,
+    viewing: true,
+    untouched: true,
+  };
+  const raw = localStorage.getItem(FILTER_STORAGE_KEY);
+  if (!raw) return defaults;
+  try {
+    const parsed = JSON.parse(raw) as Partial<Record<FilterKey, unknown>>;
+    return {
+      liked: typeof parsed.liked === "boolean" ? parsed.liked : defaults.liked,
+      discarded: typeof parsed.discarded === "boolean" ? parsed.discarded : defaults.discarded,
+      viewing: typeof parsed.viewing === "boolean" ? parsed.viewing : defaults.viewing,
+      untouched: typeof parsed.untouched === "boolean" ? parsed.untouched : defaults.untouched,
+    };
+  } catch {
+    return defaults;
+  }
+}
+
+const enabled = ref<Record<FilterKey, boolean>>(readFilters());
+
+watch(
+  enabled,
+  (val) => {
+    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(val));
+  },
+  { deep: true },
+);
 
 function toggle(key: FilterKey) {
   enabled.value = { ...enabled.value, [key]: !enabled.value[key] };
