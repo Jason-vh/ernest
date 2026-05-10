@@ -17,3 +17,4 @@ export const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? null;
 export const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID ?? null;
 export const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY ?? null;
 export const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? null;
+export const CALENDAR_WEBHOOK_URL = process.env.CALENDAR_WEBHOOK_URL ?? null;

@@ -212,6 +212,8 @@ export const listingViewings = pgTable("listing_viewings", {
   scheduledBy: text("scheduled_by")
     .notNull()
     .references(() => users.id),
+  /** Google Calendar event ID returned by the webhook on create */
+  calendarEventId: text("calendar_event_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

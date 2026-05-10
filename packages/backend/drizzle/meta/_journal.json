@@ -141,6 +141,13 @@
       "when": 1778803200000,
       "tag": "0019_listing_ai_catch",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1778889600000,
+      "tag": "0020_viewing_calendar_event",
+      "breakpoints": true
     }
   ]
 }

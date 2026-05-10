@@ -8,6 +8,11 @@ import { invalidateFundaCache } from "@/routes/geodata";
 import { telegramApi } from "@/services/telegram";
 import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, ANTHROPIC_API_KEY } from "@/config";
 import { analyzeListingCatch, hashCatchSource } from "@/services/ai-catch-analysis";
+import {
+  createCalendarEvent,
+  updateCalendarEvent,
+  deleteCalendarEvent,
+} from "@/services/viewing-calendar";
 
 const listingsRouter = new Hono<AppEnv>();
 
@@ -139,7 +144,7 @@ listingsRouter.put("/:fundaId/viewing", requireAuth, async (c) => {
   const noteValue = note === "" ? null : note;
 
   const [existing] = await db
-    .select({ fundaId: listings.fundaId })
+    .select({ fundaId: listings.fundaId, address: listings.address })
     .from(listings)
     .where(eq(listings.fundaId, fundaId))
     .limit(1);
@@ -147,7 +152,28 @@ listingsRouter.put("/:fundaId/viewing", requireAuth, async (c) => {
     return c.json({ error: "Listing not found" }, 404);
   }
 
+  const [existingViewing] = await db
+    .select({ calendarEventId: listingViewings.calendarEventId })
+    .from(listingViewings)
+    .where(eq(listingViewings.fundaId, fundaId))
+    .limit(1);
+
   const user = c.get("user")!;
+
+  // Create or update the calendar event before persisting, so we can store the eventId
+  const payload = {
+    fundaId,
+    address: existing.address,
+    scheduledAt: scheduledAtDate,
+    note: noteValue,
+  };
+
+  let calendarEventId: string | null = existingViewing?.calendarEventId ?? null;
+  if (calendarEventId) {
+    await updateCalendarEvent(calendarEventId, payload);
+  } else {
+    calendarEventId = await createCalendarEvent(payload);
+  }
 
   await db
     .insert(listingViewings)
@@ -156,6 +182,7 @@ listingsRouter.put("/:fundaId/viewing", requireAuth, async (c) => {
       scheduledAt: scheduledAtDate,
       note: noteValue,
       scheduledBy: user.sub,
+      calendarEventId,
     })
     .onConflictDoUpdate({
       target: listingViewings.fundaId,
@@ -163,6 +190,8 @@ listingsRouter.put("/:fundaId/viewing", requireAuth, async (c) => {
         scheduledAt: scheduledAtDate,
         note: noteValue,
         scheduledBy: user.sub,
+        // Don't overwrite an existing eventId with null if calendar create failed
+        ...(calendarEventId !== null ? { calendarEventId } : {}),
         updatedAt: new Date(),
       },
     });
@@ -174,7 +203,17 @@ listingsRouter.put("/:fundaId/viewing", requireAuth, async (c) => {
 listingsRouter.delete("/:fundaId/viewing", requireAuth, async (c) => {
   const fundaId = c.req.param("fundaId");
 
+  const [existingViewing] = await db
+    .select({ calendarEventId: listingViewings.calendarEventId })
+    .from(listingViewings)
+    .where(eq(listingViewings.fundaId, fundaId))
+    .limit(1);
+
   await db.delete(listingViewings).where(eq(listingViewings.fundaId, fundaId));
+
+  if (existingViewing?.calendarEventId) {
+    await deleteCalendarEvent(existingViewing.calendarEventId);
+  }
 
   await invalidateFundaCache();
   return c.json({ ok: true });
