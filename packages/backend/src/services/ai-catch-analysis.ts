@@ -8,6 +8,21 @@ const ANTHROPIC_MODEL = "claude-sonnet-4-6";
 
 const PHOTO_CAP = 60;
 
+/**
+ * Anthropic enforces a 2000-pixel max dimension when sending many images.
+ * Funda originals are larger (e.g. 2160×1439), so we route every photo through
+ * weserv.nl, a free image-proxy/resize CDN. Anthropic fetches the resized
+ * variant directly. The proxy doesn't enlarge smaller images, and `fit=inside`
+ * preserves aspect ratio without cropping.
+ */
+const RESIZE_LONG_EDGE = 1500;
+
+function resizedPhotoUrl(url: string): string {
+  const stripped = url.replace(/^https?:\/\//, "");
+  const encoded = encodeURIComponent(stripped);
+  return `https://images.weserv.nl/?url=${encoded}&w=${RESIZE_LONG_EDGE}&h=${RESIZE_LONG_EDGE}&fit=inside&output=jpg`;
+}
+
 const SYSTEM_PROMPT = `You review Funda listings on behalf of a buyer who is NOT the agent's customer. The agent is selling. You are not.
 
 Your job: surface concerns the buyer might miss when scrolling. Focus on what the listing implies but does not say outright. Do not restate positives. Do not narrate the listing.
@@ -176,7 +191,7 @@ export async function analyzeListingCatch(listing: DbListing): Promise<ListingCa
 
   const userContent: unknown[] = photos.map((url) => ({
     type: "image",
-    source: { type: "url", url },
+    source: { type: "url", url: resizedPhotoUrl(url) },
   }));
   userContent.push({ type: "text", text: buildContextBlock(listing) });
 
