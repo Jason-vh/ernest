@@ -56,13 +56,16 @@
                   <div class="flex items-baseline justify-between gap-2 text-[13px] leading-snug">
                     <span class="activity-address truncate font-semibold">{{ item.address }}</span>
                     <span class="flex-shrink-0 text-[11px] text-[#999]">{{
-                      formatTime(item.createdAt)
+                      formatTime(item.lastActivityAt)
                     }}</span>
                   </div>
                   <div class="mt-0.5 truncate text-[12px] text-[#888]">
                     <span v-if="item.city">{{ item.city }}</span>
                     <span v-if="item.city"> &middot; </span>
                     <span>{{ formatPrice(estimatedPrice(item)) }}</span>
+                    <span v-if="item.lastActivityAt !== item.createdAt">
+                      &middot; added {{ formatRelative(item.createdAt) }}
+                    </span>
                   </div>
                   <div
                     v-if="item.reaction || item.viewing"
@@ -120,6 +123,12 @@
                       {{ formatViewing(item.viewing.scheduledAt) }}
                     </span>
                   </div>
+                  <p
+                    v-if="item.reaction?.note"
+                    class="m-0 mt-1.5 line-clamp-3 text-[12px] leading-snug whitespace-pre-line text-[#555]"
+                  >
+                    {{ item.reaction.note }}
+                  </p>
                 </div>
               </router-link>
             </div>
@@ -179,6 +188,21 @@ function formatPrice(price: number): string {
   return `€${price.toLocaleString("nl-NL")}`;
 }
 
+const relativeDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+});
+
+function formatRelative(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const days = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days}d ago`;
+  return relativeDateFormatter.format(d);
+}
+
 function estimatedPrice(item: ActivityListing): number {
   return getEstimatedClosingPrice(item.price, item.url) ?? item.price;
 }
@@ -208,10 +232,10 @@ function dayLabel(iso: string): string {
 const groups = computed(() => {
   const map = new Map<string, { label: string; items: ActivityListing[] }>();
   for (const item of items.value) {
-    const key = dayKey(item.createdAt);
+    const key = dayKey(item.lastActivityAt);
     let group = map.get(key);
     if (!group) {
-      group = { label: dayLabel(item.createdAt), items: [] };
+      group = { label: dayLabel(item.lastActivityAt), items: [] };
       map.set(key, group);
     }
     group.items.push(item);

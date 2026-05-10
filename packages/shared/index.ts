@@ -68,10 +68,14 @@ export interface ActivityListing {
   photo: string | null;
   /** When the listing first appeared in our system */
   createdAt: string;
+  /** Most recent of: createdAt, reaction.at, viewing.at — drives feed sort order */
+  lastActivityAt: string;
   reaction: {
     type: ReactionType;
     by: string;
     at: string;
+    /** The reactor's note for this listing, if they wrote one */
+    note: string | null;
   } | null;
   viewing: {
     scheduledAt: string;
