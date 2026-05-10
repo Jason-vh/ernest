@@ -293,45 +293,19 @@
 
                 <!-- "What's the catch?" — skeptical AI analysis -->
                 <div v-if="catchSectionVisible" class="mt-4 border-t border-black/6 pt-4">
-                  <div class="mb-2 flex items-baseline justify-between gap-2">
-                    <div class="text-[11px] font-semibold uppercase tracking-wide text-[#888]">
-                      What's the catch?
-                    </div>
-                    <button
-                      v-if="user && listing.aiCatch !== null && !catchAnalyzing"
-                      class="cursor-pointer border-none bg-transparent p-0 font-inherit text-[10px] uppercase tracking-wide text-[#aaa] transition-colors hover:text-[#666]"
-                      title="Re-run analysis"
-                      @click="reanalyzeCatch"
-                    >
-                      Refresh
-                    </button>
+                  <div class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#888]">
+                    What's the catch?
                   </div>
 
-                  <div
-                    v-if="catchAnalyzing"
-                    class="flex items-center gap-2 text-[12px] text-[#888]"
-                  >
-                    <svg
-                      class="h-3.5 w-3.5 animate-spin text-[#aaa]"
-                      viewBox="0 0 24 24"
-                      fill="none"
+                  <div v-if="catchAnalyzing" class="flex flex-col gap-2">
+                    <div
+                      v-for="(width, idx) in catchSkeletonWidths"
+                      :key="idx"
+                      class="flex items-center gap-2"
                     >
-                      <circle
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        stroke-opacity="0.25"
-                        stroke-width="3"
-                      />
-                      <path
-                        d="M22 12a10 10 0 0 1-10 10"
-                        stroke="currentColor"
-                        stroke-width="3"
-                        stroke-linecap="round"
-                      />
-                    </svg>
-                    Looking for things the agent isn't telling you…
+                      <span class="catch-skeleton-dot flex-shrink-0"></span>
+                      <span class="catch-skeleton-bar" :style="{ width }"></span>
+                    </div>
                   </div>
 
                   <ul
@@ -1157,10 +1131,7 @@ function catchDotClass(severity: string): string {
   return "catch-dot--low";
 }
 
-function reanalyzeCatch() {
-  if (!listing.value) return;
-  void analyzeCatch(listing.value.fundaId);
-}
+const catchSkeletonWidths = ["80%", "65%", "72%"];
 
 function toIsoFromLocalInput(local: string): string {
   // datetime-local value is "YYYY-MM-DDTHH:MM" interpreted as local time
@@ -1492,6 +1463,33 @@ function trapFocus(e: KeyboardEvent) {
 .catch-dot--low {
   background: #9ca3af;
   box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.18);
+}
+
+.catch-skeleton-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.08);
+  animation: catch-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.catch-skeleton-bar {
+  display: inline-block;
+  height: 12px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.06);
+  animation: catch-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes catch-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* Reset iOS Safari's oversized native datetime-local rendering */
