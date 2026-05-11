@@ -538,15 +538,31 @@
                 <!-- Description -->
                 <div v-if="displayDescription" class="mt-4">
                   <div
-                    class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-[#888]"
+                    class="flex items-center justify-between gap-2 text-[11px] font-semibold uppercase tracking-wide text-[#888]"
                   >
                     <span>Description</span>
-                    <span
+                    <svg
                       v-if="isTranslating"
-                      class="font-normal normal-case tracking-normal text-[#bbb]"
+                      class="h-3 w-3 animate-spin text-[#bbb]"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-label="Translating"
                     >
-                      translating…
-                    </span>
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-opacity="0.25"
+                        stroke-width="3"
+                      />
+                      <path
+                        d="M22 12a10 10 0 0 1-10 10"
+                        stroke="currentColor"
+                        stroke-width="3"
+                        stroke-linecap="round"
+                      />
+                    </svg>
                   </div>
                   <p
                     class="m-0 mt-1.5 whitespace-pre-line text-[13px] leading-[1.6] text-[#555]"
