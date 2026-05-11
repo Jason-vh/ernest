@@ -63,6 +63,7 @@ export interface ActivityListing {
   fundaId: string;
   url: string;
   address: string;
+  postcode: string | null;
   city: string | null;
   price: number;
   photo: string | null;

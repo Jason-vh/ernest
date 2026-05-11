@@ -24,31 +24,84 @@
       <h1 class="text-[17px] font-semibold text-[#333]">Activity</h1>
     </header>
 
-    <div class="flex-1 overflow-y-auto">
-      <div class="mx-auto w-full max-w-[640px] px-4 py-6">
-        <div
-          v-if="!loading && !error && items.length > 0"
-          class="mb-4 flex flex-wrap items-center gap-1.5"
-        >
-          <button
-            v-for="filter in filterDefs"
-            :key="filter.key"
-            class="filter-chip"
-            :class="[`filter-chip--${filter.key}`, { 'filter-chip--off': !enabled[filter.key] }]"
-            @click="toggle(filter.key)"
+    <div
+      v-if="!loading && !error && items.length > 0"
+      class="sticky top-[57px] z-10 border-b border-black/8 bg-white/90 px-4 py-3 backdrop-blur-lg"
+    >
+      <div class="mx-auto flex w-full max-w-[640px] items-center gap-2">
+        <div class="relative flex-1">
+          <svg
+            class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#999]"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
           >
-            {{ filter.label }}
-            <span class="filter-chip-count">{{ counts[filter.key] }}</span>
+            <circle cx="11" cy="11" r="7" />
+            <path d="M21 21l-4.3-4.3" />
+          </svg>
+          <input
+            v-model="searchQuery"
+            type="search"
+            inputmode="search"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Search address, postcode, city"
+            class="block h-10 w-full rounded-full border border-black/10 bg-white pl-9 pr-9 text-[15px] text-[#222] outline-none transition-colors focus:border-black/25"
+          />
+          <button
+            v-if="searchQuery"
+            class="absolute top-1/2 right-2 flex h-7 w-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-[#aaa] transition-colors hover:bg-black/5 hover:text-[#666]"
+            aria-label="Clear search"
+            @click="searchQuery = ''"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
           </button>
         </div>
+        <div class="relative flex-shrink-0">
+          <select
+            v-model="stateFilter"
+            class="state-select h-10 cursor-pointer appearance-none rounded-full border border-black/10 bg-white pl-4 pr-8 text-[15px] font-medium text-[#222] outline-none transition-colors focus:border-black/25"
+          >
+            <option v-for="opt in stateOptions" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+          <svg
+            class="pointer-events-none absolute top-1/2 right-2.5 h-4 w-4 -translate-y-1/2 text-[#777]"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </div>
+      </div>
+    </div>
 
+    <div class="flex-1 overflow-y-auto">
+      <div class="mx-auto w-full max-w-[640px] px-4 py-6">
         <div v-if="loading" class="text-center text-[13px] text-[#888]">Loading...</div>
         <div v-else-if="error" class="text-center text-[13px] text-red-600">{{ error }}</div>
         <div v-else-if="items.length === 0" class="text-center text-[13px] text-[#888]">
           No listings yet.
         </div>
         <div v-else-if="filteredItems.length === 0" class="text-center text-[13px] text-[#888]">
-          Nothing matches the current filters.
+          Nothing matches.
         </div>
 
         <div v-else class="flex flex-col gap-6">
@@ -164,77 +217,64 @@ import type { ActivityListing } from "@ernest/shared";
 import { getEstimatedClosingPrice } from "@ernest/shared";
 import { fetchActivity } from "@/api/client";
 
-const FILTER_STORAGE_KEY = "ernest:activityFilters";
+const STATE_STORAGE_KEY = "ernest:activityState";
 
 const items = ref<ActivityListing[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
-type FilterKey = "liked" | "discarded" | "viewing" | "untouched";
+type StateFilter = "all" | "liked" | "discarded" | "viewing" | "untouched";
 
-const filterDefs: { key: FilterKey; label: string }[] = [
-  { key: "liked", label: "Liked" },
-  { key: "discarded", label: "Discarded" },
-  { key: "viewing", label: "Viewing" },
-  { key: "untouched", label: "Untouched" },
+const stateOptions: { value: StateFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "liked", label: "Liked" },
+  { value: "viewing", label: "Viewing" },
+  { value: "untouched", label: "Untouched" },
+  { value: "discarded", label: "Discarded" },
 ];
 
-function readFilters(): Record<FilterKey, boolean> {
-  const defaults: Record<FilterKey, boolean> = {
-    liked: true,
-    discarded: true,
-    viewing: true,
-    untouched: true,
-  };
-  const raw = localStorage.getItem(FILTER_STORAGE_KEY);
-  if (!raw) return defaults;
-  try {
-    const parsed = JSON.parse(raw) as Partial<Record<FilterKey, unknown>>;
-    return {
-      liked: typeof parsed.liked === "boolean" ? parsed.liked : defaults.liked,
-      discarded: typeof parsed.discarded === "boolean" ? parsed.discarded : defaults.discarded,
-      viewing: typeof parsed.viewing === "boolean" ? parsed.viewing : defaults.viewing,
-      untouched: typeof parsed.untouched === "boolean" ? parsed.untouched : defaults.untouched,
-    };
-  } catch {
-    return defaults;
+function readState(): StateFilter {
+  const raw = localStorage.getItem(STATE_STORAGE_KEY);
+  if (raw && ["all", "liked", "discarded", "viewing", "untouched"].includes(raw)) {
+    return raw as StateFilter;
   }
+  return "all";
 }
 
-const enabled = ref<Record<FilterKey, boolean>>(readFilters());
+const stateFilter = ref<StateFilter>(readState());
+const searchQuery = ref("");
 
-watch(
-  enabled,
-  (val) => {
-    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(val));
-  },
-  { deep: true },
-);
-
-function toggle(key: FilterKey) {
-  enabled.value = { ...enabled.value, [key]: !enabled.value[key] };
-}
-
-function categoriesOf(item: ActivityListing): FilterKey[] {
-  const cats: FilterKey[] = [];
-  if (item.reaction?.type === "favourite") cats.push("liked");
-  if (item.reaction?.type === "discarded") cats.push("discarded");
-  if (item.viewing) cats.push("viewing");
-  if (cats.length === 0) cats.push("untouched");
-  return cats;
-}
-
-const counts = computed(() => {
-  const c: Record<FilterKey, number> = { liked: 0, discarded: 0, viewing: 0, untouched: 0 };
-  for (const item of items.value) {
-    for (const cat of categoriesOf(item)) c[cat]++;
-  }
-  return c;
+watch(stateFilter, (val) => {
+  localStorage.setItem(STATE_STORAGE_KEY, val);
 });
 
-const filteredItems = computed(() =>
-  items.value.filter((item) => categoriesOf(item).some((c) => enabled.value[c])),
-);
+function matchesState(item: ActivityListing, state: StateFilter): boolean {
+  switch (state) {
+    case "all":
+      return true;
+    case "liked":
+      return item.reaction?.type === "favourite";
+    case "discarded":
+      return item.reaction?.type === "discarded";
+    case "viewing":
+      return item.viewing !== null;
+    case "untouched":
+      return item.reaction === null && item.viewing === null;
+  }
+}
+
+function matchesSearch(item: ActivityListing, query: string): boolean {
+  if (query === "") return true;
+  const haystack = `${item.address} ${item.postcode ?? ""} ${item.city ?? ""}`.toLowerCase();
+  return haystack.includes(query);
+}
+
+const filteredItems = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase();
+  return items.value.filter(
+    (item) => matchesState(item, stateFilter.value) && matchesSearch(item, query),
+  );
+});
 
 onMounted(async () => {
   try {
@@ -379,56 +419,8 @@ const groups = computed(() => {
   opacity: 0.75;
 }
 
-.filter-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px 4px 12px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.12s ease;
-}
-
-.filter-chip-count {
-  font-size: 10px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.06);
-}
-
-.filter-chip--liked {
-  background: rgba(244, 63, 94, 0.1);
-  color: #be123c;
-}
-
-.filter-chip--discarded {
-  background: rgba(0, 0, 0, 0.05);
-  color: #555;
-}
-
-.filter-chip--viewing {
-  background: rgba(16, 185, 129, 0.1);
-  color: #047857;
-}
-
-.filter-chip--untouched {
-  background: rgba(245, 158, 11, 0.12);
-  color: #b45309;
-}
-
-.filter-chip--off {
-  background: transparent !important;
-  color: #aaa !important;
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
-.filter-chip--off .filter-chip-count {
-  background: rgba(0, 0, 0, 0.04);
-  color: #bbb;
+.state-select {
+  /* Min width so the chevron always has room */
+  min-width: 7.5rem;
 }
 </style>
