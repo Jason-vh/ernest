@@ -128,7 +128,7 @@ export const listings = pgTable(
 export type Listing = InferSelectModel<typeof listings>;
 export type NewListing = InferInsertModel<typeof listings>;
 
-export type JobType = "telegram-notify" | "translate-description";
+export type JobType = "telegram-notify";
 export type JobStatus = "pending" | "running" | "completed" | "failed" | "skipped";
 
 export const jobs = pgTable(

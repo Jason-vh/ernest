@@ -105,6 +105,20 @@ export async function analyzeCatch(fundaId: string): Promise<ListingCatchConcern
   return json.aiCatch;
 }
 
+export async function translateDescription(fundaId: string): Promise<string> {
+  const res = await fetch(`/api/listings/${encodeURIComponent(fundaId)}/translate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Failed to translate listing: ${res.status}`);
+  }
+  const json = (await res.json()) as { descriptionEn: string };
+  return json.descriptionEn;
+}
+
 export async function fetchUpcomingViewings(): Promise<UpcomingViewing[]> {
   const res = await fetch("/api/viewings/upcoming");
   if (!res.ok) throw new Error(`Failed to fetch upcoming viewings: ${res.status}`);

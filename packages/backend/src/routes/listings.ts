@@ -9,6 +9,11 @@ import { telegramApi } from "@/services/telegram";
 import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, ANTHROPIC_API_KEY } from "@/config";
 import { analyzeListingCatch, hashCatchSource } from "@/services/ai-catch-analysis";
 import {
+  hasMeaningfulDescription,
+  hashDescription,
+  translateListingDescription,
+} from "@/services/listing-description-translation";
+import {
   createCalendarEvent,
   updateCalendarEvent,
   deleteCalendarEvent,
@@ -268,6 +273,53 @@ listingsRouter.post("/:fundaId/catch", requireAuth, async (c) => {
   await invalidateFundaCache();
 
   return c.json({ aiCatch: concerns, cached: false });
+});
+
+listingsRouter.post("/:fundaId/translate", requireAuth, async (c) => {
+  if (!ANTHROPIC_API_KEY) {
+    return c.json({ error: "Translation unavailable (no API key)" }, 503);
+  }
+
+  const fundaId = c.req.param("fundaId");
+  const force = c.req.query("force") === "1";
+
+  const [listing] = await db.select().from(listings).where(eq(listings.fundaId, fundaId)).limit(1);
+  if (!listing) {
+    return c.json({ error: "Listing not found" }, 404);
+  }
+  if (listing.disappearedAt !== null) {
+    return c.json({ error: "Listing no longer active" }, 410);
+  }
+  if (!hasMeaningfulDescription(listing.description)) {
+    return c.json({ error: "Listing has no description to translate" }, 422);
+  }
+
+  const expectedHash = hashDescription(listing.description);
+  if (!force && listing.descriptionEn != null && listing.descriptionEnSourceHash === expectedHash) {
+    return c.json({ descriptionEn: listing.descriptionEn, cached: true });
+  }
+
+  let descriptionEn: string;
+  try {
+    descriptionEn = await translateListingDescription(listing.description);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn(`Translation failed for ${fundaId}: ${message}`);
+    return c.json({ error: "Translation failed", detail: message }, 502);
+  }
+
+  await db
+    .update(listings)
+    .set({
+      descriptionEn,
+      descriptionEnSourceHash: expectedHash,
+      updatedAt: sql`now()`,
+    })
+    .where(eq(listings.fundaId, fundaId));
+
+  await invalidateFundaCache();
+
+  return c.json({ descriptionEn, cached: false });
 });
 
 export default listingsRouter;

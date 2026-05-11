@@ -1,6 +1,5 @@
 import { claimJob, completeJob, skipJob, failJob } from "@/services/job-queue";
 import { handleTelegramNotify } from "@/services/handlers/telegram-notify";
-import { handleTranslateDescription } from "@/services/handlers/translate-description";
 import { invalidateFundaCache } from "@/routes/geodata";
 import type { Job } from "@/db/schema";
 import { TelegramRateLimitError } from "@/services/telegram";
@@ -9,12 +8,10 @@ type HandlerFn = (job: Job) => Promise<"completed" | "skipped">;
 
 const handlers: Record<string, HandlerFn> = {
   "telegram-notify": handleTelegramNotify,
-  "translate-description": handleTranslateDescription,
 };
 
 const RATE_LIMITS: Record<string, number> = {
   "telegram-notify": 1500,
-  "translate-description": 500,
 };
 
 export function startQueueProcessor(): void {

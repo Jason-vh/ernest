@@ -1,13 +1,8 @@
 import { db } from "@/db";
 import { listings, type NewListing } from "@/db/schema";
-import { ANTHROPIC_API_KEY } from "@/config";
 import { isNull, notInArray, and, or, eq, sql } from "drizzle-orm";
 import { enqueueMany } from "@/services/job-queue";
 import { matchBuurt, type BuurtStats } from "@/services/buurt-matcher";
-import {
-  hasMeaningfulDescription,
-  hashDescription,
-} from "@/services/listing-description-translation";
 
 /** Listing is active: not disappeared and status is available */
 const isActiveListing = and(
@@ -100,31 +95,6 @@ export async function syncListings(incoming: NewListing[]): Promise<SyncResult> 
     }
   }
 
-  let translatedEnqueued = 0;
-  if (ANTHROPIC_API_KEY) {
-    const candidates = await db
-      .select({
-        fundaId: listings.fundaId,
-        description: listings.description,
-        descriptionEnSourceHash: listings.descriptionEnSourceHash,
-      })
-      .from(listings)
-      .where(isActiveListing);
-
-    const translateJobs = candidates
-      .filter((listing) => {
-        if (!hasMeaningfulDescription(listing.description)) return false;
-        return listing.descriptionEnSourceHash !== hashDescription(listing.description);
-      })
-      .map((listing) => ({
-        type: "translate-description" as const,
-        fundaId: listing.fundaId,
-        maxAttempts: 3,
-      }));
-
-    translatedEnqueued = await enqueueMany(translateJobs);
-  }
-
   // Telegram notifications are currently disabled. Handler and rules remain in place,
   // so re-enabling means flipping this flag.
   const TELEGRAM_NOTIFICATIONS_ENABLED = false;
@@ -146,6 +116,6 @@ export async function syncListings(incoming: NewListing[]): Promise<SyncResult> 
   return {
     upserted: incoming.length,
     disappeared,
-    jobsEnqueued: translatedEnqueued + notifyEnqueued,
+    jobsEnqueued: notifyEnqueued,
   };
 }

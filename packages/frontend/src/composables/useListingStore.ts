@@ -7,6 +7,7 @@ import {
   putViewing,
   deleteViewing,
   analyzeCatch as apiAnalyzeCatch,
+  translateDescription as apiTranslateDescription,
 } from "@/api/client";
 
 export type ListingId = string;
@@ -343,6 +344,44 @@ async function analyzeCatch(fundaId: string) {
   }
 }
 
+const translatingIds = ref<Set<string>>(new Set());
+const translateErrors = ref<Map<string, string>>(new Map());
+
+async function translateDescription(fundaId: string) {
+  const listing = listings.value.get(fundaId);
+  if (!listing) return;
+  if (translatingIds.value.has(fundaId)) return;
+
+  const inProgress = new Set(translatingIds.value);
+  inProgress.add(fundaId);
+  translatingIds.value = inProgress;
+
+  if (translateErrors.value.has(fundaId)) {
+    const cleared = new Map(translateErrors.value);
+    cleared.delete(fundaId);
+    translateErrors.value = cleared;
+  }
+
+  try {
+    const descriptionEn = await apiTranslateDescription(fundaId);
+    const current = listings.value.get(fundaId);
+    if (current) {
+      const newMap = new Map(listings.value);
+      newMap.set(fundaId, { ...current, descriptionEn });
+      listings.value = newMap;
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Translation failed";
+    const newErrors = new Map(translateErrors.value);
+    newErrors.set(fundaId, message);
+    translateErrors.value = newErrors;
+  } finally {
+    const cleared = new Set(translatingIds.value);
+    cleared.delete(fundaId);
+    translatingIds.value = cleared;
+  }
+}
+
 async function clearViewing(fundaId: string) {
   const listing = listings.value.get(fundaId);
   if (!listing) return;
@@ -403,5 +442,8 @@ export function useListingStore() {
     analyzeCatch,
     analyzingCatchIds,
     catchErrors,
+    translateDescription,
+    translatingIds,
+    translateErrors,
   };
 }

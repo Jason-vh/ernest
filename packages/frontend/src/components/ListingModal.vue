@@ -537,8 +537,16 @@
 
                 <!-- Description -->
                 <div v-if="displayDescription" class="mt-4">
-                  <div class="text-[11px] font-semibold uppercase tracking-wide text-[#888]">
-                    Description
+                  <div
+                    class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-[#888]"
+                  >
+                    <span>Description</span>
+                    <span
+                      v-if="isTranslating"
+                      class="font-normal normal-case tracking-normal text-[#bbb]"
+                    >
+                      translating…
+                    </span>
                   </div>
                   <p
                     class="m-0 mt-1.5 whitespace-pre-line text-[13px] leading-[1.6] text-[#555]"
@@ -673,6 +681,8 @@ const {
   analyzeCatch,
   analyzingCatchIds,
   catchErrors,
+  translateDescription,
+  translatingIds,
 } = useListingStore();
 const { user } = useAuth();
 const router = useRouter();
@@ -736,6 +746,10 @@ const hasBuurtStats = computed(() => {
   const l = listing.value;
   return l.buurtSafetyRating != null || l.buurtCrimesPer1000 != null;
 });
+
+const isTranslating = computed(() =>
+  listing.value ? translatingIds.value.has(listing.value.fundaId) : false,
+);
 
 const displayDescription = computed(() => {
   if (!listing.value) return null;
@@ -998,6 +1012,19 @@ watch(
       !catchErrors.value.has(v.fundaId)
     ) {
       void analyzeCatch(v.fundaId);
+    }
+
+    // Lazy-trigger description translation if we have a Dutch description but no English yet
+    if (
+      v &&
+      user.value &&
+      v.descriptionEn === null &&
+      v.description != null &&
+      v.description.trim().length > 0 &&
+      (v.status === "Beschikbaar" || v.status === "") &&
+      !translatingIds.value.has(v.fundaId)
+    ) {
+      void translateDescription(v.fundaId);
     }
 
     // Scroll inner content back to top when switching listings

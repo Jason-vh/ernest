@@ -6,11 +6,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from funda import Funda
 
 MIN_BEDROOMS = 2
+MAX_RENT_EUR = 3000
 # "Energy label > D" means strictly better than D.
 ACCEPTABLE_LABELS = {"A+++", "A++", "A+", "A", "B", "C"}
 DETAIL_WORKERS = 8
 SEARCH_LOCATION = "amsterdam"
-SEARCH_RADIUS_KM = 15
+SEARCH_RADIUS_KM = 7
 
 
 def _is_terminal_page_error(error):
@@ -57,6 +58,7 @@ def fetch_all_listings(log=print, limit=None):
                 SEARCH_LOCATION,
                 radius_km=SEARCH_RADIUS_KM,
                 offering_type="rent",
+                price_max=MAX_RENT_EUR,
                 page=page,
             )
         except Exception as e:
@@ -101,7 +103,8 @@ def filter_listings(listings, log=print):
         if listing.get("price_condition") != "per_month":
             continue
 
-        if listing.get("price") is None:
+        price = listing.get("price")
+        if price is None or price > MAX_RENT_EUR:
             continue
 
         bedrooms = listing.get("bedrooms")
