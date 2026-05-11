@@ -2,7 +2,7 @@ import { CALENDAR_WEBHOOK_URL, ORIGIN } from "@/config";
 
 // Jason's account owns the calendar (the GAS uses CalendarApp.getDefaultCalendar()),
 // so we only need to invite the other guest explicitly.
-const ATTENDEES = ["denisamicas@hotmail.com"];
+const ATTENDEES = ["denisamicas@hotmail.com", "jason.vanhattum@fareharbor.com"];
 
 const VIEWING_DURATION_MINS = 30;
 
