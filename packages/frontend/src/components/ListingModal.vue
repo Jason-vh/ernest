@@ -780,6 +780,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from "vue";
+import { useRouter } from "vue-router";
 import { getEstimatedClosingPrice, getOverbidRatePctForUrl } from "@ernest/shared";
 import type { ReactionType } from "@ernest/shared";
 import { useListingStore } from "@/composables/useListingStore";
@@ -807,6 +808,7 @@ const {
   catchErrors,
 } = useListingStore();
 const { user } = useAuth();
+const router = useRouter();
 
 const listing = selectedListing;
 const isCluster = computed(() => clusterListingIds.value.length > 1);
@@ -1063,7 +1065,7 @@ function close() {
   closeModal();
 }
 
-function showOnMap() {
+async function showOnMap() {
   if (!listing.value) return;
   // Flush any pending auto-save
   if (saveDebounceTimer && user.value && ownNoteChanged.value) {
@@ -1075,6 +1077,13 @@ function showOnMap() {
     });
   }
   const { longitude, latitude } = listing.value;
+  if (router.currentRoute.value.path !== "/") {
+    // flyTo queues until MapView mounts and registers the new map
+    flyTo(longitude, latitude);
+    dismissModal();
+    await router.push("/");
+    return;
+  }
   dismissModal();
   flyTo(longitude, latitude);
 }

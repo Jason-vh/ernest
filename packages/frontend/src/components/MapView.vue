@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, onBeforeUnmount, watch } from "vue";
 import { fetchStations, fetchLines } from "@/api/client";
 import { useZoneState } from "@/composables/useZoneState";
 import { useListingStore } from "@/composables/useListingStore";
@@ -72,6 +72,12 @@ const {
 } = useListingStore();
 
 const { initMap } = useMap(mapContainer);
+
+onBeforeUnmount(() => {
+  // Drop the global map ref so flyTo() callers (e.g. from /activity) queue
+  // until the next MapView mount instead of firing on a destroyed map
+  setMap(null);
+});
 
 onMounted(async () => {
   const map = await initMap();
