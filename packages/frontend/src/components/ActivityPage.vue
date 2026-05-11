@@ -133,7 +133,7 @@
                   <div class="mt-0.5 truncate text-[12px] text-[#888]">
                     <span v-if="item.city">{{ item.city }}</span>
                     <span v-if="item.city"> &middot; </span>
-                    <span>{{ formatPrice(estimatedPrice(item)) }}</span>
+                    <span>{{ formatPrice(item.price) }}/mo</span>
                     <span v-if="item.lastActivityAt !== item.createdAt">
                       &middot; added {{ formatRelative(item.createdAt) }}
                     </span>
@@ -213,7 +213,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import type { ActivityListing } from "@ernest/shared";
-import { getEstimatedClosingPrice } from "@ernest/shared";
 import { fetchActivity } from "@/api/client";
 import { useListingStore } from "@/composables/useListingStore";
 
@@ -330,10 +329,6 @@ function formatRelative(iso: string): string {
   if (days === 1) return "yesterday";
   if (days < 7) return `${days}d ago`;
   return relativeDateFormatter.format(d);
-}
-
-function estimatedPrice(item: ActivityListing): number {
-  return getEstimatedClosingPrice(item.price, item.url) ?? item.price;
 }
 
 function dayKey(iso: string): string {

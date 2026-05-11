@@ -8,7 +8,7 @@ const SYSTEM_PROMPT = `You translate Dutch real-estate listing descriptions into
 Your job is not to preserve the sales tone. Your job is to preserve facts while removing estate-agent marketing language.
 
 Rules:
-- Preserve all concrete facts, caveats, dimensions, costs, ownership details, condition notes, layout details, and renovation information.
+- Preserve all concrete facts, caveats, dimensions, costs, rental terms, condition notes, layout details, and renovation information.
 - Remove marketing fluff, hype, empty superlatives, lifestyle framing, and generic sales language.
 - If a sentence contains no concrete information, delete it.
 - If a sentence mixes facts with fluff, keep only the factual part.

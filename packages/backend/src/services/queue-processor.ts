@@ -1,48 +1,21 @@
-import { claimJob, completeJob, skipJob, failJob, enqueueMany } from "@/services/job-queue";
-import { handleComputeRoutes } from "@/services/handlers/compute-routes";
+import { claimJob, completeJob, skipJob, failJob } from "@/services/job-queue";
 import { handleTelegramNotify } from "@/services/handlers/telegram-notify";
 import { handleTranslateDescription } from "@/services/handlers/translate-description";
 import { invalidateFundaCache } from "@/routes/geodata";
-import { db } from "@/db";
-import { listings } from "@/db/schema";
 import type { Job } from "@/db/schema";
-import { eq } from "drizzle-orm";
 import { TelegramRateLimitError } from "@/services/telegram";
-import { isTelegramNotificationEligible } from "@/services/telegram-notification-rules";
 
 type HandlerFn = (job: Job) => Promise<"completed" | "skipped">;
 
 const handlers: Record<string, HandlerFn> = {
-  "compute-routes": handleComputeRoutes,
   "telegram-notify": handleTelegramNotify,
   "translate-description": handleTranslateDescription,
 };
 
 const RATE_LIMITS: Record<string, number> = {
-  "compute-routes": 200,
   "telegram-notify": 1500,
   "translate-description": 500,
 };
-
-async function maybeEnqueueNotification(fundaId: string): Promise<void> {
-  const rows = await db
-    .select({
-      notifiedAt: listings.notifiedAt,
-      status: listings.status,
-      disappearedAt: listings.disappearedAt,
-      routeCentraal: listings.routeCentraal,
-    })
-    .from(listings)
-    .where(eq(listings.fundaId, fundaId));
-
-  if (rows.length === 0) return;
-
-  const listing = rows[0];
-  if (listing.notifiedAt !== null) return;
-  if (!isTelegramNotificationEligible(listing)) return;
-
-  await enqueueMany([{ type: "telegram-notify", fundaId, maxAttempts: 3 }]);
-}
 
 export function startQueueProcessor(): void {
   console.log("Queue processor started");
@@ -57,7 +30,6 @@ export function startQueueProcessor(): void {
         const job = await claimJob(); // eslint-disable-line no-await-in-loop
 
         if (!job) {
-          // Idle: flush cache if any jobs completed
           if (completedSinceFlush > 0) {
             await invalidateFundaCache(); // eslint-disable-line no-await-in-loop
             completedSinceFlush = 0;
@@ -83,11 +55,6 @@ export function startQueueProcessor(): void {
             await completeJob(job.id); // eslint-disable-line no-await-in-loop
             completedSinceFlush++;
             console.log(`Job ${job.type}/${job.fundaId}: completed`);
-
-            // Trigger notification check after route jobs complete
-            if (job.type === "compute-routes") {
-              await maybeEnqueueNotification(job.fundaId); // eslint-disable-line no-await-in-loop
-            }
           } else {
             await skipJob(job.id, "Handler returned skipped"); // eslint-disable-line no-await-in-loop
             console.log(`Job ${job.type}/${job.fundaId}: skipped`);
@@ -113,13 +80,11 @@ export function startQueueProcessor(): void {
           }
         }
 
-        // Flush cache every 5 completed jobs
         if (completedSinceFlush >= 5) {
           await invalidateFundaCache(); // eslint-disable-line no-await-in-loop
           completedSinceFlush = 0;
         }
 
-        // Rate-limit delay
         const delay = RATE_LIMITS[job.type] ?? 200;
         await new Promise((resolve) => setTimeout(resolve, delay)); // eslint-disable-line no-await-in-loop
       } catch (err) {

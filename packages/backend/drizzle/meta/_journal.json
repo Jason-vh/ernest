@@ -148,6 +148,13 @@
       "when": 1778889600000,
       "tag": "0020_viewing_calendar_event",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1778976000000,
+      "tag": "0021_rentals_drop_buy_fields",
+      "breakpoints": true
     }
   ]
 }

@@ -9,14 +9,6 @@ export const MAP_CENTER = {
   lon: (OFFICES.fareharbor.lon + OFFICES.airwallex.lon) / 2,
 } as const;
 
-export const AMSTERDAM_CENTRAAL = {
-  lat: 52.3791283,
-  lon: 4.8980833,
-  name: "Amsterdam Centraal",
-} as const;
-
-export const TRANSIT_RADIUS_KM = 40;
-
 export const DEFAULT_ZOOM = 13;
 
 export const COLORS = {
@@ -30,7 +22,6 @@ export const COLORS = {
   zone20: "#f59e0b",
   zone30: "#ef4444",
   zone40: "#9333ea",
-  routeCentraal: "#14b8a6",
   fundaFavourite: "#c0392b",
   fundaUnreviewed: "#E8950F",
   fundaDiscarded: "#999",

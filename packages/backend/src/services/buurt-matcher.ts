@@ -2,18 +2,14 @@ import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
 import { point, polygon } from "@turf/helpers";
 
 export interface BuurtStats {
-  buurtWozValue: number | null;
   buurtSafetyRating: number | null;
   buurtCrimesPer1000: number | null;
-  buurtOwnerOccupiedPct: number | null;
 }
 
 interface BuurtEntry {
   coordinates: number[][][];
-  wozValue: number | null;
   safetyRating: number | null;
   crimesPer1000: number | null;
-  ownerOccupiedPct: number | null;
 }
 
 let cachedEntries: BuurtEntry[] = [];
@@ -52,10 +48,8 @@ export function setBuurtenData(geojson: unknown): void {
 
     entries.push({
       coordinates: geom.coordinates,
-      wozValue: typeof props.wozValue === "number" ? props.wozValue : null,
       safetyRating: typeof props.safetyRating === "number" ? props.safetyRating : null,
       crimesPer1000: typeof props.crimesPer1000 === "number" ? props.crimesPer1000 : null,
-      ownerOccupiedPct: typeof props.ownerOccupiedPct === "number" ? props.ownerOccupiedPct : null,
     });
   }
 
@@ -71,10 +65,8 @@ export function matchBuurt(lat: number, lng: number): BuurtStats | null {
   for (const entry of cachedEntries) {
     if (booleanPointInPolygon(pt, polygon(entry.coordinates))) {
       return {
-        buurtWozValue: entry.wozValue,
         buurtSafetyRating: entry.safetyRating,
         buurtCrimesPer1000: entry.crimesPer1000,
-        buurtOwnerOccupiedPct: entry.ownerOccupiedPct,
       };
     }
   }

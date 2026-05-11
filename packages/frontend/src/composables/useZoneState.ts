@@ -14,7 +14,6 @@ interface LegendState {
   fundaFav: boolean;
   fundaUnreviewed: boolean;
   fundaDiscarded: boolean;
-  maxMinutesFromCentraal: number;
 }
 
 function allTrue<T extends string>(keys: readonly T[]): Record<T, boolean> {
@@ -28,7 +27,6 @@ function readFromStorage(): LegendState {
     fundaFav: true,
     fundaUnreviewed: true,
     fundaDiscarded: false,
-    maxMinutesFromCentraal: 60,
   };
 
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -52,10 +50,6 @@ function readFromStorage(): LegendState {
         typeof parsed.fundaDiscarded === "boolean"
           ? parsed.fundaDiscarded
           : defaults.fundaDiscarded,
-      maxMinutesFromCentraal:
-        typeof parsed.maxMinutesFromCentraal === "number"
-          ? parsed.maxMinutesFromCentraal
-          : defaults.maxMinutesFromCentraal,
     };
   } catch {
     return defaults;
@@ -73,7 +67,6 @@ const transitVisibility = ref(saved.transit);
 const fundaFavouriteVisible = ref(saved.fundaFav);
 const fundaUnreviewedVisible = ref(saved.fundaUnreviewed);
 const fundaDiscardedVisible = ref(saved.fundaDiscarded);
-const maxMinutesFromCentraal = ref(saved.maxMinutesFromCentraal);
 
 const hoveredZone = ref<string | null>(null);
 const hoveredTransit = ref<TransitKey | null>(null);
@@ -89,7 +82,6 @@ watch(
     fundaFavouriteVisible,
     fundaUnreviewedVisible,
     fundaDiscardedVisible,
-    maxMinutesFromCentraal,
   ],
   () =>
     writeToStorage({
@@ -98,7 +90,6 @@ watch(
       fundaFav: fundaFavouriteVisible.value,
       fundaUnreviewed: fundaUnreviewedVisible.value,
       fundaDiscarded: fundaDiscardedVisible.value,
-      maxMinutesFromCentraal: maxMinutesFromCentraal.value,
     }),
   { deep: true },
 );
@@ -141,7 +132,6 @@ export function useZoneState() {
     fundaFavouriteCount,
     fundaUnreviewedCount,
     fundaDiscardedCount,
-    maxMinutesFromCentraal,
     toggleZone,
     toggleTransit,
     toggleFundaFavourite,

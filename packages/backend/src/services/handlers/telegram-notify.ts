@@ -4,32 +4,33 @@ import type { Job } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, ORIGIN } from "@/config";
 import { telegramApi } from "@/services/telegram";
-import { isTelegramNotificationEligible } from "@/services/telegram-notification-rules";
-import type { RouteResult } from "@/services/google-routes";
-import { getEstimatedClosingPrice } from "@ernest/shared";
 
-function formatPrice(price: number): string {
-  return `\u20AC${price.toLocaleString("nl-NL")}`;
+function formatRent(price: number): string {
+  return `€${price.toLocaleString("nl-NL")}/mo`;
+}
+
+function isActive(listing: { status: string; disappearedAt: Date | null }): boolean {
+  if (listing.disappearedAt !== null) return false;
+  return listing.status === "Beschikbaar" || listing.status === "";
 }
 
 function buildCaption(listing: {
   address: string;
   city: string | null;
-  url: string;
   price: number;
   livingArea: number;
+  bedrooms: number;
   constructionYear: number | null;
   hasGarden: boolean | null;
   hasBalcony: boolean | null;
   hasRoofTerrace: boolean | null;
-  routeCentraal: RouteResult | null;
 }): string {
-  const overbidPrice = getEstimatedClosingPrice(listing.price, listing.url) ?? listing.price;
+  const summaryParts: string[] = [
+    formatRent(listing.price),
+    `${listing.livingArea} m²`,
+    `${listing.bedrooms} bed`,
+  ];
 
-  // Summary line: price · area
-  const summaryParts: string[] = [formatPrice(overbidPrice), `${listing.livingArea} m\u00B2`];
-
-  // Extra facts
   const extras: string[] = [];
   if (listing.constructionYear) extras.push(String(listing.constructionYear));
   if (listing.hasGarden) extras.push("Garden");
@@ -39,15 +40,9 @@ function buildCaption(listing: {
   const firstLineParts: string[] = [listing.address];
   if (listing.city) firstLineParts.push(listing.city);
 
-  const locationParts: string[] = [];
-  if (listing.routeCentraal !== null) {
-    locationParts.push(`${listing.routeCentraal.duration} min to Amsterdam Centraal`);
-  }
-
-  const lines: string[] = [`<b>${escapeHtml(firstLineParts.join(" \u00B7 "))}</b>`];
-  if (locationParts.length > 0) lines.push(escapeHtml(locationParts.join(" \u00B7 ")));
-  lines.push(summaryParts.join(" \u00B7 "));
-  if (extras.length > 0) lines.push(extras.join(" \u00B7 "));
+  const lines: string[] = [`<b>${escapeHtml(firstLineParts.join(" · "))}</b>`];
+  lines.push(summaryParts.join(" · "));
+  if (extras.length > 0) lines.push(extras.join(" · "));
 
   return lines.join("\n");
 }
@@ -64,9 +59,9 @@ export async function handleTelegramNotify(job: Job): Promise<"completed" | "ski
       fundaId: listings.fundaId,
       address: listings.address,
       city: listings.city,
-      url: listings.url,
       price: listings.price,
       livingArea: listings.livingArea,
+      bedrooms: listings.bedrooms,
       constructionYear: listings.constructionYear,
       hasGarden: listings.hasGarden,
       hasBalcony: listings.hasBalcony,
@@ -74,7 +69,7 @@ export async function handleTelegramNotify(job: Job): Promise<"completed" | "ski
       photos: listings.photos,
       status: listings.status,
       disappearedAt: listings.disappearedAt,
-      routeCentraal: listings.routeCentraal,
+      notifiedAt: listings.notifiedAt,
     })
     .from(listings)
     .where(eq(listings.fundaId, job.fundaId));
@@ -82,7 +77,8 @@ export async function handleTelegramNotify(job: Job): Promise<"completed" | "ski
   if (rows.length === 0) return "skipped";
   const listing = rows[0];
 
-  if (!isTelegramNotificationEligible(listing)) return "skipped";
+  if (!isActive(listing)) return "skipped";
+  if (listing.notifiedAt !== null) return "skipped";
 
   const caption = buildCaption(listing);
   const photos = listing.photos ?? [];
@@ -111,7 +107,6 @@ export async function handleTelegramNotify(job: Job): Promise<"completed" | "ski
     });
   }
 
-  // Extract message_id from Telegram response using runtime narrowing
   let telegramMessageId: number | undefined;
   if (
     typeof response === "object" &&

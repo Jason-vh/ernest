@@ -2,7 +2,7 @@
 
 ## Project overview
 
-Ernest is an Amsterdam house-hunting map. Bun monorepo with Vue 3 frontend and Hono backend. Static geodata is precomputed and served from disk. Funda listings refresh hourly via a Railway cron service.
+Ernest is an Amsterdam rental-hunting map. Bun monorepo with Vue 3 frontend and Hono backend. Static geodata is precomputed and served from disk. Funda rental listings refresh hourly via a Railway cron service. Searches a 15 km radius around Amsterdam Centraal; filters to 2+ bedrooms with an energy label better than D.
 
 ## Commands
 
@@ -34,9 +34,9 @@ bun run fetch-ferries    # Fetch ferry routes/stops from Overpass into data file
 - **Backend** (`packages/backend`): Bun + Hono + Drizzle ORM + PostgreSQL. Serves precomputed data as JSON endpoints and the built frontend via `serveStatic`. Auth uses passkeys (WebAuthn) with JWT sessions. All file paths resolved via `import.meta.dir` (never relative to CWD). Database schema defined in Drizzle (`src/db/schema.ts`), migrations in `drizzle/`, applied automatically on startup.
 - **Scripts** (`scripts/`): `fetch-data.ts` runs with Bun to precompute geodata (uses Turf.js for spatial operations). `fetch_funda.py` is a thin wrapper that imports shared Funda logic from `services/funda-cron/funda_core.py` and outputs GeoJSON to stdout (called by `fetch-data.ts` via `Bun.spawn`).
 - **Cron** (`services/funda-cron/`): Python service that fetches Funda listings hourly and POSTs them to the backend's `POST /api/internal/refresh-funda` endpoint. Runs as a separate Railway cron service, communicates via Railway internal networking. Core fetch/filter/enrich logic lives in `funda_core.py`, shared with the local script.
-- **Data** (`packages/backend/data/`): Static JSON/GeoJSON files (isochrone, stations, lines, buurten). Funda listings are stored in PostgreSQL (see `listings` table in schema).
-- **Job queue**: Database-backed queue (`jobs` table) for background processing. Two job types: `ai-enrich` (Claude API) and `compute-routes` (Valhalla). Queue processor runs on startup, polls continuously, processes jobs sequentially with rate limiting (500ms between ai-enrich, 200ms between route jobs). Failed jobs retry with exponential backoff (30s, 120s, 480s). Jobs are only enqueued for **active** listings (status `"Beschikbaar"` or `""`, not disappeared).
-- **AI enrichment**: Uses Claude Haiku (`claude-haiku-4-5-20251001`) to enrich listings with `aiPositives` (3-5 standout features), `aiNegatives` (3-5 concerns), and `aiDescription` (English translation, marketing fluff stripped). Sends up to 20 listing photos + structured property/neighbourhood data. Requires `ANTHROPIC_API_KEY` env var — skipped if not set.
+- **Data** (`packages/backend/data/`): Static JSON/GeoJSON files (stations, lines, buurten). Funda listings are stored in PostgreSQL (see `listings` table in schema).
+- **Job queue**: Database-backed queue (`jobs` table) for background processing. Two job types: `telegram-notify` and `translate-description`. Queue processor runs on startup, polls continuously, processes jobs sequentially with rate limiting (1500ms between telegram-notify, 500ms between translate-description). Failed jobs retry with exponential backoff (30s, 120s, 480s). Jobs are only enqueued for **active** listings (status `"Beschikbaar"` or `""`, not disappeared).
+- **AI enrichment**: Uses Claude Sonnet (`claude-sonnet-4-6`) for "what's the catch?" analysis on user-opened listings and Claude Haiku (`claude-haiku-4-5-20251001`) to translate Dutch descriptions to English. Requires `ANTHROPIC_API_KEY` env var — features are skipped if not set.
 
 ## Key files
 
@@ -63,19 +63,19 @@ bun run fetch-ferries    # Fetch ferry routes/stops from Overpass into data file
 - `packages/backend/src/db/schema.ts` — Drizzle table definitions (users, credentials, challenges, listings, jobs, reactions, notes)
 - `packages/backend/src/config.ts` — Required env var validation (DATABASE_URL, JWT_SECRET, ORIGIN, RP_ID) + optional ANTHROPIC_API_KEY
 - `packages/backend/src/routes/auth.ts` — WebAuthn registration/login flows, JWT session management
-- `packages/backend/src/routes/geodata.ts` — API endpoints for isochrone, stations, lines, buurten, funda + POST /internal/refresh-funda. Funda query filters to active listings only (`disappeared_at IS NULL` and status `"Beschikbaar"` or `""`)
-- `packages/backend/src/services/listing-sync.ts` — Upserts incoming listings, marks disappeared ones, enqueues ai-enrich + compute-routes jobs for active listings
+- `packages/backend/src/routes/geodata.ts` — API endpoints for stations, lines, buurten, funda + POST /internal/refresh-funda. Funda query filters to active listings only (`disappeared_at IS NULL` and status `"Beschikbaar"` or `""`)
+- `packages/backend/src/services/listing-sync.ts` — Upserts incoming listings, marks disappeared ones, enqueues translate-description + telegram-notify jobs for active listings
 - `packages/backend/src/services/job-queue.ts` — Database-backed job queue: enqueue, claim, complete/fail/skip jobs
 - `packages/backend/src/services/queue-processor.ts` — Background processor: polls for pending jobs, dispatches to handlers, rate-limits
-- `packages/backend/src/services/handlers/ai-enrich.ts` — Claude API call: sends photos + property data, parses structured JSON response
-- `packages/backend/src/services/buurt-matcher.ts` — Matches listing coordinates to neighbourhood polygons for buurt stats
+- `packages/backend/src/services/ai-catch-analysis.ts` — Claude API call for the per-listing "what's the catch?" review (tuned for renters)
+- `packages/backend/src/services/buurt-matcher.ts` — Matches listing coordinates to neighbourhood polygons for buurt stats (safety + crime rate)
 
 ### Services & Scripts
 
-- `services/funda-cron/funda_core.py` — Shared Funda logic: fetch, filter, enrich with coordinates, convert to GeoJSON. Searches Amsterdam, Diemen, Duivendrecht, Amstelveen, Ouderkerk aan de Amstel. Filters: €450k–€513k, ≥2 bed, ≥65 m², energy label ≥ D or unknown, status "Beschikbaar" only. Per-area error handling so one failure doesn't stop the rest.
+- `services/funda-cron/funda_core.py` — Shared Funda logic: fetch, filter, enrich with coordinates, convert to GeoJSON. Rentals only (`offering_type="rent"`, filtered to `price_condition == "per_month"` because pyfunda leaks buy results). 15 km radius around Amsterdam Centraal, ≥2 bedrooms, energy label A+++ through C (strictly better than D).
 - `services/funda-cron/fetch_and_push.py` — Cron job: calls `funda_core.fetch_and_build_geojson()` and POSTs result to backend
-- `scripts/fetch-data.ts` — Data precomputation pipeline (Valhalla + Overpass + Amsterdam BBGA + Funda + Turf)
-- `scripts/fetch_funda.py` — Thin wrapper: imports from `funda_core`, outputs GeoJSON to stdout for `fetch-data.ts`
+- `scripts/fetch-data.ts` — Data precomputation pipeline (Overpass transit + Amsterdam BBGA buurten)
+- `scripts/fetch_funda.py` — Thin wrapper: imports from `funda_core`, outputs GeoJSON to stdout
 - `scripts/fetch-ferries.ts` — Fetches GVB ferry routes + stops from Overpass and merges them into `lines.geojson` and `stations.json`
 
 ## Conventions
@@ -90,9 +90,9 @@ bun run fetch-ferries    # Fetch ferry routes/stops from Overpass into data file
 - No test framework set up yet
 - **Frontend composable pattern**: MapView.vue is a thin orchestrator. Each concern (zones, transit, routes, funda, buildings, popups) lives in its own `useXxx` composable under `src/composables/`. Composables receive the map instance and reactive state as parameters.
 - Shared types in `packages/frontend/src/types/transit.ts` (StopType enum, TransitStop interface) and `packages/frontend/src/types/buurt.ts` (BuurtProperties interface)
-- Office locations defined in both `scripts/fetch-data.ts` and `packages/frontend/src/geo/constants.ts` — keep in sync if changed
+- Office locations defined in `packages/frontend/src/geo/constants.ts`
 - Transit line colors: train=#003DA5 (OV blue), metro=#E4003A (red), tram=#7B2D8E (purple), ferry=#0891B2 (cyan, dashed), funda=#E8950F (amber). Defined in `COLORS` object in `geo/constants.ts` and as Tailwind tokens in `app.css`.
-- Funda overbid price shown at 115% of list price in popup
+- Listing price shown as monthly rent in popup, modal, activity feed, and viewings page.
 - Vite config uses `target: "esnext"` for both optimizeDeps and build (required for MapLibre GL)
 
 ## Deployment
@@ -108,7 +108,6 @@ bun run fetch-ferries    # Fetch ferry routes/stops from Overpass into data file
 
 ## External APIs (used by fetch-data script only)
 
-- **Valhalla** (`valhalla1.openstreetmap.de`): Cycling isochrones and route queries. Isochrones are augmented with ferry supplements for Amsterdam Noord — the script computes cycling time to the Buiksloterweg ferry via `/route`, then fetches supplementary isochrones from the north landing with the remaining time budget, unioning them with `@turf/union`. Rate-limited — add delays between requests.
 - **Overpass** (`overpass.kumi.systems`): Transit stops and lines from OSM. Rate-limited — make requests sequential with delays.
-- **Amsterdam BBGA** (`api.data.amsterdam.nl`): Neighbourhood boundaries (`/v1/gebieden/buurten`) and statistics (`/v1/bbga/kerncijfers`). Free, no auth. Produces `buurten.geojson` — neighbourhood polygons with WOZ value, owner-occupied %, safety rating, and crime rate properties.
-- **Funda** (via [pyfunda](https://github.com/0xMH/pyfunda)): Property listings from Funda's mobile API. Requires `pip install pyfunda` (Python 3.13). Search results don't include coordinates — the script fetches individual listing details in parallel (8 workers) to get lat/lng and photo URLs. The `characteristics['Status']` field from detail pages is the reliable source for listing status (the top-level `status` field always says "available").
+- **Amsterdam BBGA** (`api.data.amsterdam.nl`): Neighbourhood boundaries (`/v1/gebieden/buurten`) and statistics (`/v1/bbga/kerncijfers`). Free, no auth. Produces `buurten.geojson` — neighbourhood polygons with WOZ value, owner-occupied %, safety rating, and crime rate properties (only safety + crime rate are surfaced to listings now that we're renting).
+- **Funda** (via [pyfunda](https://github.com/0xMH/pyfunda)): Rental listings from Funda's mobile API. Requires `pip install pyfunda` (Python 3.13). `offering_type="rent"` leaks some buy results, so we filter to `price_condition == "per_month"`. Search results don't include coordinates — the script fetches individual listing details in parallel (8 workers) to get lat/lng and photo URLs.

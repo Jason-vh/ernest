@@ -63,7 +63,7 @@
                   <div class="mt-0.5 truncate text-[12px] text-[#888]">
                     <span v-if="item.city">{{ item.city }}</span>
                     <span v-if="item.city"> &middot; </span>
-                    <span>{{ formatPrice(estimatedPrice(item)) }}</span>
+                    <span>{{ formatPrice(item.price) }}/mo</span>
                   </div>
                   <div class="mt-1 truncate text-[11px] text-[#888]">
                     scheduled by {{ item.scheduledBy }}
@@ -87,7 +87,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import type { UpcomingViewing } from "@ernest/shared";
-import { getEstimatedClosingPrice } from "@ernest/shared";
 import { fetchUpcomingViewings } from "@/api/client";
 
 const items = ref<UpcomingViewing[]>([]);
@@ -128,10 +127,6 @@ function formatTime(iso: string): string {
 
 function formatPrice(price: number): string {
   return `€${price.toLocaleString("nl-NL")}`;
-}
-
-function estimatedPrice(item: UpcomingViewing): number {
-  return getEstimatedClosingPrice(item.price, item.url) ?? item.price;
 }
 
 function dayKey(iso: string): string {

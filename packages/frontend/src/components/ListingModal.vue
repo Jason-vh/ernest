@@ -258,22 +258,14 @@
                   </div>
                   <div class="flex-shrink-0 text-right">
                     <div class="text-[20px] font-bold tracking-[-0.02em] text-[#1a1a1a]">
-                      {{ formatPrice(overbidPrice) }}
+                      {{ formatPrice(listing.price) }}
                     </div>
-                    <div class="mt-0.5 text-[11px] text-[#999]">
-                      asking {{ formatPrice(listing.price) }}
-                    </div>
-                    <div v-if="overbidRatePct !== null" class="mt-0.5 text-[11px] text-[#999]">
-                      incl. {{ formatPct(overbidRatePct) }} local overbid
-                    </div>
+                    <div class="mt-0.5 text-[11px] text-[#999]">per month</div>
                   </div>
                 </div>
 
-                <!-- Key facts (inline) with status + energy + ownership badges -->
-                <div
-                  v-if="keyFacts || energyLabelBadge || ownershipBadge"
-                  class="mt-2.5 text-[13px] text-[#666]"
-                >
+                <!-- Key facts (inline) with status + energy badges -->
+                <div v-if="keyFacts || energyLabelBadge" class="mt-2.5 text-[13px] text-[#666]">
                   <span
                     v-if="listing.status === 'Beschikbaar'"
                     class="mr-1.5 inline-block rounded bg-emerald-500/10 px-1.5 py-[1px] text-[11px] font-semibold text-emerald-700"
@@ -283,11 +275,6 @@
                     class="mr-1.5 inline-block rounded px-1.5 py-[1px] text-[11px] font-semibold"
                     :class="energyLabelBadge.cls"
                     >{{ energyLabelBadge.text }}</span
-                  ><span
-                    v-if="ownershipBadge"
-                    class="mr-1.5 inline-block rounded px-1.5 py-[1px] text-[11px] font-semibold"
-                    :class="ownershipBadge.cls"
-                    >{{ ownershipBadge.text }}</span
                   >{{ keyFacts }}
                 </div>
 
@@ -325,75 +312,6 @@
                       <span class="text-[#444]">{{ concern.flag }}</span>
                     </li>
                   </ul>
-                </div>
-
-                <!-- Transit commute -->
-                <div
-                  v-if="commuteEntries.length"
-                  class="mt-4 flex flex-col gap-3.5 border-t border-black/6 pt-4"
-                >
-                  <div
-                    v-for="entry in commuteEntries"
-                    :key="entry.label"
-                    class="flex flex-col gap-1.5 border-b border-black/5 pb-3.5 last:border-0 last:pb-0"
-                  >
-                    <div class="flex items-baseline justify-between gap-3 text-[13px] leading-none">
-                      <div>
-                        <span class="font-semibold text-[#111]">{{ entry.mins }} minutes</span>
-                        <span class="font-medium text-[#444]"> to {{ entry.label }}</span>
-                      </div>
-                      <div class="text-right text-[10px] font-normal whitespace-nowrap text-[#aaa]">
-                        arriving 9:00 Monday
-                      </div>
-                    </div>
-
-                    <div
-                      v-if="entry.barSegments.length > 0"
-                      class="flex h-[20px] w-full overflow-hidden rounded-full border border-black/10 bg-[#f8f7f3] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]"
-                    >
-                      <div
-                        v-for="(seg, sIdx) in entry.barSegments"
-                        :key="sIdx"
-                        :style="{ width: `${(seg.durationMins / entry.mins) * 100}%` }"
-                        class="flex h-full flex-shrink-0 items-center justify-center overflow-hidden border-r border-white font-semibold whitespace-nowrap text-white last:border-r-0"
-                        :class="getModeBgClass(seg.mode)"
-                      >
-                        <template v-if="seg.mode === 'WALK'">
-                          <span
-                            v-if="seg.durationMins / entry.mins > 0.08"
-                            class="text-[10.5px] text-[#666]"
-                          >
-                            {{ seg.durationMins }}
-                          </span>
-                        </template>
-                        <template v-else-if="seg.mode === 'WAIT'">
-                          <div
-                            class="h-full w-full"
-                            style="
-                              background-image: repeating-linear-gradient(
-                                45deg,
-                                transparent,
-                                transparent 2px,
-                                rgba(0, 0, 0, 0.06) 2px,
-                                rgba(0, 0, 0, 0.06) 4px
-                              );
-                            "
-                          ></div>
-                        </template>
-                        <template v-else>
-                          <span v-if="seg.durationMins / entry.mins > 0.15" class="text-[10.5px]">
-                            {{ formatTransitLabel(seg) }} ({{ seg.durationMins }} mins)
-                          </span>
-                          <span
-                            v-else-if="seg.durationMins / entry.mins > 0.08"
-                            class="text-[10.5px]"
-                          >
-                            {{ seg.durationMins }}
-                          </span>
-                        </template>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 <!-- Actions row + integrated note (logged-in users) -->
@@ -649,20 +567,6 @@
                   </div>
                   <div class="flex flex-col gap-1.5 text-[13px]">
                     <div
-                      v-if="listing.buurtWozValue != null"
-                      class="flex justify-between text-[#555]"
-                    >
-                      <span class="text-[#999]">Avg. WOZ value</span>
-                      <span>{{ formatPrice(listing.buurtWozValue) }}</span>
-                    </div>
-                    <div
-                      v-if="listing.buurtOwnerOccupiedPct != null"
-                      class="flex justify-between text-[#555]"
-                    >
-                      <span class="text-[#999]">Owner-occupied</span>
-                      <span>{{ listing.buurtOwnerOccupiedPct }}%</span>
-                    </div>
-                    <div
                       v-if="listing.buurtSafetyRating != null"
                       class="flex justify-between text-[#555]"
                     >
@@ -676,41 +580,6 @@
                       <span class="text-[#999]">Crimes per 1,000</span>
                       <span>{{ listing.buurtCrimesPer1000 }}</span>
                     </div>
-                  </div>
-                </div>
-
-                <!-- Financials card -->
-                <div class="mt-4 rounded-xl border border-black/6 bg-[#f0f0ee] px-4 py-3">
-                  <div class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#888]">
-                    Financials
-                  </div>
-                  <div class="flex flex-col gap-1.5 text-[13px]">
-                    <div class="flex justify-between text-[#555]">
-                      <span class="text-[#999]">Mortgage (4.5%, 30yr)</span>
-                      <span>{{ formatPrice(monthlyMortgage) }}</span>
-                    </div>
-                    <div v-if="listing.vveCostsMonthly" class="flex justify-between text-[#555]">
-                      <span class="text-[#999]">VvE contribution</span>
-                      <span>{{ formatPrice(listing.vveCostsMonthly) }}</span>
-                    </div>
-                    <div
-                      v-if="listing.erfpachtCostsMonthly"
-                      class="flex justify-between text-[#555]"
-                    >
-                      <span class="text-[#999]">Erfpacht (leasehold)</span>
-                      <span>{{ formatPrice(listing.erfpachtCostsMonthly) }}</span>
-                    </div>
-                    <div v-if="estimatedOzb" class="flex justify-between text-[#555]">
-                      <span class="text-[#999]">Property tax (OZB)</span>
-                      <span>{{ formatPrice(estimatedOzb) }}</span>
-                    </div>
-                    <template v-if="hasExtraMonthlyCosts">
-                      <div class="my-0.5 h-px bg-black/6"></div>
-                      <div class="flex justify-between font-medium text-[#444]">
-                        <span>Total</span>
-                        <span>{{ formatPrice(totalMonthlyCost) }}/mo</span>
-                      </div>
-                    </template>
                   </div>
                 </div>
 
@@ -781,12 +650,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from "vue";
 import { useRouter } from "vue-router";
-import { getEstimatedClosingPrice, getOverbidRatePctForUrl } from "@ernest/shared";
 import type { ReactionType } from "@ernest/shared";
 import { useListingStore } from "@/composables/useListingStore";
 import { useAuth } from "@/composables/useAuth";
 import { flyTo } from "@/composables/useMapPosition";
-import { AMSTERDAM_CENTRAAL } from "@/geo/constants";
 import PhotoGallery from "@/components/PhotoGallery.vue";
 import PhotoViewer from "@/components/PhotoViewer.vue";
 import ListingMiniMap from "@/components/ListingMiniMap.vue";
@@ -831,51 +698,6 @@ let saveDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 let savedFadeTimer: ReturnType<typeof setTimeout> | null = null;
 let prevFundaId: string | null = null;
 
-const overbidRatePct = computed(() => {
-  if (!listing.value) return null;
-  return getOverbidRatePctForUrl(listing.value.url);
-});
-
-const overbidPrice = computed(() => {
-  if (!listing.value) return 0;
-  return getEstimatedClosingPrice(listing.value.price, listing.value.url) ?? listing.value.price;
-});
-
-const monthlyMortgage = computed(() => {
-  if (!listing.value) return 0;
-  const principal = overbidPrice.value;
-  const monthlyRate = 0.045 / 12;
-  const months = 360;
-  return Math.round(
-    (principal * (monthlyRate * Math.pow(1 + monthlyRate, months))) /
-      (Math.pow(1 + monthlyRate, months) - 1),
-  );
-});
-
-const estimatedOzb = computed(() => {
-  if (!listing.value) return null;
-  const woz = listing.value.wozValue ?? listing.value.buurtWozValue;
-  if (woz == null) return null;
-  // Amsterdam OZB rate ~0.05% annually
-  return Math.round((woz * 0.0005) / 12);
-});
-
-const totalMonthlyCost = computed(() => {
-  let total = monthlyMortgage.value;
-  if (listing.value?.vveCostsMonthly) total += listing.value.vveCostsMonthly;
-  if (listing.value?.erfpachtCostsMonthly) total += listing.value.erfpachtCostsMonthly;
-  if (estimatedOzb.value) total += estimatedOzb.value;
-  return total;
-});
-
-const hasExtraMonthlyCosts = computed(() => {
-  return (
-    (listing.value?.vveCostsMonthly ?? 0) > 0 ||
-    (listing.value?.erfpachtCostsMonthly ?? 0) > 0 ||
-    (estimatedOzb.value ?? 0) > 0
-  );
-});
-
 const listingAgeText = computed(() => {
   if (!listing.value?.offeredSince) return null;
   const offered = new Date(listing.value.offeredSince);
@@ -900,104 +722,6 @@ const keyFacts = computed(() => {
   return parts.join(" \u00B7 ");
 });
 
-const commuteEntries = computed(() => {
-  if (!listing.value) return [];
-  const entries: {
-    mins: number;
-    label: string;
-    barSegments: { mode: string; durationMins: number; line?: string }[];
-  }[] = [];
-
-  function buildBarSegments(
-    totalMins: number,
-    rawSegments: import("@ernest/shared").TransitSegment[],
-  ) {
-    // Keep all walk and transit segments, but distribute missing time as WAIT segments
-    let sum = 0;
-    for (const seg of rawSegments) sum += seg.durationMins;
-    let missing = Math.max(0, totalMins - sum);
-
-    const transitIndexes: number[] = [];
-    rawSegments.forEach((seg, i) => {
-      if (seg.mode !== "WALK") transitIndexes.push(i);
-    });
-
-    // If there are transit segments, put the wait time before them
-    const waitAmounts = Array.from({ length: rawSegments.length }).fill(0) as number[];
-    if (transitIndexes.length > 0 && missing > 0) {
-      const waitPer = Math.floor(missing / transitIndexes.length);
-      let remainder = missing % transitIndexes.length;
-      for (const i of transitIndexes) {
-        waitAmounts[i] = waitPer + (remainder > 0 ? 1 : 0);
-        if (remainder > 0) remainder--;
-      }
-    } else if (missing > 0) {
-      // No transit segments (pure walk?), just put all wait time at the end
-      waitAmounts.push(missing);
-    }
-
-    const barSegments: { mode: string; durationMins: number; line?: string }[] = [];
-    for (let i = 0; i < rawSegments.length; i++) {
-      if (waitAmounts[i] > 0) {
-        barSegments.push({ mode: "WAIT", durationMins: waitAmounts[i] });
-      }
-      // Combine adjacent walks (if any)
-      if (
-        rawSegments[i].mode === "WALK" &&
-        barSegments.length > 0 &&
-        barSegments[barSegments.length - 1].mode === "WALK"
-      ) {
-        barSegments[barSegments.length - 1].durationMins += rawSegments[i].durationMins;
-      } else {
-        barSegments.push({ ...rawSegments[i] });
-      }
-    }
-    if (waitAmounts.length > rawSegments.length && waitAmounts[rawSegments.length] > 0) {
-      barSegments.push({ mode: "WAIT", durationMins: waitAmounts[rawSegments.length] });
-    }
-
-    return barSegments;
-  }
-
-  const centraalRoute = listing.value.routeCentraal;
-  if (centraalRoute) {
-    entries.push({
-      mins: centraalRoute.duration,
-      barSegments: buildBarSegments(centraalRoute.duration, centraalRoute.segments || []),
-      label: AMSTERDAM_CENTRAAL.name,
-    });
-  }
-  return entries;
-});
-
-function getModeBgClass(mode: string) {
-  if (mode === "SUBWAY") return "bg-[#1560a8]"; // M52 blue
-  if (mode === "TRAM") return "bg-[#259b73]"; // Tram green
-  if (mode === "TRAIN") return "bg-[#5545a1]"; // Train purple
-  if (mode === "BUS") return "bg-[#da5c3a]"; // Bus orange
-  if (mode === "FERRY") return "bg-[#0891b2]"; // Cyan
-  if (mode === "WAIT") return "bg-[#f4f4ef]"; // Wait
-  return "bg-[#f4f4ef]"; // Walk
-}
-
-function formatTransitLabel(
-  seg:
-    | import("@ernest/shared").TransitSegment
-    | { mode: string; durationMins: number; line?: string },
-) {
-  if (seg.mode === "SUBWAY") return `M${seg.line || ""}`.trim();
-  if (seg.mode === "TRAIN") {
-    const l = seg.line?.toLowerCase() || "";
-    if (l.includes("sprinter")) return "Sprinter";
-    if (l.includes("intercity")) return "Intercity";
-    return "Train";
-  }
-  if (seg.mode === "TRAM") return "Tram";
-  if (seg.mode === "BUS") return "Bus";
-  if (seg.mode === "FERRY") return "Ferry";
-  return seg.mode;
-}
-
 const energyLabelBadge = computed(() => {
   if (!listing.value) return null;
   const label = listing.value.energyLabel;
@@ -1007,24 +731,10 @@ const energyLabelBadge = computed(() => {
   return { text: `Label ${label}`, cls: "bg-emerald-500/10 text-emerald-700" };
 });
 
-const ownershipBadge = computed(() => {
-  if (!listing.value) return null;
-  const ownership = listing.value.ownership;
-  if (!ownership) return null;
-  const isErfpacht = ownership.toLowerCase().includes("erfpacht");
-  if (isErfpacht) return { text: ownership, cls: "bg-amber-500/10 text-amber-700" };
-  return { text: ownership, cls: "bg-black/5 text-[#666]" };
-});
-
 const hasBuurtStats = computed(() => {
   if (!listing.value) return false;
   const l = listing.value;
-  return (
-    l.buurtWozValue != null ||
-    l.buurtSafetyRating != null ||
-    l.buurtCrimesPer1000 != null ||
-    l.buurtOwnerOccupiedPct != null
-  );
+  return l.buurtSafetyRating != null || l.buurtCrimesPer1000 != null;
 });
 
 const displayDescription = computed(() => {
@@ -1034,13 +744,6 @@ const displayDescription = computed(() => {
 
 function formatPrice(price: number): string {
   return `\u20AC${price.toLocaleString("nl-NL")}`;
-}
-
-function formatPct(value: number): string {
-  return `${value.toLocaleString("nl-NL", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}%`;
 }
 
 function copyLink() {

@@ -23,10 +23,8 @@ interface SyncResult {
 
 async function upsertListing(listing: NewListing, buurt: BuurtStats | null) {
   const buurtFields = {
-    buurtWozValue: buurt?.buurtWozValue ?? null,
     buurtSafetyRating: buurt?.buurtSafetyRating ?? null,
     buurtCrimesPer1000: buurt?.buurtCrimesPer1000 ?? null,
-    buurtOwnerOccupiedPct: buurt?.buurtOwnerOccupiedPct ?? null,
   };
 
   return db
@@ -56,11 +54,6 @@ async function upsertListing(listing: NewListing, buurt: BuurtStats | null) {
           WHEN excluded.description IS DISTINCT FROM ${listings.description} THEN NULL
           ELSE ${listings.descriptionEnSourceHash}
         END`,
-        ownership: listing.ownership,
-        vveCostsMonthly: listing.vveCostsMonthly,
-        erfpachtCostsMonthly: listing.erfpachtCostsMonthly,
-        // Only update WOZ if incoming value is non-null (don't overwrite existing with null)
-        ...(listing.wozValue != null ? { wozValue: listing.wozValue } : {}),
         hasGarden: listing.hasGarden,
         hasBalcony: listing.hasBalcony,
         hasRoofTerrace: listing.hasRoofTerrace,
@@ -77,7 +70,6 @@ async function upsertListing(listing: NewListing, buurt: BuurtStats | null) {
 }
 
 export async function syncListings(incoming: NewListing[]): Promise<SyncResult> {
-  // Upsert all listings sequentially (DB operations, fine to serialize)
   for (const listing of incoming) {
     const buurt = matchBuurt(listing.latitude, listing.longitude);
     await upsertListing(listing, buurt); // eslint-disable-line no-await-in-loop
@@ -108,20 +100,6 @@ export async function syncListings(incoming: NewListing[]): Promise<SyncResult> 
     }
   }
 
-  // Enqueue jobs for active listings needing routes
-  const needRoutes = await db
-    .select({ fundaId: listings.fundaId })
-    .from(listings)
-    .where(and(isActiveListing, isNull(listings.routeCentraal)));
-
-  const routeJobs = needRoutes.map((r) => ({
-    type: "compute-routes" as const,
-    fundaId: r.fundaId,
-    maxAttempts: 3,
-  }));
-
-  const routesEnqueued = await enqueueMany(routeJobs);
-
   let translatedEnqueued = 0;
   if (ANTHROPIC_API_KEY) {
     const candidates = await db
@@ -147,9 +125,27 @@ export async function syncListings(incoming: NewListing[]): Promise<SyncResult> 
     translatedEnqueued = await enqueueMany(translateJobs);
   }
 
+  // Telegram notifications are currently disabled. Handler and rules remain in place,
+  // so re-enabling means flipping this flag.
+  const TELEGRAM_NOTIFICATIONS_ENABLED = false;
+  let notifyEnqueued = 0;
+  if (TELEGRAM_NOTIFICATIONS_ENABLED) {
+    const notifyCandidates = await db
+      .select({ fundaId: listings.fundaId })
+      .from(listings)
+      .where(and(isActiveListing, isNull(listings.notifiedAt)));
+
+    const notifyJobs = notifyCandidates.map((l) => ({
+      type: "telegram-notify" as const,
+      fundaId: l.fundaId,
+      maxAttempts: 3,
+    }));
+    notifyEnqueued = await enqueueMany(notifyJobs);
+  }
+
   return {
     upserted: incoming.length,
     disappeared,
-    jobsEnqueued: routesEnqueued + translatedEnqueued,
+    jobsEnqueued: translatedEnqueued + notifyEnqueued,
   };
 }

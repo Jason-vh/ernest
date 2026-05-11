@@ -1,30 +1,4 @@
-export interface TransitSegment {
-  mode: "WALK" | "SUBWAY" | "TRAM" | "BUS" | "TRAIN" | "FERRY" | "TRANSIT";
-  durationMins: number;
-  line?: string;
-}
-
-export interface TransitRoute {
-  duration: number;
-  geometry: {
-    type: "LineString";
-    coordinates: [number, number][];
-  };
-  segments: TransitSegment[];
-}
-
-export interface TransitRoutes {
-  centraal: TransitRoute | null;
-}
-
 export type ReactionType = "favourite" | "discarded";
-
-export {
-  OVERBID_RATE_PCT_BY_CITY_SLUG,
-  getEstimatedClosingPrice,
-  getListingCitySlug,
-  getOverbidRatePctForUrl,
-} from "./overbid";
 
 export interface ListingNote {
   userId: string;
@@ -93,6 +67,7 @@ export interface Listing {
   postcode: string | null;
   city: string | null;
   neighbourhood: string | null;
+  /** Monthly rent in EUR */
   price: number;
   bedrooms: number;
   livingArea: number;
@@ -101,25 +76,16 @@ export interface Listing {
   constructionYear: number | null;
   description: string | null;
   descriptionEn: string | null;
-  ownership: string | null;
-  vveCostsMonthly: number | null;
-  erfpachtCostsMonthly: number | null;
-  wozValue: number | null;
   hasGarden: boolean | null;
   hasBalcony: boolean | null;
   hasRoofTerrace: boolean | null;
   latitude: number;
   longitude: number;
-  buurtWozValue: number | null;
   buurtSafetyRating: number | null;
   buurtCrimesPer1000: number | null;
-  buurtOwnerOccupiedPct: number | null;
   photos: string[];
   status: string;
   offeredSince: string | null;
-
-  /** Public transit route to Amsterdam Centraal */
-  routeCentraal: TransitRoute | null;
 
   /** Collaborative reaction (null = unreviewed) */
   reaction: ReactionType | null;

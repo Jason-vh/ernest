@@ -76,9 +76,9 @@ async function fetchAndResize(url: string): Promise<ResizedImage | null> {
   }
 }
 
-const SYSTEM_PROMPT = `You review Funda listings on behalf of a buyer who is NOT the agent's customer. The agent is selling. You are not.
+const SYSTEM_PROMPT = `You review Funda rental listings on behalf of a renter who is NOT the agent's customer. The agent represents the landlord. You do not.
 
-Surface concerns about the property a buyer might miss when scrolling. Focus on substantive issues visible in photos or implied by the data.
+Surface concerns about the property a renter might miss when scrolling. Focus on substantive issues visible in photos or implied by the data.
 
 Output language: always English. Never Dutch.
 
@@ -89,35 +89,37 @@ Discipline:
 
 Severity rules (use these strictly):
 
-high (material to a buying decision):
-- Construction year before 1925 (foundation / palenrot risk in Amsterdam).
-- No outdoor space at all (no garden, balcony, or roof terrace).
-- Visible damp, rot, or structural damage in photos.
-- Energy label F or G with no renovation indicated.
+high (material to renting decision):
+- Visible damp, rot, mould, or structural damage in photos.
+- No outdoor space at all (no garden, balcony, or roof terrace) when explicitly marketed as having one.
+- Energy label F or G (high utility bills, often tenant-paid).
+- Heating system absent or clearly broken in photos.
 
-medium (worth investigating before bidding):
-- No bathtub anywhere in the property.
-- Construction year 1925 to 1970 combined with another concern.
-- Erfpacht with canon renewal coming up or unfavourable terms.
-- Very low VvE costs (suggests under-funded reserves).
-- Visible significant wear in kitchen or bathroom.
+medium (worth investigating before signing):
+- Listing furnished / semi-furnished with worn or mismatched furniture that the tenant may be stuck with.
+- Tiny kitchen or absent appliances (no oven, no proper fridge) visible in photos.
+- Bathroom shared, missing shower, or in clearly poor condition.
+- Description mentions short-term lease, diplomat clause, or unusual restrictions.
+- Listing in a basement / souterrain with limited daylight or below-grade windows.
 
 low (worth knowing):
 - Tight room dimensions clearly visible.
-- Dated finish in main rooms with no renovation mentioned.
+- Dated finish in main rooms.
+- Limited natural light in photos.
 
 If most of your flags are medium, you are miscalibrated.
 
 Do NOT flag:
 - Photo composition, drone shots, camera angles, or photo quality.
 - Missing photos, rooms not photographed, or "what should have been shown".
-- Aesthetic choices: tile colour, decor, paint, art, furniture.
+- Aesthetic choices: tile colour, decor, paint, art, furniture style.
 - Lack of inspection or maintenance history. Absence of documentation is not itself a concern, only flag when something is actively wrong.
 - Adjacent buildings, signs, or context at the edges of photos.
 - Ceiling heights unless clearly below 2.3m or noted as low.
-- Construction year on its own unless before 1925.
+- Construction year (renters don't care about foundations).
+- Anything about purchase price, mortgage, VvE, erfpacht, or ownership — this is a rental.
 
-Dutch listing copy often uses words that mask concerns ("karakteristiek", "knus", "potentie", "in oude staat"). Reason about what specific concern they may hide rather than translating literally. Only flag when context shows the concern is real.
+Dutch listing copy often uses words that mask concerns ("karakteristiek", "knus", "gezellig", "in oude staat"). Reason about what specific concern they may hide rather than translating literally. Only flag when context shows the concern is real.
 
 Flag style:
 - Hard limit: 15 words per flag. Aim for 8 to 12.
@@ -126,8 +128,8 @@ Flag style:
 - No em-dashes. Use commas, periods, or short sentences.
 - No image numbers, no "the photo shows" preamble. Just the finding.
 
-Good: "Construction year 1899, high foundation risk in Amsterdam."
-Bad: "The construction year of 1899 may indicate the property has older foundations which could potentially be a concern."`;
+Good: "Energy label F, expect high winter utility bills."
+Bad: "The energy label of F may suggest higher utility costs which could potentially be a concern."`;
 
 const RESPONSE_SCHEMA = {
   type: "object",
@@ -165,9 +167,6 @@ export function hashCatchSource(listing: DbListing): string {
     String(listing.livingArea),
     listing.energyLabel ?? "",
     String(listing.constructionYear ?? ""),
-    listing.ownership ?? "",
-    String(listing.vveCostsMonthly ?? ""),
-    String(listing.erfpachtCostsMonthly ?? ""),
     listing.status,
     listing.offeredSince ?? "",
   ];
@@ -187,26 +186,16 @@ function buildContextBlock(listing: DbListing): string {
   if (listing.neighbourhood || listing.city) {
     lines.push(`Area: ${[listing.neighbourhood, listing.city].filter(Boolean).join(", ")}`);
   }
-  lines.push(`Asking price: €${listing.price.toLocaleString("nl-NL")}`);
+  lines.push(`Monthly rent: €${listing.price.toLocaleString("nl-NL")}`);
   lines.push(`Living area: ${listing.livingArea} m²`);
   lines.push(`Bedrooms: ${listing.bedrooms}`);
   lines.push(
     `Construction year: ${listing.constructionYear != null ? String(listing.constructionYear) : "not provided"}`,
   );
   lines.push(`Energy label: ${listing.energyLabel ?? "not provided"}`);
-  if (listing.ownership) lines.push(`Ownership: ${listing.ownership}`);
-  if (listing.vveCostsMonthly != null) lines.push(`VvE monthly: €${listing.vveCostsMonthly}`);
-  if (listing.erfpachtCostsMonthly != null) {
-    lines.push(`Erfpacht monthly: €${listing.erfpachtCostsMonthly}`);
-  }
   if (listing.hasGarden) lines.push("Garden: yes");
   if (listing.hasBalcony) lines.push("Balcony: yes");
   if (listing.hasRoofTerrace) lines.push("Roof terrace: yes");
-  if (listing.wozValue != null)
-    lines.push(`WOZ value: €${listing.wozValue.toLocaleString("nl-NL")}`);
-  if (listing.buurtWozValue != null) {
-    lines.push(`Buurt avg WOZ: €${listing.buurtWozValue.toLocaleString("nl-NL")}`);
-  }
   if (listing.buurtSafetyRating != null) {
     lines.push(`Buurt safety: ${listing.buurtSafetyRating}/10`);
   }

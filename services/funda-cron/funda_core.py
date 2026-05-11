@@ -1,78 +1,16 @@
-"""Shared Funda listing fetch, filter, and GeoJSON conversion logic."""
+"""Shared Funda rental fetch, filter, and GeoJSON conversion logic."""
 
 import json
-import os
-import re
 import time
-from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from funda import Funda
 
-PRICE_MIN = 450000
-PRICE_MAX = 600000
-MAX_ESTIMATED_CLOSING_PRICE = 590000
-MIN_BEDROOMS = 3
-MIN_LIVING_AREA = 65
-ACCEPTABLE_LABELS = {"A+++", "A++", "A+", "A", "B", "C", "D", "unknown"}
+MIN_BEDROOMS = 2
+# "Energy label > D" means strictly better than D.
+ACCEPTABLE_LABELS = {"A+++", "A++", "A+", "A", "B", "C"}
 DETAIL_WORKERS = 8
 SEARCH_LOCATION = "amsterdam"
-SEARCH_RADIUS_KM = 30
-EXCLUDED_CONSTRUCTION_TYPES = {"newly_built"}
-
-
-def _find_overbid_rates_path():
-    env_path = os.environ.get("OVERBID_RATES_PATH")
-    if env_path:
-        path = Path(env_path).expanduser()
-        if path.is_file():
-            return path
-
-    here = Path(__file__).resolve()
-    candidates = [here.with_name("overbid-rates.json")]
-    candidates.extend(parent / "packages" / "shared" / "overbid-rates.json" for parent in here.parents)
-
-    for path in candidates:
-        if path.is_file():
-            return path
-
-    raise FileNotFoundError(
-        "Could not find overbid-rates.json. Set OVERBID_RATES_PATH or place the file next to funda_core.py."
-    )
-
-
-OVERBID_RATES_PATH = _find_overbid_rates_path()
-with OVERBID_RATES_PATH.open() as f:
-    OVERBID_RATE_PCT_BY_CITY_SLUG = json.load(f)
-
-
-def _parse_monthly_cost(value):
-    """Parse Dutch currency strings like '€ 121,00 per maand' or '€ 1.800 per jaar' to monthly int."""
-    if not value or not isinstance(value, str):
-        return None
-    # Strip euro sign and whitespace
-    s = value.replace("€", "").strip()
-    # Detect yearly vs monthly
-    is_yearly = "jaar" in s.lower()
-    # Extract numeric part: remove everything after the number
-    # e.g. "121,00 per maand" or "1.800,- per jaar" or "1.800 per jaar"
-    num_match = re.match(r"[\d.,\-]+", s.strip())
-    if not num_match:
-        return None
-    num_str = num_match.group(0)
-    # Remove trailing dash/comma (e.g. "1.800,-" -> "1.800")
-    num_str = num_str.rstrip(",-")
-    # Dutch format: dots are thousands, comma is decimal
-    # Remove thousand separators
-    num_str = num_str.replace(".", "")
-    # Replace decimal comma with dot
-    num_str = num_str.replace(",", ".")
-    try:
-        amount = float(num_str)
-    except ValueError:
-        return None
-    if is_yearly:
-        amount = amount / 12
-    return round(amount)
+SEARCH_RADIUS_KM = 15
 
 
 def _is_terminal_page_error(error):
@@ -82,20 +20,7 @@ def _is_terminal_page_error(error):
     if status_code == 400:
         return True
 
-    # Fallback for wrapped exceptions that only expose status in text.
     return "400" in str(error)
-
-
-def _extract_city_slug_from_url(url):
-    if not isinstance(url, str):
-        return None
-
-    match = re.search(r"/koop/([^/]+)/", url)
-    if not match:
-        return None
-
-    slug = match.group(1).strip()
-    return slug or None
 
 
 def _build_listing_url(listing, detail):
@@ -111,26 +36,12 @@ def _build_listing_url(listing, detail):
     return None
 
 
-def _estimate_closing_price(price, url):
-    if price is None:
-        return None
-
-    slug = _extract_city_slug_from_url(url)
-    if slug is None:
-        return None
-
-    rate_pct = OVERBID_RATE_PCT_BY_CITY_SLUG.get(slug)
-    if not isinstance(rate_pct, (int, float)):
-        return None
-
-    return round(price * (1 + rate_pct / 100))
-
-
-def _is_excluded_construction_type(value):
-    return isinstance(value, str) and value.strip().lower() in EXCLUDED_CONSTRUCTION_TYPES
-
-
 def fetch_all_listings(log=print, limit=None):
+    """Fetch all rental listings around Amsterdam.
+
+    pyfunda's `offering_type="rent"` leaks buy listings, so callers must filter
+    by `price_condition == "per_month"`.
+    """
     f = Funda(timeout=30)
     all_listings = []
     seen_ids = set()
@@ -145,13 +56,10 @@ def fetch_all_listings(log=print, limit=None):
             results = f.search_listing(
                 SEARCH_LOCATION,
                 radius_km=SEARCH_RADIUS_KM,
-                offering_type="buy",
-                price_min=PRICE_MIN,
-                price_max=PRICE_MAX,
+                offering_type="rent",
                 page=page,
             )
         except Exception as e:
-            # Some backends use one-based page indexing; recover once if page 0 is rejected.
             if page == 0 and _is_terminal_page_error(e) and not tried_one_based_fallback:
                 tried_one_based_fallback = True
                 page = 1
@@ -189,28 +97,24 @@ def fetch_all_listings(log=print, limit=None):
 def filter_listings(listings, log=print):
     filtered = []
     for listing in listings:
-        price = listing.get("price")
-        if price is None or price > MAX_ESTIMATED_CLOSING_PRICE:
+        # Funda's "rent" search leaks buy listings; only keep monthly rentals.
+        if listing.get("price_condition") != "per_month":
+            continue
+
+        if listing.get("price") is None:
             continue
 
         bedrooms = listing.get("bedrooms")
         if bedrooms is None or bedrooms < MIN_BEDROOMS:
             continue
 
-        living_area = listing.get("living_area")
-        if living_area is None or living_area < MIN_LIVING_AREA:
-            continue
-
         energy_label = listing.get("energy_label") or ""
         if energy_label not in ACCEPTABLE_LABELS:
             continue
 
-        if _is_excluded_construction_type(listing.get("construction_type")):
-            continue
-
         filtered.append(listing)
 
-    log(f"  {len(filtered)} listings after basic filtering")
+    log(f"  {len(filtered)} listings after filtering")
     return filtered
 
 
@@ -252,11 +156,6 @@ def enrich_with_coordinates(listings, log=print):
     return coords, details
 
 
-def _fetch_woz_values(details, known_ids=None, log=print):
-    """WOZ fetching disabled to avoid rate limits and slow execution on large radiuses."""
-    return
-
-
 def _extract_city(listing, detail):
     candidates = [
         (detail.get("city") if detail else None),
@@ -272,34 +171,6 @@ def _extract_city(listing, detail):
     return None
 
 
-def filter_affordable_listings(listings, details, log=print):
-    filtered = []
-    missing_rate_count = 0
-
-    for listing in listings:
-        detail = details.get(listing.get("global_id"))
-        if detail and _is_excluded_construction_type(detail.get("construction_type")):
-            continue
-
-        price = listing.get("price")
-        url = _build_listing_url(listing, detail)
-        estimated_closing_price = _estimate_closing_price(price, url)
-
-        if estimated_closing_price is None:
-            missing_rate_count += 1
-            address = listing.get("title") or listing.get("global_id") or "unknown listing"
-            log(f"  Warning: missing overbid rate for {address}, skipping listing")
-            continue
-
-        if estimated_closing_price <= MAX_ESTIMATED_CLOSING_PRICE:
-            filtered.append(listing)
-
-    log(f"  {len(filtered)} listings after affordability filtering")
-    if missing_rate_count > 0:
-        log(f"  Skipped {missing_rate_count} listings with unknown overbid rates")
-    return filtered
-
-
 def to_geojson(listings, coords, details):
     features = []
     for listing in listings:
@@ -313,10 +184,6 @@ def to_geojson(listings, coords, details):
         url = ""
         photo_urls = []
         status = ""
-        ownership = ""
-        vve_costs = None
-        erfpacht_costs = None
-        woz_value = None
         if detail:
             try:
                 url = detail.get("url") or ""
@@ -329,14 +196,8 @@ def to_geojson(listings, coords, details):
             try:
                 chars = detail.get("characteristics") or {}
                 status = chars.get("Status", "")
-                ownership = chars.get("Eigendomssituatie", chars.get("Eigendom", ""))
-                vve_costs = _parse_monthly_cost(chars.get("Bijdrage VvE"))
-                erfpacht_costs = _parse_monthly_cost(
-                    chars.get("Erfpachtcanon") or chars.get("Canon")
-                )
             except Exception:
                 pass
-            woz_value = detail.get("_woz_value")
 
         if not url:
             detail_url = listing.get("detail_url") or ""
@@ -370,10 +231,6 @@ def to_geojson(listings, coords, details):
                     "hasBalcony": listing.get("has_balcony"),
                     "hasRoofTerrace": listing.get("has_roof_terrace"),
                     "status": status,
-                    "ownership": ownership,
-                    "vveCostsMonthly": vve_costs,
-                    "erfpachtCostsMonthly": erfpacht_costs,
-                    "wozValue": woz_value,
                     "photos": json.dumps(photo_urls),
                     "url": url,
                 },
@@ -385,12 +242,10 @@ def to_geojson(listings, coords, details):
 
 def fetch_and_build_geojson(known_ids=None, limit=None, log=print):
     """Full pipeline: fetch, filter, enrich, convert to GeoJSON."""
-    log("Fetching Funda listings...")
+    log("Fetching Funda rentals...")
     listings = fetch_all_listings(log, limit=limit)
     filtered = filter_listings(listings, log)
     coords, details = enrich_with_coordinates(filtered, log=log)
-    affordable = filter_affordable_listings(filtered, details, log=log)
-    _fetch_woz_values(details, known_ids=known_ids, log=log)
-    geojson = to_geojson(affordable, coords, details)
+    geojson = to_geojson(filtered, coords, details)
     log(f"  {len(geojson['features'])} features with coordinates")
     return geojson

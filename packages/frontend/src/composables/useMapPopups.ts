@@ -1,5 +1,4 @@
 import maplibregl from "maplibre-gl";
-import { getEstimatedClosingPrice } from "@ernest/shared";
 import type { Listing } from "@ernest/shared";
 
 function createCell(url: string): HTMLDivElement {
@@ -57,13 +56,8 @@ export function useMapPopups(deps: PopupDeps) {
 
     const p = feature.properties ?? {};
 
-    const listPrice = Number(p.price);
-    const overbidPrice =
-      typeof p.url === "string"
-        ? (getEstimatedClosingPrice(listPrice, p.url) ?? listPrice)
-        : listPrice;
-    const fmtOverbid = `\u20AC${overbidPrice.toLocaleString("nl-NL")}`;
-    const fmtList = `\u20AC${listPrice.toLocaleString("nl-NL")}`;
+    const rent = Number(p.price);
+    const fmtRent = `\u20AC${rent.toLocaleString("nl-NL")}`;
     const details = [
       p.livingArea ? `${p.livingArea} m\u00B2` : null,
       p.bedrooms ? `${p.bedrooms} bedrooms` : null,
@@ -129,11 +123,11 @@ export function useMapPopups(deps: PopupDeps) {
     const priceGroup = document.createElement("div");
     const priceEl = document.createElement("div");
     priceEl.className = "funda-bar-price";
-    priceEl.textContent = fmtOverbid;
+    priceEl.textContent = fmtRent;
     priceGroup.appendChild(priceEl);
     const askingEl = document.createElement("div");
     askingEl.className = "funda-bar-asking";
-    askingEl.textContent = `asking ${fmtList}`;
+    askingEl.textContent = "per month";
     priceGroup.appendChild(askingEl);
     bar.appendChild(priceGroup);
 

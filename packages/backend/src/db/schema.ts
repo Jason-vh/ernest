@@ -12,7 +12,6 @@ import {
   customType,
 } from "drizzle-orm/pg-core";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
-import type { RouteResult } from "@/services/google-routes";
 import type { AuthenticatorTransportFuture } from "@simplewebauthn/server";
 
 const bytea = customType<{ data: Uint8Array; driverValue: Buffer }>({
@@ -94,14 +93,6 @@ export const listings = pgTable(
     aiCatch: jsonb("ai_catch").$type<{ severity: "low" | "medium" | "high"; flag: string }[]>(),
     aiCatchSourceHash: text("ai_catch_source_hash"),
 
-    // Ownership
-    ownership: text("ownership"),
-
-    // Monthly costs
-    vveCostsMonthly: integer("vve_costs_monthly"),
-    erfpachtCostsMonthly: integer("erfpacht_costs_monthly"),
-    wozValue: integer("woz_value"),
-
     // Amenities
     hasGarden: boolean("has_garden"),
     hasBalcony: boolean("has_balcony"),
@@ -112,10 +103,8 @@ export const listings = pgTable(
     longitude: doublePrecision("longitude").notNull(),
 
     // Neighbourhood stats (from buurten GeoJSON)
-    buurtWozValue: integer("buurt_woz_value"),
     buurtSafetyRating: real("buurt_safety_rating"),
     buurtCrimesPer1000: real("buurt_crimes_per_1000"),
-    buurtOwnerOccupiedPct: real("buurt_owner_occupied_pct"),
 
     // Media
     photos: jsonb("photos").$type<string[]>().notNull().default([]),
@@ -124,9 +113,6 @@ export const listings = pgTable(
     status: text("status").notNull().default("Beschikbaar"),
     offeredSince: text("offered_since"),
     disappearedAt: timestamp("disappeared_at", { withTimezone: true }),
-
-    // Pre-computed public transit route to Amsterdam Centraal
-    routeCentraal: jsonb("route_centraal").$type<RouteResult>(),
 
     // Notification tracking
     notifiedAt: timestamp("notified_at", { withTimezone: true }),
@@ -142,7 +128,7 @@ export const listings = pgTable(
 export type Listing = InferSelectModel<typeof listings>;
 export type NewListing = InferInsertModel<typeof listings>;
 
-export type JobType = "compute-routes" | "telegram-notify" | "translate-description";
+export type JobType = "telegram-notify" | "translate-description";
 export type JobStatus = "pending" | "running" | "completed" | "failed" | "skipped";
 
 export const jobs = pgTable(

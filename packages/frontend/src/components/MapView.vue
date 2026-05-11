@@ -38,7 +38,6 @@ import { useMap } from "@/composables/useMap";
 import { setMap, flyTo } from "@/composables/useMapPosition";
 import { useOfficeMarkers } from "@/composables/useOfficeMarkers";
 import { useTransitLayers } from "@/composables/useTransitLayers";
-import { useCommuteFilter } from "@/composables/useCommuteFilter";
 import { useFundaLayer } from "@/composables/useFundaLayer";
 import { useBuildingHighlightLayer } from "@/composables/useBuildingHighlightLayer";
 import { useMapPopups } from "@/composables/useMapPopups";
@@ -103,9 +102,7 @@ onMounted(async () => {
       }
     }
 
-    const { filteredListings } = useCommuteFilter({ listings });
-
-    const { refreshFundaSource } = useFundaLayer(map, filteredListings, {
+    const { refreshFundaSource } = useFundaLayer(map, listings, {
       favouriteIds,
       discardedIds,
       lastViewedFundaId,
@@ -125,7 +122,7 @@ onMounted(async () => {
 
     useMapPopups({
       map,
-      listings: filteredListings,
+      listings,
       selectListing,
       fundaFavouriteVisible,
       fundaUnreviewedVisible,
