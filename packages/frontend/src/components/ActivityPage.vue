@@ -108,15 +108,16 @@
               {{ group.label }}
             </div>
             <div class="overflow-hidden rounded-xl border border-black/6 bg-white">
-              <router-link
+              <button
                 v-for="item in group.items"
                 :key="item.fundaId"
-                :to="{ path: '/', query: { listing: item.fundaId } }"
-                class="activity-row flex items-start gap-3 border-b border-black/5 px-4 py-3 no-underline last:border-0 transition-colors hover:bg-black/3"
+                type="button"
+                class="activity-row flex w-full items-start gap-3 border-0 border-b border-black/5 bg-transparent px-4 py-3 text-left last:border-b-0 transition-colors hover:bg-black/3"
                 :class="{
                   'activity-row--favourited': item.reaction?.type === 'favourite',
                   'activity-row--discarded': item.reaction?.type === 'discarded',
                 }"
+                @click="selectListing(item.fundaId)"
               >
                 <div
                   class="activity-photo h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-[#eee] bg-cover bg-center"
@@ -200,7 +201,7 @@
                     {{ item.reaction.note }}
                   </p>
                 </div>
-              </router-link>
+              </button>
             </div>
           </section>
         </div>
@@ -214,6 +215,9 @@ import { ref, computed, onMounted, watch } from "vue";
 import type { ActivityListing } from "@ernest/shared";
 import { getEstimatedClosingPrice } from "@ernest/shared";
 import { fetchActivity } from "@/api/client";
+import { useListingStore } from "@/composables/useListingStore";
+
+const { selectListing } = useListingStore();
 
 const STATE_STORAGE_KEY = "ernest:activityState";
 

@@ -1,6 +1,7 @@
 import { ref, computed, watch } from "vue";
 import type { Listing, ReactionType, ListingNote } from "@ernest/shared";
 import {
+  fetchFunda,
   putReaction,
   putNote,
   putViewing,
@@ -163,6 +164,23 @@ function syncFromUrl() {
     selectedFundaId.value = null;
     pushedState = false;
   }
+}
+
+const listingsLoading = ref(false);
+let listingsLoadPromise: Promise<Listing[]> | null = null;
+
+function loadListings(): Promise<Listing[]> {
+  if (listingsLoadPromise) return listingsLoadPromise;
+  listingsLoading.value = true;
+  listingsLoadPromise = fetchFunda()
+    .then((data) => {
+      setListings(data);
+      return data;
+    })
+    .finally(() => {
+      listingsLoading.value = false;
+    });
+  return listingsLoadPromise;
 }
 
 function setListings(items: Listing[]) {
@@ -374,6 +392,8 @@ export function useListingStore() {
     navigateCluster,
     consumeDeepLink,
     setListings,
+    loadListings,
+    listingsLoading,
     setReaction,
     saveNote,
     setViewing,

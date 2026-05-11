@@ -66,7 +66,10 @@ import { useListingStore } from "@/composables/useListingStore";
 
 const route = useRoute();
 const { showAuthModal } = useAuth();
-const { syncFromUrl } = useListingStore();
+const { syncFromUrl, loadListings } = useListingStore();
+
+// Kick off listings fetch as early as possible so the modal can open from any route
+void loadListings();
 
 const isMapRoute = computed(() => route.path === "/");
 

@@ -3,7 +3,7 @@
 
   <Transition name="fade">
     <div
-      v-if="loadingListings"
+      v-if="listingsLoading"
       class="pointer-events-none absolute top-3 left-1/2 z-2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-white/55 px-3 py-1.5 text-[12px] font-medium text-[#666] shadow-sm backdrop-blur-2xl"
       role="status"
       aria-live="polite"
@@ -31,7 +31,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from "vue";
-import { fetchStations, fetchLines, fetchFunda } from "@/api/client";
+import { fetchStations, fetchLines } from "@/api/client";
 import { useZoneState } from "@/composables/useZoneState";
 import { useListingStore } from "@/composables/useListingStore";
 import { useMap } from "@/composables/useMap";
@@ -44,7 +44,6 @@ import { useBuildingHighlightLayer } from "@/composables/useBuildingHighlightLay
 import { useMapPopups } from "@/composables/useMapPopups";
 
 const mapContainer = ref<HTMLDivElement>();
-const loadingListings = ref(true);
 
 const {
   zoneVisibility,
@@ -67,7 +66,8 @@ const {
   clusterListingIds,
   selectListing,
   consumeDeepLink,
-  setListings,
+  loadListings,
+  listingsLoading,
   findColocatedIds,
 } = useListingStore();
 
@@ -79,17 +79,13 @@ onMounted(async () => {
   useOfficeMarkers(map);
 
   map.on("load", async () => {
-    // Fire all fetches simultaneously
-    const fundaPromise = fetchFunda();
+    // Funda fetch was kicked off in App.vue on app mount; this awaits the cached promise
+    const fundaPromise = loadListings();
     const [stations, lines] = await Promise.all([fetchStations(), fetchLines()]);
 
     useTransitLayers(map, stations, lines, { transitVisibility, hoveredTransit });
 
-    // Await funda (fetch was already fired in parallel, may already be resolved)
-    const fundaData = await fundaPromise.finally(() => {
-      loadingListings.value = false;
-    });
-    setListings(fundaData);
+    await fundaPromise;
 
     // Fly to deep-linked listing if opened via URL
     const deepLinkedId = consumeDeepLink();

@@ -575,13 +575,27 @@
                       class="mt-2 w-full resize-none rounded-lg border border-black/10 bg-white/80 px-3 py-2 font-inherit text-[13px] text-[#333] outline-none placeholder:text-[#bbb] focus:border-black/20 focus:bg-white"
                     ></textarea>
                     <div class="mt-2 flex items-center justify-end gap-1.5">
-                      <button class="viewing-btn" @click="closeViewingEditor">Cancel</button>
+                      <button
+                        class="viewing-btn"
+                        :disabled="viewingSaving"
+                        @click="closeViewingEditor"
+                      >
+                        Cancel
+                      </button>
                       <button
                         class="viewing-btn viewing-btn--primary"
-                        :disabled="!viewingDateInput"
+                        :disabled="!viewingDateInput || viewingSaving"
                         @click="saveViewing"
                       >
-                        {{ listing.viewing ? "Update" : "Schedule" }}
+                        {{
+                          viewingSaving
+                            ? listing.viewing
+                              ? "Updating…"
+                              : "Scheduling…"
+                            : listing.viewing
+                              ? "Update"
+                              : "Schedule"
+                        }}
                       </button>
                     </div>
                   </div>
@@ -805,6 +819,7 @@ const noteEditorOpen = ref(false);
 const viewingEditorOpen = ref(false);
 const viewingDateInput = ref("");
 const viewingNoteInput = ref("");
+const viewingSaving = ref(false);
 const noteSaving = ref(false);
 const noteSaved = ref(false);
 const scrollContainerRef = ref<HTMLDivElement>();
@@ -1190,11 +1205,14 @@ async function saveViewing() {
     return;
   }
   const note = viewingNoteInput.value.trim();
+  viewingSaving.value = true;
   try {
     await setViewing(listing.value.fundaId, iso, note === "" ? null : note, user.value.username);
     viewingEditorOpen.value = false;
   } catch {
     // optimistic update already rolled back; keep editor open so the user can retry
+  } finally {
+    viewingSaving.value = false;
   }
 }
 
