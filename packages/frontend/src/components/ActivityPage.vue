@@ -1,8 +1,6 @@
 <template>
-  <div class="flex h-full flex-col bg-[#f5f5f5]">
-    <header
-      class="sticky top-0 z-10 flex items-center gap-3 border-b border-black/8 bg-white/80 px-5 py-4 backdrop-blur-lg"
-    >
+  <div class="h-full overflow-y-auto bg-[#f5f5f5]">
+    <header class="flex items-center gap-3 border-b border-black/8 bg-white px-5 py-4">
       <router-link
         to="/"
         class="flex h-8 w-8 items-center justify-center rounded-full text-[#666] no-underline transition-colors hover:bg-black/5"
@@ -26,7 +24,7 @@
 
     <div
       v-if="!loading && !error && items.length > 0"
-      class="sticky top-[57px] z-10 border-b border-black/8 bg-white/90 px-4 py-3 backdrop-blur-lg"
+      class="border-b border-black/8 bg-white px-4 py-3"
     >
       <div class="mx-auto flex w-full max-w-[640px] items-center gap-2">
         <div class="relative flex-1">
@@ -48,8 +46,8 @@
             inputmode="search"
             autocomplete="off"
             spellcheck="false"
-            placeholder="Search address, postcode, city"
-            class="block h-10 w-full rounded-full border border-black/10 bg-white pl-9 pr-9 text-[15px] text-[#222] outline-none transition-colors focus:border-black/25"
+            placeholder="Search"
+            class="block h-10 w-full rounded-full border border-black/10 bg-white pl-9 pr-9 text-[16px] text-[#222] outline-none transition-colors focus:border-black/25"
           />
           <button
             v-if="searchQuery"
@@ -72,7 +70,7 @@
         <div class="relative flex-shrink-0">
           <select
             v-model="stateFilter"
-            class="state-select h-10 cursor-pointer appearance-none rounded-full border border-black/10 bg-white pl-4 pr-8 text-[15px] font-medium text-[#222] outline-none transition-colors focus:border-black/25"
+            class="state-select h-10 cursor-pointer appearance-none rounded-full border border-black/10 bg-white pl-4 pr-8 text-[16px] font-medium text-[#222] outline-none transition-colors focus:border-black/25"
           >
             <option v-for="opt in stateOptions" :key="opt.value" :value="opt.value">
               {{ opt.label }}
@@ -93,7 +91,7 @@
       </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto">
+    <div>
       <div class="mx-auto w-full max-w-[640px] px-4 py-6">
         <div v-if="loading" class="text-center text-[13px] text-[#888]">Loading...</div>
         <div v-else-if="error" class="text-center text-[13px] text-red-600">{{ error }}</div>
