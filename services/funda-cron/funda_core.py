@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from funda import Funda
 
 MIN_BEDROOMS = 2
+MIN_LIVING_AREA_M2 = 60
 MAX_RENT_EUR = 3000
 # "Energy label > D" means strictly better than D.
 ACCEPTABLE_LABELS = {"A+++", "A++", "A+", "A", "B", "C"}
@@ -59,6 +60,7 @@ def fetch_all_listings(log=print, limit=None):
                 radius_km=SEARCH_RADIUS_KM,
                 offering_type="rent",
                 price_max=MAX_RENT_EUR,
+                area_min=MIN_LIVING_AREA_M2,
                 page=page,
             )
         except Exception as e:
@@ -109,6 +111,10 @@ def filter_listings(listings, log=print):
 
         bedrooms = listing.get("bedrooms")
         if bedrooms is None or bedrooms < MIN_BEDROOMS:
+            continue
+
+        living_area = listing.get("living_area")
+        if living_area is None or living_area < MIN_LIVING_AREA_M2:
             continue
 
         energy_label = listing.get("energy_label") or ""

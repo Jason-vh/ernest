@@ -95,23 +95,20 @@ export async function syncListings(incoming: NewListing[]): Promise<SyncResult> 
     }
   }
 
-  // Telegram notifications are currently disabled. Handler and rules remain in place,
-  // so re-enabling means flipping this flag.
-  const TELEGRAM_NOTIFICATIONS_ENABLED = false;
-  let notifyEnqueued = 0;
-  if (TELEGRAM_NOTIFICATIONS_ENABLED) {
-    const notifyCandidates = await db
-      .select({ fundaId: listings.fundaId })
-      .from(listings)
-      .where(and(isActiveListing, isNull(listings.notifiedAt)));
+  // Only enqueue notifications for active listings we haven't notified about yet.
+  // Existing rows are backfilled with notified_at = now() at deploy time so the
+  // first post-enable cron run doesn't flood the channel.
+  const notifyCandidates = await db
+    .select({ fundaId: listings.fundaId })
+    .from(listings)
+    .where(and(isActiveListing, isNull(listings.notifiedAt)));
 
-    const notifyJobs = notifyCandidates.map((l) => ({
-      type: "telegram-notify" as const,
-      fundaId: l.fundaId,
-      maxAttempts: 3,
-    }));
-    notifyEnqueued = await enqueueMany(notifyJobs);
-  }
+  const notifyJobs = notifyCandidates.map((l) => ({
+    type: "telegram-notify" as const,
+    fundaId: l.fundaId,
+    maxAttempts: 3,
+  }));
+  const notifyEnqueued = await enqueueMany(notifyJobs);
 
   return {
     upserted: incoming.length,
