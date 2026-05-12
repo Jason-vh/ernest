@@ -72,6 +72,7 @@ export const listings = pgTable(
     // Identity
     fundaId: text("funda_id").primaryKey(),
     url: text("url").notNull(),
+    source: text("source").notNull().default("funda"),
 
     // Core property data
     address: text("address").notNull(),

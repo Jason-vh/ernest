@@ -28,6 +28,7 @@ async function upsertListing(listing: NewListing, buurt: BuurtStats | null) {
     .onConflictDoUpdate({
       target: listings.fundaId,
       set: {
+        source: listing.source,
         url: listing.url,
         address: listing.address,
         postcode: listing.postcode,

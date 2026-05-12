@@ -62,6 +62,7 @@ export interface ActivityListing {
 /** The shape returned by GET /api/funda — all listing fields except lifecycle timestamps. */
 export interface Listing {
   fundaId: string;
+  source: string;
   url: string;
   address: string;
   postcode: string | null;

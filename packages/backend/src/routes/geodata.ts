@@ -66,6 +66,7 @@ async function queryFundaListings(): Promise<Listing[]> {
   const rows = await db
     .select({
       fundaId: listings.fundaId,
+      source: listings.source,
       url: listings.url,
       address: listings.address,
       postcode: listings.postcode,
@@ -302,6 +303,7 @@ geodata.post(
 
       incoming.push({
         fundaId: String(fundaId),
+        source: typeof p.source === "string" && p.source.trim() !== "" ? p.source : "funda",
         url: p.url || "",
         address: p.address || "",
         postcode: p.postcode || null,

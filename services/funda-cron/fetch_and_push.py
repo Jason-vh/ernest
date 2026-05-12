@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Fetch Funda listings and POST them to the web service for refresh."""
+"""Fetch rentals (Funda + Vesteda) and POST them to the web service."""
 
+import argparse
 import os
 import sys
+
 import requests
-from funda_core import fetch_and_build_geojson
+
+from funda_core import fetch_and_build_geojson as fetch_funda
+from vesteda_core import fetch_and_build_geojson as fetch_vesteda, normalize_address
 
 
 def push_to_server(geojson):
@@ -40,10 +44,8 @@ def push_to_server(geojson):
 
 
 def fetch_known_ids():
-    """Fetch the set of known listing IDs from the backend to skip redundant WOZ fetches."""
     refresh_url = os.environ.get("REFRESH_URL", "")
     refresh_secret = os.environ.get("REFRESH_SECRET", "")
-    # Derive base URL from refresh URL (strip the path)
     base_url = refresh_url.rsplit("/api/", 1)[0] if "/api/" in refresh_url else ""
     if not base_url or not refresh_secret:
         return None
@@ -62,15 +64,61 @@ def fetch_known_ids():
     return None
 
 
+def merge_and_dedup(funda_geojson, vesteda_geojson):
+    """Combine sources, drop Vesteda entries that share an address with Funda."""
+    funda_features = funda_geojson.get("features", [])
+    vesteda_features = vesteda_geojson.get("features", [])
+
+    funda_addresses = {
+        normalize_address((f.get("properties") or {}).get("address", ""))
+        for f in funda_features
+    }
+    funda_addresses.discard("")
+
+    deduped_vesteda = []
+    duplicates = 0
+    for feature in vesteda_features:
+        addr = (feature.get("properties") or {}).get("address", "")
+        if normalize_address(addr) in funda_addresses:
+            duplicates += 1
+            continue
+        deduped_vesteda.append(feature)
+
+    if duplicates:
+        print(f"  Dedup: dropped {duplicates} Vesteda listing(s) already on Funda")
+
+    combined = funda_features + deduped_vesteda
+    return {"type": "FeatureCollection", "features": combined}
+
+
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(description="Fetch and push Funda listings.")
-    parser.add_argument("--limit", type=int, help="Limit the number of properties to fetch")
+    parser = argparse.ArgumentParser(description="Fetch and push rental listings.")
+    parser.add_argument("--limit", type=int, help="Limit listings per source")
+    parser.add_argument("--skip-vesteda", action="store_true")
+    parser.add_argument("--skip-funda", action="store_true")
     args = parser.parse_args()
 
     known_ids = fetch_known_ids()
-    geojson = fetch_and_build_geojson(known_ids=known_ids, limit=args.limit)
-    push_to_server(geojson)
+
+    funda_gj = {"type": "FeatureCollection", "features": []}
+    if not args.skip_funda:
+        try:
+            funda_gj = fetch_funda(known_ids=known_ids, limit=args.limit)
+        except Exception as e:
+            print(f"ERROR: Funda fetch failed: {e}", file=sys.stderr)
+
+    vesteda_gj = {"type": "FeatureCollection", "features": []}
+    if not args.skip_vesteda:
+        try:
+            vesteda_gj = fetch_vesteda(limit=args.limit)
+        except Exception as e:
+            print(f"ERROR: Vesteda fetch failed: {e}", file=sys.stderr)
+
+    combined = merge_and_dedup(funda_gj, vesteda_gj)
+    if not combined["features"]:
+        print("ERROR: no features to push", file=sys.stderr)
+        sys.exit(1)
+    push_to_server(combined)
     print("Done!")
 
 
