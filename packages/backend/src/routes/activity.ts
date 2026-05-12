@@ -9,8 +9,16 @@ const activity = new Hono();
 
 const FEED_LIMIT = 100;
 
+const STATE_FILTERS = ["all", "liked", "discarded", "viewing", "untouched"] as const;
+type StateFilter = (typeof STATE_FILTERS)[number];
+
+function parseState(raw: string | undefined): StateFilter {
+  return STATE_FILTERS.includes(raw as StateFilter) ? (raw as StateFilter) : "all";
+}
+
 activity.get("/", async (c) => {
   const q = (c.req.query("q") ?? "").trim();
+  const state = parseState(c.req.query("state"));
   const reactionUser = alias(users, "reaction_user");
   const viewingUser = alias(users, "viewing_user");
 
@@ -62,6 +70,12 @@ activity.get("/", async (c) => {
               ilike(listings.postcode, `%${q}%`),
               ilike(listings.city, `%${q}%`),
             ),
+        state === "liked" ? eq(listingReactions.reaction, "favourite") : undefined,
+        state === "discarded" ? eq(listingReactions.reaction, "discarded") : undefined,
+        state === "viewing" ? sql`${listingViewings.fundaId} IS NOT NULL` : undefined,
+        state === "untouched"
+          ? and(isNull(listingReactions.reaction), isNull(listingViewings.fundaId))
+          : undefined,
       ),
     )
     .orderBy(sql`${lastActivityExpr} DESC`)

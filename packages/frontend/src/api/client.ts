@@ -85,10 +85,18 @@ export async function deleteViewing(fundaId: string): Promise<void> {
   }
 }
 
-export async function fetchActivity(query = ""): Promise<ActivityListing[]> {
+export type ActivityStateFilter = "all" | "liked" | "discarded" | "viewing" | "untouched";
+
+export async function fetchActivity(
+  query = "",
+  state: ActivityStateFilter = "all",
+): Promise<ActivityListing[]> {
+  const params = new URLSearchParams();
   const trimmed = query.trim();
-  const url = trimmed === "" ? "/api/activity" : `/api/activity?q=${encodeURIComponent(trimmed)}`;
-  const res = await fetch(url);
+  if (trimmed !== "") params.set("q", trimmed);
+  if (state !== "all") params.set("state", state);
+  const qs = params.toString();
+  const res = await fetch(qs === "" ? "/api/activity" : `/api/activity?${qs}`);
   if (!res.ok) throw new Error(`Failed to fetch activity: ${res.status}`);
   return res.json();
 }

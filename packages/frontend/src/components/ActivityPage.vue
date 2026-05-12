@@ -213,7 +213,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import type { ActivityListing } from "@ernest/shared";
-import { fetchActivity } from "@/api/client";
+import { fetchActivity, type ActivityStateFilter } from "@/api/client";
 import { useListingStore } from "@/composables/useListingStore";
 
 const { selectListing } = useListingStore();
@@ -224,7 +224,7 @@ const items = ref<ActivityListing[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
-type StateFilter = "all" | "liked" | "discarded" | "viewing" | "untouched";
+type StateFilter = ActivityStateFilter;
 
 const stateOptions: { value: StateFilter; label: string }[] = [
   { value: "all", label: "All" },
@@ -245,35 +245,14 @@ function readState(): StateFilter {
 const stateFilter = ref<StateFilter>(readState());
 const searchQuery = ref("");
 
-watch(stateFilter, (val) => {
-  localStorage.setItem(STATE_STORAGE_KEY, val);
-});
-
-function matchesState(item: ActivityListing, state: StateFilter): boolean {
-  switch (state) {
-    case "all":
-      return true;
-    case "liked":
-      return item.reaction?.type === "favourite";
-    case "discarded":
-      return item.reaction?.type === "discarded";
-    case "viewing":
-      return item.viewing !== null;
-    case "untouched":
-      return item.reaction === null && item.viewing === null;
-  }
-}
-
-const filteredItems = computed(() =>
-  items.value.filter((item) => matchesState(item, stateFilter.value)),
-);
+const filteredItems = computed(() => items.value);
 
 let searchDebounce: ReturnType<typeof setTimeout> | null = null;
 
-async function reload(query: string) {
+async function reload(query: string, state: StateFilter) {
   loading.value = true;
   try {
-    items.value = await fetchActivity(query);
+    items.value = await fetchActivity(query, state);
     error.value = null;
   } catch (err) {
     error.value = err instanceof Error ? err.message : "Failed to load activity";
@@ -285,13 +264,19 @@ async function reload(query: string) {
 watch(searchQuery, (val) => {
   if (searchDebounce) clearTimeout(searchDebounce);
   searchDebounce = setTimeout(() => {
-    void reload(val);
+    void reload(val, stateFilter.value);
   }, 250);
+});
+
+watch(stateFilter, (val) => {
+  localStorage.setItem(STATE_STORAGE_KEY, val);
+  if (searchDebounce) clearTimeout(searchDebounce);
+  void reload(searchQuery.value, val);
 });
 
 onMounted(async () => {
   try {
-    items.value = await fetchActivity(searchQuery.value);
+    items.value = await fetchActivity(searchQuery.value, stateFilter.value);
   } catch (err) {
     error.value = err instanceof Error ? err.message : "Failed to load activity";
   } finally {
