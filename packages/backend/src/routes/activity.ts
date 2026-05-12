@@ -7,8 +7,6 @@ import type { ActivityListing, ReactionType } from "@ernest/shared";
 
 const activity = new Hono();
 
-const FEED_LIMIT = 100;
-
 activity.get("/", async (c) => {
   const reactionUser = alias(users, "reaction_user");
   const viewingUser = alias(users, "viewing_user");
@@ -56,8 +54,7 @@ activity.get("/", async (c) => {
         or(eq(listings.status, "Beschikbaar"), eq(listings.status, "")),
       ),
     )
-    .orderBy(sql`${lastActivityExpr} DESC`)
-    .limit(FEED_LIMIT);
+    .orderBy(sql`${lastActivityExpr} DESC`);
 
   const items: ActivityListing[] = rows.map((r) => ({
     fundaId: r.fundaId,
