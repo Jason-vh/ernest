@@ -632,7 +632,7 @@
                     Add note
                   </button>
                 </div>
-                <!-- View on Funda -->
+                <!-- View on source site -->
                 <div class="mt-4 border-t border-black/6 pt-4">
                   <a
                     :href="listing.url"
@@ -640,7 +640,15 @@
                     rel="noopener"
                     class="flex w-full items-center justify-center rounded-lg bg-black/5 py-2.5 no-underline transition-colors hover:bg-black/10"
                   >
-                    <img :src="fundaLogo" alt="View on Funda" class="h-[16px]" />
+                    <img
+                      v-if="listing.source === 'funda'"
+                      :src="fundaLogo"
+                      alt="View on Funda"
+                      class="h-[16px]"
+                    />
+                    <span v-else class="text-[13px] font-semibold tracking-wide text-[#444]">
+                      View on {{ sourceLabel }}
+                    </span>
                   </a>
                 </div>
               </div>
@@ -746,6 +754,17 @@ const keyFacts = computed(() => {
   if (listing.value.hasRoofTerrace) parts.push("Roof terrace");
   if (listingAgeText.value) parts.push(listingAgeText.value);
   return parts.join(" \u00B7 ");
+});
+
+const SOURCE_LABELS: Record<string, string> = {
+  funda: "Funda",
+  vesteda: "Vesteda",
+};
+
+const sourceLabel = computed(() => {
+  if (!listing.value) return "";
+  const src = listing.value.source;
+  return SOURCE_LABELS[src] ?? src.charAt(0).toUpperCase() + src.slice(1);
 });
 
 const energyLabelBadge = computed(() => {
