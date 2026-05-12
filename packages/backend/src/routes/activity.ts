@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq, isNull, and, or, sql } from "drizzle-orm";
+import { eq, isNull, and, or, sql, ilike } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import { listings, listingReactions, listingViewings, listingNotes, users } from "@/db/schema";
@@ -7,7 +7,10 @@ import type { ActivityListing, ReactionType } from "@ernest/shared";
 
 const activity = new Hono();
 
+const FEED_LIMIT = 100;
+
 activity.get("/", async (c) => {
+  const q = (c.req.query("q") ?? "").trim();
   const reactionUser = alias(users, "reaction_user");
   const viewingUser = alias(users, "viewing_user");
 
@@ -52,9 +55,17 @@ activity.get("/", async (c) => {
       and(
         isNull(listings.disappearedAt),
         or(eq(listings.status, "Beschikbaar"), eq(listings.status, "")),
+        q === ""
+          ? undefined
+          : or(
+              ilike(listings.address, `%${q}%`),
+              ilike(listings.postcode, `%${q}%`),
+              ilike(listings.city, `%${q}%`),
+            ),
       ),
     )
-    .orderBy(sql`${lastActivityExpr} DESC`);
+    .orderBy(sql`${lastActivityExpr} DESC`)
+    .limit(FEED_LIMIT);
 
   const items: ActivityListing[] = rows.map((r) => ({
     fundaId: r.fundaId,

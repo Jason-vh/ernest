@@ -264,22 +264,34 @@ function matchesState(item: ActivityListing, state: StateFilter): boolean {
   }
 }
 
-function matchesSearch(item: ActivityListing, query: string): boolean {
-  if (query === "") return true;
-  const haystack = `${item.address} ${item.postcode ?? ""} ${item.city ?? ""}`.toLowerCase();
-  return haystack.includes(query);
+const filteredItems = computed(() =>
+  items.value.filter((item) => matchesState(item, stateFilter.value)),
+);
+
+let searchDebounce: ReturnType<typeof setTimeout> | null = null;
+
+async function reload(query: string) {
+  loading.value = true;
+  try {
+    items.value = await fetchActivity(query);
+    error.value = null;
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : "Failed to load activity";
+  } finally {
+    loading.value = false;
+  }
 }
 
-const filteredItems = computed(() => {
-  const query = searchQuery.value.trim().toLowerCase();
-  return items.value.filter(
-    (item) => matchesState(item, stateFilter.value) && matchesSearch(item, query),
-  );
+watch(searchQuery, (val) => {
+  if (searchDebounce) clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => {
+    void reload(val);
+  }, 250);
 });
 
 onMounted(async () => {
   try {
-    items.value = await fetchActivity();
+    items.value = await fetchActivity(searchQuery.value);
   } catch (err) {
     error.value = err instanceof Error ? err.message : "Failed to load activity";
   } finally {

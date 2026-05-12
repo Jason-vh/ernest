@@ -85,8 +85,10 @@ export async function deleteViewing(fundaId: string): Promise<void> {
   }
 }
 
-export async function fetchActivity(): Promise<ActivityListing[]> {
-  const res = await fetch("/api/activity");
+export async function fetchActivity(query = ""): Promise<ActivityListing[]> {
+  const trimmed = query.trim();
+  const url = trimmed === "" ? "/api/activity" : `/api/activity?q=${encodeURIComponent(trimmed)}`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`Failed to fetch activity: ${res.status}`);
   return res.json();
 }
