@@ -730,6 +730,32 @@
                   </div>
                 </div>
 
+                <!-- Nearest stations -->
+                <div
+                  v-if="nearestStations && nearestStations.length > 0"
+                  class="mt-4 rounded-xl border border-black/6 bg-[#f0f0ee] px-4 py-3"
+                >
+                  <div class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#888]">
+                    Nearby stations
+                  </div>
+                  <div class="flex flex-col gap-2">
+                    <div
+                      v-for="s in nearestStations"
+                      :key="s.label"
+                      class="flex items-center gap-3"
+                    >
+                      <div class="flex min-w-0 flex-col">
+                        <span class="truncate text-[13px] font-medium text-[#333]">{{
+                          s.name
+                        }}</span>
+                        <span class="text-[11px] text-[#999]"
+                          >{{ s.distKm.toFixed(1) }} km &middot; {{ s.label }}</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Location mini map -->
                 <ListingMiniMap :longitude="listing.longitude" :latitude="listing.latitude" />
 
@@ -810,8 +836,10 @@ import { useRouter } from "vue-router";
 import type { ListingState } from "@ernest/shared";
 import { sourceLabel as getSourceLabel } from "@ernest/shared";
 import { useListingStore } from "@/composables/useListingStore";
+import { useStationStore } from "@/composables/useStationStore";
 import { useAuth } from "@/composables/useAuth";
 import { flyTo } from "@/composables/useMapPosition";
+import { StopType } from "@/types/transit";
 import PhotoGallery from "@/components/PhotoGallery.vue";
 import PhotoViewer from "@/components/PhotoViewer.vue";
 import ListingMiniMap from "@/components/ListingMiniMap.vue";
@@ -836,6 +864,7 @@ const {
 } = useListingStore();
 const { user } = useAuth();
 const router = useRouter();
+const { stations, ensureLoaded: ensureStationsLoaded } = useStationStore();
 
 const listing = selectedListing;
 const isCluster = computed(() => clusterListingIds.value.length > 1);
@@ -927,6 +956,37 @@ const hasBuurtStats = computed(() => {
   if (!listing.value) return false;
   const l = listing.value;
   return l.buurtSafetyRating != null || l.buurtCrimesPer1000 != null;
+});
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+const STATION_TYPES = [
+  { type: StopType.Train, label: "Train station" },
+  { type: StopType.Metro, label: "Metro station" },
+  { type: StopType.Tram, label: "Tram stop" },
+] as const;
+
+const nearestStations = computed(() => {
+  if (!listing.value || stations.value.length === 0) return null;
+  const { latitude, longitude } = listing.value;
+  return STATION_TYPES.map(({ type, label }) => {
+    let nearest: { name: string; distKm: number } | null = null;
+    for (const s of stations.value) {
+      if (s.type !== type) continue;
+      const d = haversineKm(latitude, longitude, s.lat, s.lon);
+      if (!nearest || d < nearest.distKm) nearest = { name: s.name, distKm: d };
+    }
+    if (!nearest) return null;
+    return { label, name: nearest.name, distKm: nearest.distKm };
+  }).filter((s) => s !== null);
 });
 
 const isTranslating = computed(() =>
@@ -1267,6 +1327,7 @@ watch(listing, (v, oldV) => {
       modalRef.value?.focus();
     });
   }
+  if (v) void ensureStationsLoaded();
 });
 
 // Global keyboard listener (Escape to close, Left/Right for cluster nav)
