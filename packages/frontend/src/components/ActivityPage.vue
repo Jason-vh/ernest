@@ -134,6 +134,9 @@
                     <span v-if="item.city">{{ item.city }}</span>
                     <span v-if="item.city"> &middot; </span>
                     <span>{{ formatPrice(item.price) }}/mo</span>
+                    <span v-if="item.source !== 'funda'">
+                      &middot; {{ getSourceLabel(item.source) }}</span
+                    >
                     <span v-if="item.lastActivityAt !== item.createdAt">
                       &middot; added {{ formatRelative(item.createdAt) }}
                     </span>
@@ -213,6 +216,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import type { ActivityListing } from "@ernest/shared";
+import { sourceLabel as getSourceLabel } from "@ernest/shared";
 import { fetchActivity, type ActivityStateFilter } from "@/api/client";
 import { useListingStore } from "@/composables/useListingStore";
 

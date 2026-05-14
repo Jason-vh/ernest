@@ -35,6 +35,7 @@ export interface UpcomingViewing {
 
 export interface ActivityListing {
   fundaId: string;
+  source: string;
   url: string;
   address: string;
   postcode: string | null;
@@ -57,6 +58,16 @@ export interface ActivityListing {
     by: string;
     at: string;
   } | null;
+}
+
+export const SOURCE_LABELS: Record<string, string> = {
+  funda: "Funda",
+  vesteda: "Vesteda",
+  vbt: "VB&T",
+};
+
+export function sourceLabel(source: string): string {
+  return SOURCE_LABELS[source] ?? source.charAt(0).toUpperCase() + source.slice(1);
 }
 
 /** The shape returned by GET /api/funda — all listing fields except lifecycle timestamps. */

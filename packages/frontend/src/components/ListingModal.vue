@@ -751,6 +751,7 @@
 import { ref, computed, watch, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import type { ReactionType } from "@ernest/shared";
+import { sourceLabel as getSourceLabel } from "@ernest/shared";
 import { useListingStore } from "@/composables/useListingStore";
 import { useAuth } from "@/composables/useAuth";
 import { flyTo } from "@/composables/useMapPosition";
@@ -824,12 +825,6 @@ const keyFacts = computed(() => {
   return parts.join(" \u00B7 ");
 });
 
-const SOURCE_LABELS: Record<string, string> = {
-  funda: "Funda",
-  vesteda: "Vesteda",
-  vbt: "VB&T",
-};
-
 const listingAgeChip = computed(() => {
   if (!listing.value?.offeredSince) return null;
   const offered = new Date(listing.value.offeredSince);
@@ -853,11 +848,7 @@ const chipHasOutsideArea = computed(() => {
   );
 });
 
-const sourceLabel = computed(() => {
-  if (!listing.value) return "";
-  const src = listing.value.source;
-  return SOURCE_LABELS[src] ?? src.charAt(0).toUpperCase() + src.slice(1);
-});
+const sourceLabel = computed(() => (listing.value ? getSourceLabel(listing.value.source) : ""));
 
 const energyLabelBadge = computed(() => {
   if (!listing.value) return null;

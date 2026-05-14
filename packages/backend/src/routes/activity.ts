@@ -31,6 +31,7 @@ activity.get("/", async (c) => {
   const rows = await db
     .select({
       fundaId: listings.fundaId,
+      source: listings.source,
       url: listings.url,
       address: listings.address,
       postcode: listings.postcode,
@@ -83,6 +84,7 @@ activity.get("/", async (c) => {
 
   const items: ActivityListing[] = rows.map((r) => ({
     fundaId: r.fundaId,
+    source: r.source,
     url: r.url,
     address: r.address,
     postcode: r.postcode,
