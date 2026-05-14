@@ -724,11 +724,11 @@
                         <svg width="18" height="18" viewBox="0 0 24 24" v-html="s.icon" />
                       </div>
                       <div class="flex min-w-0 flex-col">
-                        <span class="truncate text-[13px] font-medium text-[#333]">{{
-                          s.name
+                        <span class="text-[13px] font-semibold" :style="{ color: s.color }">{{
+                          s.label
                         }}</span>
-                        <span class="text-[11px] text-[#999]"
-                          >{{ s.distKm.toFixed(1) }} km &middot; {{ s.label }}</span
+                        <span class="truncate text-[11px] text-[#999]"
+                          >{{ s.name }} &middot; {{ s.distKm.toFixed(1) }} km</span
                         >
                       </div>
                     </div>
