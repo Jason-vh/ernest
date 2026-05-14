@@ -197,7 +197,7 @@ def to_geojson(units, details=None) -> dict:
                     "city": addr.get("city") or None,
                     "neighbourhood": None,
                     "description": description,
-                    "offeredSince": u.get("acceptance") or None,
+                    "offeredSince": None,
                     "hasGarden": None,
                     "hasBalcony": None,
                     "hasRoofTerrace": None,
