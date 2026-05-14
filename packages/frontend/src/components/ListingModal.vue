@@ -1104,10 +1104,14 @@ async function saveViewing() {
   } catch {
     return;
   }
+  const { fundaId, reaction, application } = listing.value;
   const note = viewingNoteInput.value.trim();
   viewingSaving.value = true;
   try {
-    await setViewing(listing.value.fundaId, iso, note === "" ? null : note, user.value.username);
+    await setViewing(fundaId, iso, note === "" ? null : note, user.value.username);
+    // Viewing is the active state — clear any conflicting state
+    if (reaction) void setReaction(fundaId, null, user.value.username);
+    if (application) void clearApplication(fundaId);
     viewingEditorOpen.value = false;
   } catch {
     // optimistic update already rolled back; keep editor open so the user can retry
@@ -1127,9 +1131,13 @@ async function cancelViewing() {
 
 async function markApplied() {
   if (!listing.value || !user.value) return;
+  const { fundaId, reaction, viewing } = listing.value;
   applicationSaving.value = true;
   try {
-    await setApplication(listing.value.fundaId, user.value.username);
+    await setApplication(fundaId, user.value.username);
+    // Applied is the active state — clear any conflicting state
+    if (reaction) void setReaction(fundaId, null, user.value.username);
+    if (viewing) void clearViewing(fundaId);
   } catch {
     // optimistic update already rolled back
   } finally {
@@ -1148,12 +1156,15 @@ async function removeApplication() {
 
 function toggleReaction(reaction: ReactionType) {
   if (!listing.value || !user.value) return;
-  const newReaction = listing.value.reaction === reaction ? null : reaction;
-  setReaction(listing.value.fundaId, newReaction, user.value.username);
-  // Auto-open the note editor when setting a reaction (not when clearing)
+  const { fundaId, reaction: cur, viewing, application } = listing.value;
+  const newReaction = cur === reaction ? null : reaction;
   if (newReaction) {
-    noteEditorOpen.value = true;
+    // Reaction is the active state — clear any conflicting state
+    if (viewing) void clearViewing(fundaId);
+    if (application) void clearApplication(fundaId);
   }
+  setReaction(fundaId, newReaction, user.value.username);
+  if (newReaction) noteEditorOpen.value = true;
 }
 
 // Auto-save note on text change (debounced 1s)
