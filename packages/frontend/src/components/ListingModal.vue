@@ -472,8 +472,8 @@
                     <button
                       class="reaction-btn"
                       :class="{ 'reaction-btn--active reaction-btn--applied': listing.application }"
-                      :disabled="applicationSaving || !!listing.application"
-                      @click="markApplied"
+                      :disabled="applicationSaving"
+                      @click="listing.application ? removeApplication() : markApplied()"
                     >
                       <svg
                         width="14"
@@ -628,25 +628,6 @@
                               ? "Update"
                               : "Schedule"
                         }}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Application -->
-                <div v-if="listing.application" class="mt-3">
-                  <div class="viewing-card flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                      <div class="text-[11px] font-semibold uppercase tracking-wide text-blue-700">
-                        Applied
-                      </div>
-                      <div class="mt-0.5 text-[11px] text-[#888]">
-                        by {{ listing.application.appliedBy }}
-                      </div>
-                    </div>
-                    <div v-if="user" class="flex flex-shrink-0 flex-col gap-1.5">
-                      <button class="viewing-btn viewing-btn--danger" @click="removeApplication">
-                        Remove
                       </button>
                     </div>
                   </div>
