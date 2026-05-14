@@ -17,6 +17,7 @@ We keep status==1.
 import json
 import re
 import unicodedata
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 
 import requests
@@ -25,6 +26,15 @@ SEARCH_URL = "https://www.vesteda.com/api/units/search/facet"
 USER_AGENT = "ernest-vesteda-cron/1.0 (+https://ernest.vhtm.eu)"
 HTTP_TIMEOUT = 30
 DETAIL_HOST = "https://www.vesteda.com"
+PHOTO_WORKERS = 8
+
+# CDN photo URL pattern — the /o/ path segment marks original-quality images
+_AZURE_PHOTO_RE = re.compile(
+    r"https://[^\s\"'<>]*azureedge\.net/[^\s\"'<>?&#]+\.(?:jpg|jpeg|png|webp)",
+    re.IGNORECASE,
+)
+# Description is embedded as JSON string in the server-rendered HTML
+_DESC_RE = re.compile(r'"description":"((?:[^\\"]|\\.)*?)"')
 
 # Amsterdam Centraal-ish; matches the latlon Vesteda uses in their dropdown.
 AMSTERDAM = {
@@ -119,26 +129,72 @@ def _format_address(unit: dict) -> str:
     return " ".join(p for p in parts if p).strip()
 
 
-def _photos(unit: dict) -> list:
-    raw = unit.get("subImages") or []
-    urls = []
-    if isinstance(raw, list):
-        for item in raw:
-            if isinstance(item, dict):
-                src = item.get("imageBig") or item.get("imageSmall") or item.get("src")
-                if isinstance(src, str) and src:
-                    urls.append(_full_url(src))
-            elif isinstance(item, str):
-                urls.append(_full_url(item))
+def _cover_photo(unit: dict) -> str:
     big = unit.get("imageBig") or unit.get("imageSmall")
-    if isinstance(big, str) and big:
-        big_full = _full_url(big)
-        if big_full not in urls:
-            urls.insert(0, big_full)
-    return urls
+    return _full_url(big) if isinstance(big, str) and big else ""
 
 
-def to_geojson(units):
+def _fetch_detail(unit: dict, log=print) -> tuple:
+    """Scrape the listing detail page for photos and description."""
+    unit_id = unit.get("id") or unit.get("code")
+    url_path = unit.get("url") or ""
+    if not url_path:
+        return unit_id, [], ""
+    url = _full_url(url_path)
+    try:
+        resp = requests.get(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept": "text/html",
+            },
+            timeout=HTTP_TIMEOUT,
+        )
+        resp.raise_for_status()
+        html = resp.text
+    except Exception as e:
+        log(f"  Warning: failed to fetch detail for {unit_id}: {e}")
+        return unit_id, [], ""
+
+    # Extract photos from CDN URLs; skip generic 'content.jpg' placeholder images
+    urls = list(dict.fromkeys(_AZURE_PHOTO_RE.findall(html)))
+    photos = [u for u in urls if not u.rsplit("/", 1)[-1].startswith("content.")]
+    if not photos:
+        cover = _cover_photo(unit)
+        if cover:
+            photos = [cover]
+
+    # Extract description from embedded JSON
+    description = ""
+    m = _DESC_RE.search(html)
+    if m:
+        try:
+            description = json.loads('"' + m.group(1) + '"')
+        except (json.JSONDecodeError, ValueError):
+            description = m.group(1)
+
+    return unit_id, photos, description
+
+
+def fetch_all_details(units, log=print) -> dict:
+    """Return {unit_id: {"photos": [...], "description": str}} for all units in parallel."""
+    log(f"  Fetching details for {len(units)} Vesteda listings ({PHOTO_WORKERS} workers)...")
+    results = {}
+    with ThreadPoolExecutor(max_workers=PHOTO_WORKERS) as executor:
+        futures = {
+            executor.submit(_fetch_detail, u, log): (u.get("id") or u.get("code"))
+            for u in units
+        }
+        for future in as_completed(futures):
+            unit_id, photos, description = future.result()
+            results[unit_id] = {"photos": photos, "description": description}
+    found_photos = sum(1 for d in results.values() if d["photos"])
+    found_desc = sum(1 for d in results.values() if d["description"])
+    log(f"  Got photos for {found_photos}/{len(units)}, descriptions for {found_desc}/{len(units)}")
+    return results
+
+
+def to_geojson(units, details=None):
     features = []
     for u in units:
         address = _format_address(u)
@@ -147,6 +203,13 @@ def to_geojson(units):
         unit_id = u.get("id") or u.get("code")
         if not unit_id:
             continue
+        det = (details or {}).get(unit_id) or {}
+        photos = det.get("photos") or []
+        if not photos:
+            cover = _cover_photo(u)
+            if cover:
+                photos = [cover]
+        description = det.get("description") or ""
         features.append(
             {
                 "type": "Feature",
@@ -168,13 +231,13 @@ def to_geojson(units):
                     "postcode": u.get("postalCode") or None,
                     "city": u.get("city") or None,
                     "neighbourhood": u.get("district") or None,
-                    "description": "",
+                    "description": description,
                     "offeredSince": u.get("upcomingeventdate") or None,
                     "hasGarden": None,
                     "hasBalcony": None,
                     "hasRoofTerrace": None,
                     "status": "Beschikbaar",
-                    "photos": json.dumps(_photos(u)),
+                    "photos": json.dumps(photos),
                     "url": _full_url(u.get("url") or ""),
                 },
             }
@@ -187,7 +250,8 @@ def fetch_and_build_geojson(log=print, limit=None):
     units = filter_units(units, log)
     if limit:
         units = units[:limit]
-    geojson = to_geojson(units)
+    details = fetch_all_details(units, log)
+    geojson = to_geojson(units, details)
     log(f"  Vesteda: {len(geojson['features'])} features ready")
     return geojson
 

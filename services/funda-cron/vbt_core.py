@@ -25,6 +25,9 @@ PAGE_SIZE = 50
 AVAILABLE_STATUS = 1
 PHOTO_WORKERS = 8
 _PHOTO_RE = re.compile(r"/images/[a-f0-9]+-w\d+-s-[^\"\' ]+")
+# offerText is the main listing description, embedded in __SAPPER__ server-rendered state.
+# In Sapper's minified output the key is unquoted: offerText:"..."
+_OFFER_TEXT_RE = re.compile(r'offerText:"((?:[^\\"]|\\.)*?)"')
 
 MIN_LIVING_AREA_M2 = 70
 MAX_RENT_EUR = 3000
@@ -106,40 +109,51 @@ def _full_url(path: str) -> str:
     return f"{DETAIL_HOST}{path}"
 
 
-def _fetch_photos(unit_id: str, url_path: str, log=print) -> tuple:
-    """Scrape the listing HTML page for all gallery image URLs."""
+def _fetch_detail(unit_id: str, url_path: str, log=print) -> tuple:
+    """Scrape the listing HTML page for all gallery image URLs and the description."""
     try:
         url = _full_url(url_path)
         if not url:
-            return unit_id, []
+            return unit_id, [], ""
         resp = requests.get(url, headers=_headers(), timeout=HTTP_TIMEOUT)
         resp.raise_for_status()
-        imgs = list(dict.fromkeys(_PHOTO_RE.findall(resp.text)))
-        return unit_id, [f"{DETAIL_HOST}{p}" for p in imgs]
+        resp.encoding = "utf-8"
+        html = resp.text
+        imgs = list(dict.fromkeys(_PHOTO_RE.findall(html)))
+        photos = [f"{DETAIL_HOST}{p}" for p in imgs]
+        description = ""
+        m = _OFFER_TEXT_RE.search(html)
+        if m:
+            try:
+                description = json.loads('"' + m.group(1) + '"')
+            except (json.JSONDecodeError, ValueError):
+                description = m.group(1)
+        return unit_id, photos, description
     except Exception as e:
-        log(f"  Warning: failed to fetch photos for {unit_id}: {e}")
-        return unit_id, []
+        log(f"  Warning: failed to fetch detail for {unit_id}: {e}")
+        return unit_id, [], ""
 
 
-def fetch_all_photos(units, log=print) -> dict:
-    """Return {unit_id: [photo_url, ...]} for all units in parallel."""
-    log(f"  Fetching photos for {len(units)} listings ({PHOTO_WORKERS} workers)...")
+def fetch_all_details(units, log=print) -> dict:
+    """Return {unit_id: {"photos": [...], "description": str}} for all units in parallel."""
+    log(f"  Fetching details for {len(units)} VB&T listings ({PHOTO_WORKERS} workers)...")
     results = {}
     with ThreadPoolExecutor(max_workers=PHOTO_WORKERS) as executor:
         futures = {
-            executor.submit(_fetch_photos, u["id"], u.get("url") or "", log): u["id"]
+            executor.submit(_fetch_detail, u["id"], u.get("url") or "", log): u["id"]
             for u in units
             if u.get("id")
         }
         for future in as_completed(futures):
-            unit_id, photos = future.result()
-            results[unit_id] = photos
-    found = sum(1 for p in results.values() if p)
-    log(f"  Got photos for {found}/{len(units)} listings")
+            unit_id, photos, description = future.result()
+            results[unit_id] = {"photos": photos, "description": description}
+    found_photos = sum(1 for d in results.values() if d["photos"])
+    found_desc = sum(1 for d in results.values() if d["description"])
+    log(f"  Got photos for {found_photos}/{len(units)}, descriptions for {found_desc}/{len(units)}")
     return results
 
 
-def to_geojson(units, photos: dict | None = None) -> dict:
+def to_geojson(units, details=None) -> dict:
     features = []
     for u in units:
         addr = u.get("address") or {}
@@ -155,8 +169,10 @@ def to_geojson(units, photos: dict | None = None) -> dict:
 
         price = int((u.get("prices") or {}).get("rental", {}).get("price", 0))
         image = _full_url(u.get("image") or "")
-        fetched = photos.get(unit_id) if photos else None
-        photo_list = fetched if fetched else ([image] if image else [])
+        det = (details or {}).get(unit_id) or {}
+        fetched_photos = det.get("photos")
+        photo_list = fetched_photos if fetched_photos else ([image] if image else [])
+        description = det.get("description") or ""
 
         # Prefer the canonical external link the site itself exposes
         source_link = (u.get("source") or {}).get("externalLink") or ""
@@ -180,7 +196,7 @@ def to_geojson(units, photos: dict | None = None) -> dict:
                     "postcode": None,
                     "city": addr.get("city") or None,
                     "neighbourhood": None,
-                    "description": "",
+                    "description": description,
                     "offeredSince": u.get("acceptance") or None,
                     "hasGarden": None,
                     "hasBalcony": None,
@@ -199,7 +215,7 @@ def fetch_and_build_geojson(log=print, limit=None) -> dict:
     units = filter_units(units, log)
     if limit:
         units = units[:limit]
-    photos = fetch_all_photos(units, log)
-    geojson = to_geojson(units, photos)
+    details = fetch_all_details(units, log)
+    geojson = to_geojson(units, details)
     log(f"  VB&T: {len(geojson['features'])} features ready")
     return geojson
