@@ -2,7 +2,13 @@ import { Hono } from "hono";
 import { eq, and, sql } from "drizzle-orm";
 import type { AppEnv } from "@/types";
 import { db } from "@/db";
-import { listings, listingReactions, listingNotes, listingViewings } from "@/db/schema";
+import {
+  listings,
+  listingReactions,
+  listingNotes,
+  listingViewings,
+  listingApplications,
+} from "@/db/schema";
 import { requireAuth, csrfCheck } from "@/auth/middleware";
 import { invalidateFundaCache } from "@/routes/geodata";
 import { telegramApi } from "@/services/telegram";
@@ -231,6 +237,39 @@ listingsRouter.delete("/:fundaId/viewing", requireAuth, async (c) => {
     await deleteCalendarEvent(existingViewing.calendarEventId);
   }
 
+  await invalidateFundaCache();
+  return c.json({ ok: true });
+});
+
+listingsRouter.put("/:fundaId/application", requireAuth, async (c) => {
+  const fundaId = c.req.param("fundaId");
+  const body = await c.req.json<{ note?: string | null }>();
+
+  const [existing] = await db
+    .select({ fundaId: listings.fundaId })
+    .from(listings)
+    .where(eq(listings.fundaId, fundaId))
+    .limit(1);
+  if (!existing) return c.json({ error: "Listing not found" }, 404);
+
+  const note = typeof body.note === "string" ? body.note.trim() : "";
+  const user = c.get("user")!;
+
+  await db
+    .insert(listingApplications)
+    .values({ fundaId, note: note || null, appliedBy: user.sub })
+    .onConflictDoUpdate({
+      target: listingApplications.fundaId,
+      set: { note: note || null, appliedBy: user.sub, updatedAt: new Date() },
+    });
+
+  await invalidateFundaCache();
+  return c.json({ ok: true });
+});
+
+listingsRouter.delete("/:fundaId/application", requireAuth, async (c) => {
+  const fundaId = c.req.param("fundaId");
+  await db.delete(listingApplications).where(eq(listingApplications.fundaId, fundaId));
   await invalidateFundaCache();
   return c.json({ ok: true });
 });

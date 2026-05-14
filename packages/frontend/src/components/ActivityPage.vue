@@ -142,7 +142,7 @@
                     </span>
                   </div>
                   <div
-                    v-if="item.reaction || item.viewing"
+                    v-if="item.reaction || item.viewing || item.application"
                     class="mt-1.5 flex flex-wrap items-center gap-1.5"
                   >
                     <span
@@ -196,6 +196,26 @@
                       </svg>
                       {{ formatViewing(item.viewing.scheduledAt) }}
                     </span>
+                    <span
+                      v-if="item.application"
+                      class="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[11px] font-medium text-blue-700"
+                    >
+                      <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path d="M20 12V22H4V12" />
+                        <path d="M22 7H2v5h20V7z" />
+                        <path
+                          d="M12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"
+                        />
+                      </svg>
+                      Applied
+                    </span>
                   </div>
                   <p
                     v-if="item.reaction?.note"
@@ -215,9 +235,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
-import type { ActivityListing } from "@ernest/shared";
 import { sourceLabel as getSourceLabel } from "@ernest/shared";
 import { fetchActivity, type ActivityStateFilter } from "@/api/client";
+import type { ActivityListing } from "@ernest/shared";
 import { useListingStore } from "@/composables/useListingStore";
 
 const { selectListing } = useListingStore();
@@ -234,13 +254,14 @@ const stateOptions: { value: StateFilter; label: string }[] = [
   { value: "all", label: "All" },
   { value: "liked", label: "Liked" },
   { value: "viewing", label: "Viewing" },
+  { value: "applied", label: "Applied" },
   { value: "untouched", label: "Untouched" },
   { value: "discarded", label: "Discarded" },
 ];
 
 function readState(): StateFilter {
   const raw = localStorage.getItem(STATE_STORAGE_KEY);
-  if (raw && ["all", "liked", "discarded", "viewing", "untouched"].includes(raw)) {
+  if (raw && ["all", "liked", "discarded", "viewing", "applied", "untouched"].includes(raw)) {
     return raw as StateFilter;
   }
   return "all";

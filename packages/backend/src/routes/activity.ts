@@ -2,14 +2,21 @@ import { Hono } from "hono";
 import { eq, isNull, and, or, sql, ilike } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
-import { listings, listingReactions, listingViewings, listingNotes, users } from "@/db/schema";
+import {
+  listings,
+  listingReactions,
+  listingViewings,
+  listingApplications,
+  listingNotes,
+  users,
+} from "@/db/schema";
 import type { ActivityListing, ReactionType } from "@ernest/shared";
 
 const activity = new Hono();
 
 const FEED_LIMIT = 100;
 
-const STATE_FILTERS = ["all", "liked", "discarded", "viewing", "untouched"] as const;
+const STATE_FILTERS = ["all", "liked", "discarded", "viewing", "applied", "untouched"] as const;
 type StateFilter = (typeof STATE_FILTERS)[number];
 
 function parseState(raw: string | undefined): StateFilter {
@@ -21,11 +28,13 @@ activity.get("/", async (c) => {
   const state = parseState(c.req.query("state"));
   const reactionUser = alias(users, "reaction_user");
   const viewingUser = alias(users, "viewing_user");
+  const applicationUser = alias(users, "application_user");
 
   const lastActivityExpr = sql<Date>`GREATEST(
     ${listings.createdAt},
     COALESCE(${listingReactions.changedAt}, '-infinity'::timestamptz),
-    COALESCE(${listingViewings.updatedAt}, '-infinity'::timestamptz)
+    COALESCE(${listingViewings.updatedAt}, '-infinity'::timestamptz),
+    COALESCE(${listingApplications.updatedAt}, '-infinity'::timestamptz)
   )`;
 
   const rows = await db
@@ -47,6 +56,8 @@ activity.get("/", async (c) => {
       viewingScheduledAt: listingViewings.scheduledAt,
       viewingBy: viewingUser.username,
       viewingUpdatedAt: listingViewings.updatedAt,
+      applicationAt: listingApplications.createdAt,
+      applicationBy: applicationUser.username,
     })
     .from(listings)
     .leftJoin(listingReactions, eq(listings.fundaId, listingReactions.fundaId))
@@ -60,6 +71,8 @@ activity.get("/", async (c) => {
     )
     .leftJoin(listingViewings, eq(listings.fundaId, listingViewings.fundaId))
     .leftJoin(viewingUser, eq(listingViewings.scheduledBy, viewingUser.id))
+    .leftJoin(listingApplications, eq(listings.fundaId, listingApplications.fundaId))
+    .leftJoin(applicationUser, eq(listingApplications.appliedBy, applicationUser.id))
     .where(
       and(
         isNull(listings.disappearedAt),
@@ -74,6 +87,7 @@ activity.get("/", async (c) => {
         state === "liked" ? eq(listingReactions.reaction, "favourite") : undefined,
         state === "discarded" ? eq(listingReactions.reaction, "discarded") : undefined,
         state === "viewing" ? sql`${listingViewings.fundaId} IS NOT NULL` : undefined,
+        state === "applied" ? sql`${listingApplications.fundaId} IS NOT NULL` : undefined,
         state === "untouched"
           ? and(isNull(listingReactions.reaction), isNull(listingViewings.fundaId))
           : undefined,
@@ -110,6 +124,10 @@ activity.get("/", async (c) => {
             by: r.viewingBy,
             at: (r.viewingUpdatedAt ?? r.viewingScheduledAt).toISOString(),
           }
+        : null,
+    application:
+      r.applicationAt && r.applicationBy
+        ? { appliedAt: r.applicationAt.toISOString(), by: r.applicationBy }
         : null,
   }));
 

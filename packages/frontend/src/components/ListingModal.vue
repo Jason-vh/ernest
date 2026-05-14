@@ -232,6 +232,30 @@
                     </svg>
                     Viewing
                   </span>
+                  <!-- applied -->
+                  <span
+                    v-if="listing.application"
+                    class="chip chip--blue"
+                    title="Application submitted"
+                  >
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M20 12V22H4V12" />
+                      <path d="M22 7H2v5h20V7z" />
+                      <path
+                        d="M12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"
+                      />
+                    </svg>
+                    Applied
+                  </span>
                 </div>
               </div>
 
@@ -587,6 +611,87 @@
                   </div>
                 </div>
 
+                <!-- Application -->
+                <div v-if="listing.application || user" class="mt-3">
+                  <div
+                    v-if="listing.application && !applicationEditorOpen"
+                    class="viewing-card flex items-start justify-between gap-3"
+                  >
+                    <div class="min-w-0">
+                      <div class="text-[11px] font-semibold uppercase tracking-wide text-blue-700">
+                        Applied
+                      </div>
+                      <div class="mt-0.5 text-[11px] text-[#888]">
+                        by {{ listing.application.appliedBy }}
+                      </div>
+                      <p
+                        v-if="listing.application.note"
+                        class="m-0 mt-1.5 whitespace-pre-line text-[13px] leading-[1.5] text-[#444]"
+                      >
+                        {{ listing.application.note }}
+                      </p>
+                    </div>
+                    <div v-if="user" class="flex flex-shrink-0 flex-col gap-1.5">
+                      <button class="viewing-btn" @click="openApplicationEditor">Edit</button>
+                      <button class="viewing-btn viewing-btn--danger" @click="removeApplication">
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    v-else-if="user && !listing.application && !applicationEditorOpen"
+                    class="viewing-cta"
+                    @click="openApplicationEditor"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M20 12V22H4V12" />
+                      <path d="M22 7H2v5h20V7z" />
+                      <path
+                        d="M12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"
+                      />
+                    </svg>
+                    Mark as applied
+                  </button>
+
+                  <div v-if="applicationEditorOpen" class="viewing-card mt-1">
+                    <div class="text-[11px] font-semibold uppercase tracking-wide text-[#888]">
+                      {{ listing.application ? "Edit application" : "Mark as applied" }}
+                    </div>
+                    <textarea
+                      v-model="applicationNoteInput"
+                      rows="2"
+                      placeholder="Optional note"
+                      class="mt-2 w-full resize-none rounded-lg border border-black/10 bg-white/80 px-3 py-2 font-inherit text-[13px] text-[#333] outline-none placeholder:text-[#bbb] focus:border-black/20 focus:bg-white"
+                    ></textarea>
+                    <div class="mt-2 flex items-center justify-end gap-1.5">
+                      <button
+                        class="viewing-btn"
+                        :disabled="applicationSaving"
+                        @click="closeApplicationEditor"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        class="viewing-btn viewing-btn--primary"
+                        :disabled="applicationSaving"
+                        @click="saveApplication"
+                      >
+                        {{
+                          applicationSaving ? "Saving…" : listing.application ? "Update" : "Save"
+                        }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Divider -->
                 <div class="my-4 h-px bg-black/6"></div>
 
@@ -770,6 +875,8 @@ const {
   saveNote,
   setViewing,
   clearViewing,
+  setApplication,
+  clearApplication,
   clusterListingIds,
   currentClusterIndex,
   navigateCluster,
@@ -794,6 +901,9 @@ const viewingEditorOpen = ref(false);
 const viewingDateInput = ref("");
 const viewingNoteInput = ref("");
 const viewingSaving = ref(false);
+const applicationEditorOpen = ref(false);
+const applicationNoteInput = ref("");
+const applicationSaving = ref(false);
 const noteSaving = ref(false);
 const noteSaved = ref(false);
 const scrollContainerRef = ref<HTMLDivElement>();
@@ -1071,6 +1181,38 @@ async function cancelViewing() {
   if (!listing.value) return;
   try {
     await clearViewing(listing.value.fundaId);
+  } catch {
+    // rollback already happened
+  }
+}
+
+function openApplicationEditor() {
+  applicationNoteInput.value = listing.value?.application?.note ?? "";
+  applicationEditorOpen.value = true;
+}
+
+function closeApplicationEditor() {
+  applicationEditorOpen.value = false;
+}
+
+async function saveApplication() {
+  if (!listing.value || !user.value) return;
+  const note = applicationNoteInput.value.trim();
+  applicationSaving.value = true;
+  try {
+    await setApplication(listing.value.fundaId, note || null, user.value.username);
+    applicationEditorOpen.value = false;
+  } catch {
+    // optimistic update already rolled back
+  } finally {
+    applicationSaving.value = false;
+  }
+}
+
+async function removeApplication() {
+  if (!listing.value) return;
+  try {
+    await clearApplication(listing.value.fundaId);
   } catch {
     // rollback already happened
   }

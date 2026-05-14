@@ -1,11 +1,13 @@
 import { ref, computed, watch } from "vue";
-import type { Listing, ReactionType, ListingNote } from "@ernest/shared";
+import type { Listing, ReactionType, ListingNote, ListingApplicationInfo } from "@ernest/shared";
 import {
   fetchFunda,
   putReaction,
   putNote,
   putViewing,
   deleteViewing,
+  putApplication,
+  deleteApplication,
   analyzeCatch as apiAnalyzeCatch,
   translateDescription as apiTranslateDescription,
 } from "@/api/client";
@@ -387,6 +389,51 @@ async function translateDescription(fundaId: string) {
   }
 }
 
+async function setApplication(fundaId: string, note: string | null, username: string) {
+  const listing = listings.value.get(fundaId);
+  if (!listing) return;
+
+  const prev = listing.application;
+  const optimistic: ListingApplicationInfo = {
+    appliedAt: new Date().toISOString(),
+    note,
+    appliedBy: username,
+  };
+
+  const newMap = new Map(listings.value);
+  newMap.set(fundaId, { ...listing, application: optimistic });
+  listings.value = newMap;
+
+  try {
+    await putApplication(fundaId, note);
+  } catch {
+    const rollbackMap = new Map(listings.value);
+    rollbackMap.set(fundaId, { ...listing, application: prev });
+    listings.value = rollbackMap;
+    throw new Error("Failed to save application");
+  }
+}
+
+async function clearApplication(fundaId: string) {
+  const listing = listings.value.get(fundaId);
+  if (!listing) return;
+
+  const prev = listing.application;
+
+  const newMap = new Map(listings.value);
+  newMap.set(fundaId, { ...listing, application: null });
+  listings.value = newMap;
+
+  try {
+    await deleteApplication(fundaId);
+  } catch {
+    const rollbackMap = new Map(listings.value);
+    rollbackMap.set(fundaId, { ...listing, application: prev });
+    listings.value = rollbackMap;
+    throw new Error("Failed to remove application");
+  }
+}
+
 async function clearViewing(fundaId: string) {
   const listing = listings.value.get(fundaId);
   if (!listing) return;
@@ -442,6 +489,8 @@ export function useListingStore() {
     saveNote,
     setViewing,
     clearViewing,
+    setApplication,
+    clearApplication,
     findColocatedIds,
     syncFromUrl,
     analyzeCatch,

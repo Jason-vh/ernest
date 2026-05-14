@@ -212,3 +212,18 @@ export const listingViewings = pgTable("listing_viewings", {
 
 export type ListingViewing = InferSelectModel<typeof listingViewings>;
 export type NewListingViewing = InferInsertModel<typeof listingViewings>;
+
+export const listingApplications = pgTable("listing_applications", {
+  fundaId: text("funda_id")
+    .primaryKey()
+    .references(() => listings.fundaId, { onDelete: "cascade" }),
+  note: text("note"),
+  appliedBy: text("applied_by")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type ListingApplication = InferSelectModel<typeof listingApplications>;
+export type NewListingApplication = InferInsertModel<typeof listingApplications>;

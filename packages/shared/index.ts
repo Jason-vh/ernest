@@ -14,6 +14,12 @@ export interface ListingViewingInfo {
   updatedAt: string;
 }
 
+export interface ListingApplicationInfo {
+  appliedAt: string;
+  note: string | null;
+  appliedBy: string;
+}
+
 export type ListingCatchSeverity = "low" | "medium" | "high";
 
 export interface ListingCatchConcern {
@@ -57,6 +63,10 @@ export interface ActivityListing {
     scheduledAt: string;
     by: string;
     at: string;
+  } | null;
+  application: {
+    appliedAt: string;
+    by: string;
   } | null;
 }
 
@@ -113,6 +123,8 @@ export interface Listing {
   aiHasBathtub: boolean | null;
   /** Detected from photos/data by AI. null = not yet analyzed. */
   aiHasOutsideArea: boolean | null;
-  /** All source links for this listing (same property on multiple platforms). null on old rows. */
-  sources: { source: string; url: string }[] | null;
+  /** All source links for this listing (same property on multiple platforms). */
+  sources: { source: string; url: string }[];
+  /** Application submitted for this listing. null = not applied. */
+  application: ListingApplicationInfo | null;
 }

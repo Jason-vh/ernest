@@ -9,6 +9,7 @@ import {
   listingReactions,
   listingNotes,
   listingViewings,
+  listingApplications,
   users,
   type NewListing,
 } from "@/db/schema";
@@ -59,9 +60,10 @@ async function ensureFundaCache(): Promise<void> {
 }
 
 async function queryFundaListings(): Promise<Listing[]> {
-  // Aliases so we can join users twice (reaction + viewing scheduler)
+  // Aliases so we can join users multiple times
   const reactionUser = alias(users, "reaction_user");
   const viewingUser = alias(users, "viewing_user");
+  const applicationUser = alias(users, "application_user");
 
   const rows = await db
     .select({
@@ -101,12 +103,17 @@ async function queryFundaListings(): Promise<Listing[]> {
       viewingNote: listingViewings.note,
       viewingBy: viewingUser.username,
       viewingUpdatedAt: listingViewings.updatedAt,
+      applicationCreatedAt: listingApplications.createdAt,
+      applicationNote: listingApplications.note,
+      applicationBy: applicationUser.username,
     })
     .from(listings)
     .leftJoin(listingReactions, eq(listings.fundaId, listingReactions.fundaId))
     .leftJoin(reactionUser, eq(listingReactions.changedBy, reactionUser.id))
     .leftJoin(listingViewings, eq(listings.fundaId, listingViewings.fundaId))
     .leftJoin(viewingUser, eq(listingViewings.scheduledBy, viewingUser.id))
+    .leftJoin(listingApplications, eq(listings.fundaId, listingApplications.fundaId))
+    .leftJoin(applicationUser, eq(listingApplications.appliedBy, applicationUser.id))
     .where(
       and(
         isNull(listings.disappearedAt),
@@ -140,7 +147,16 @@ async function queryFundaListings(): Promise<Listing[]> {
   }
 
   return rows.map((row) => {
-    const { viewingScheduledAt, viewingNote, viewingBy, viewingUpdatedAt, ...rest } = row;
+    const {
+      viewingScheduledAt,
+      viewingNote,
+      viewingBy,
+      viewingUpdatedAt,
+      applicationCreatedAt,
+      applicationNote,
+      applicationBy,
+      ...rest
+    } = row;
     const viewing: Listing["viewing"] =
       viewingScheduledAt && viewingBy
         ? {
@@ -150,11 +166,21 @@ async function queryFundaListings(): Promise<Listing[]> {
             updatedAt: (viewingUpdatedAt ?? viewingScheduledAt).toISOString(),
           }
         : null;
+    const application: Listing["application"] =
+      applicationCreatedAt && applicationBy
+        ? {
+            appliedAt: applicationCreatedAt.toISOString(),
+            note: applicationNote ?? null,
+            appliedBy: applicationBy,
+          }
+        : null;
     return Object.assign(rest, {
+      sources: (rest.sources ?? []) as { source: string; url: string }[],
       reaction: (rest.reaction as Listing["reaction"]) ?? null,
       reactionBy: rest.reactionBy ?? null,
       notes: notesByFundaId.get(rest.fundaId) ?? [],
       viewing,
+      application,
     });
   });
 }
@@ -330,7 +356,7 @@ geodata.post(
           ? p.sources
           : typeof p.sources === "string"
             ? (JSON.parse(p.sources) as { source: string; url: string }[])
-            : null,
+            : [{ source: p.source as string, url: p.url as string }],
         status: p.status || "Beschikbaar",
         offeredSince: p.offeredSince || null,
       });

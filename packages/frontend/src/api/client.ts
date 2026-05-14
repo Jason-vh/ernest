@@ -85,7 +85,37 @@ export async function deleteViewing(fundaId: string): Promise<void> {
   }
 }
 
-export type ActivityStateFilter = "all" | "liked" | "discarded" | "viewing" | "untouched";
+export async function putApplication(fundaId: string, note: string | null): Promise<void> {
+  const res = await fetch(`/api/listings/${encodeURIComponent(fundaId)}/application`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ note }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Failed to save application: ${res.status}`);
+  }
+}
+
+export async function deleteApplication(fundaId: string): Promise<void> {
+  const res = await fetch(`/api/listings/${encodeURIComponent(fundaId)}/application`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Failed to remove application: ${res.status}`);
+  }
+}
+
+export type ActivityStateFilter =
+  | "all"
+  | "liked"
+  | "discarded"
+  | "viewing"
+  | "applied"
+  | "untouched";
 
 export async function fetchActivity(
   query = "",
