@@ -405,9 +405,9 @@
                   </ul>
                 </div>
 
-                <!-- Actions row + integrated note (logged-in users) -->
+                <!-- Actions grid (logged-in users) -->
                 <div v-if="user" class="mt-3">
-                  <div class="flex items-center gap-2">
+                  <div class="grid grid-cols-2 gap-2">
                     <button
                       class="reaction-btn"
                       :class="{
@@ -450,13 +450,55 @@
                       </svg>
                       {{ listing.reaction === "discarded" ? "Discarded" : "Discard" }}
                     </button>
-                    <span
-                      v-if="listing.reactionBy"
-                      class="ml-auto self-center text-[11px] text-[#bbb]"
+                    <button
+                      class="reaction-btn"
+                      :class="{ 'reaction-btn--active reaction-btn--viewing': listing.viewing }"
+                      :disabled="viewingEditorOpen"
+                      @click="openViewingEditor"
                     >
-                      by {{ listing.reactionBy }}
-                    </span>
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                        <path d="M16 2v4M8 2v4M3 10h18" />
+                      </svg>
+                      Viewing
+                    </button>
+                    <button
+                      class="reaction-btn"
+                      :class="{ 'reaction-btn--active reaction-btn--applied': listing.application }"
+                      :disabled="applicationSaving || !!listing.application"
+                      @click="markApplied"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                      </svg>
+                      {{
+                        applicationSaving ? "Saving…" : listing.application ? "Applied" : "Apply"
+                      }}
+                    </button>
                   </div>
+                  <span
+                    v-if="listing.reactionBy"
+                    class="mt-1.5 block text-right text-[11px] text-[#bbb]"
+                  >
+                    by {{ listing.reactionBy }}
+                  </span>
 
                   <!-- Inline note editor (shows after reacting or when note exists) -->
                   <div v-if="noteEditorOpen" class="note-editor mt-2.5">
@@ -517,7 +559,7 @@
                 </div>
 
                 <!-- Viewing -->
-                <div v-if="listing.viewing || user" class="mt-3">
+                <div v-if="listing.viewing || (user && viewingEditorOpen)" class="mt-3">
                   <div
                     v-if="listing.viewing && !viewingEditorOpen"
                     class="viewing-card flex items-start justify-between gap-3"
@@ -549,28 +591,9 @@
                     </div>
                   </div>
 
-                  <button
-                    v-else-if="user && !listing.viewing && !viewingEditorOpen"
-                    class="viewing-cta"
-                    @click="openViewingEditor"
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <rect x="3" y="4" width="18" height="18" rx="2" />
-                      <path d="M16 2v4M8 2v4M3 10h18" />
-                    </svg>
-                    Schedule viewing
-                  </button>
-
                   <div v-if="viewingEditorOpen" class="viewing-card mt-1">
                     <div class="text-[11px] font-semibold uppercase tracking-wide text-[#888]">
-                      {{ listing.viewing ? "Edit viewing" : "Schedule viewing" }}
+                      {{ listing.viewing ? "Edit viewing" : "Schedule a viewing" }}
                     </div>
                     <input
                       v-model="viewingDateInput"
@@ -611,11 +634,8 @@
                 </div>
 
                 <!-- Application -->
-                <div v-if="listing.application || user" class="mt-3">
-                  <div
-                    v-if="listing.application"
-                    class="viewing-card flex items-start justify-between gap-3"
-                  >
+                <div v-if="listing.application" class="mt-3">
+                  <div class="viewing-card flex items-start justify-between gap-3">
                     <div class="min-w-0">
                       <div class="text-[11px] font-semibold uppercase tracking-wide text-blue-700">
                         Applied
@@ -630,28 +650,6 @@
                       </button>
                     </div>
                   </div>
-
-                  <button
-                    v-else-if="user"
-                    class="viewing-cta"
-                    :disabled="applicationSaving"
-                    @click="markApplied"
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <line x1="22" y1="2" x2="11" y2="13" />
-                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                    </svg>
-                    {{ applicationSaving ? "Saving…" : "Mark as applied" }}
-                  </button>
                 </div>
 
                 <!-- Divider -->
@@ -1360,25 +1358,6 @@ function trapFocus(e: KeyboardEvent) {
   border: 1px solid rgba(16, 185, 129, 0.18);
 }
 
-.viewing-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px dashed rgba(16, 185, 129, 0.4);
-  background: rgba(16, 185, 129, 0.06);
-  color: #047857;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.viewing-cta:hover {
-  background: rgba(16, 185, 129, 0.12);
-}
-
 .viewing-btn {
   padding: 4px 10px;
   border-radius: 7px;
@@ -1550,6 +1529,26 @@ function trapFocus(e: KeyboardEvent) {
 
 .reaction-btn--discard:hover {
   background: rgba(220, 38, 38, 0.14);
+}
+
+.reaction-btn--viewing {
+  background: rgba(16, 185, 129, 0.1);
+  color: #047857;
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.reaction-btn--viewing:hover {
+  background: rgba(16, 185, 129, 0.16);
+}
+
+.reaction-btn--applied {
+  background: rgba(59, 130, 246, 0.1);
+  color: #1d4ed8;
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.reaction-btn--applied:hover {
+  background: rgba(59, 130, 246, 0.16);
 }
 
 .cluster-arrow {
