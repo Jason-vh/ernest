@@ -3,7 +3,7 @@ import type {
   ActivityListing,
   Listing,
   ListingCatchConcern,
-  ReactionType,
+  ListingState,
   UpcomingViewing,
 } from "@ernest/shared";
 
@@ -31,16 +31,16 @@ export async function fetchFunda(): Promise<Listing[]> {
   return res.json();
 }
 
-export async function putReaction(fundaId: string, reaction: ReactionType | null): Promise<void> {
-  const res = await fetch(`/api/listings/${encodeURIComponent(fundaId)}/reaction`, {
+export async function putState(fundaId: string, state: ListingState | null): Promise<void> {
+  const res = await fetch(`/api/listings/${encodeURIComponent(fundaId)}/state`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ reaction }),
+    body: JSON.stringify({ state }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.error ?? `Failed to set reaction: ${res.status}`);
+    throw new Error(body.error ?? `Failed to set state: ${res.status}`);
   }
 }
 
@@ -82,30 +82,6 @@ export async function deleteViewing(fundaId: string): Promise<void> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error ?? `Failed to cancel viewing: ${res.status}`);
-  }
-}
-
-export async function putApplication(fundaId: string): Promise<void> {
-  const res = await fetch(`/api/listings/${encodeURIComponent(fundaId)}/application`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: "{}",
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error ?? `Failed to save application: ${res.status}`);
-  }
-}
-
-export async function deleteApplication(fundaId: string): Promise<void> {
-  const res = await fetch(`/api/listings/${encodeURIComponent(fundaId)}/application`, {
-    method: "DELETE",
-    credentials: "include",
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error ?? `Failed to remove application: ${res.status}`);
   }
 }
 

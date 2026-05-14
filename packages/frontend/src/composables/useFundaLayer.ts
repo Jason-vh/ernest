@@ -52,9 +52,9 @@ export function listingsToGeoJSON(listings: Map<string, Listing>): GeoJSON.Featu
       coordCats.set(key, counts);
     }
     const cat: Category =
-      listing.reaction === "favourite"
+      listing.state === "liked"
         ? "favourite"
-        : listing.reaction === "discarded"
+        : listing.state === "discarded"
           ? "discarded"
           : "unreviewed";
     counts[cat]++;
@@ -66,9 +66,9 @@ export function listingsToGeoJSON(listings: Map<string, Listing>): GeoJSON.Featu
   const features: GeoJSON.Feature[] = [];
   for (const listing of listings.values()) {
     const category: Category =
-      listing.reaction === "favourite"
+      listing.state === "liked"
         ? "favourite"
-        : listing.reaction === "discarded"
+        : listing.state === "discarded"
           ? "discarded"
           : "unreviewed";
     const key = `${listing.longitude},${listing.latitude}`;
@@ -136,8 +136,8 @@ export function useFundaLayer(
     let discardedCount = 0;
     let unreviewedCount = 0;
     for (const listing of listings.value.values()) {
-      if (listing.reaction === "favourite") favouriteCount++;
-      else if (listing.reaction === "discarded") discardedCount++;
+      if (listing.state === "liked") favouriteCount++;
+      else if (listing.state === "discarded") discardedCount++;
       else unreviewedCount++;
     }
     fundaFavouriteCount.value = favouriteCount;
@@ -150,8 +150,8 @@ export function useFundaLayer(
   let initialDiscardedCount = 0;
   let initialUnreviewedCount = 0;
   for (const listing of listings.value.values()) {
-    if (listing.reaction === "favourite") initialFavouriteCount++;
-    else if (listing.reaction === "discarded") initialDiscardedCount++;
+    if (listing.state === "liked") initialFavouriteCount++;
+    else if (listing.state === "discarded") initialDiscardedCount++;
     else initialUnreviewedCount++;
   }
   fundaFavouriteCount.value = initialFavouriteCount;
@@ -363,9 +363,9 @@ export function useFundaLayer(
     if (!listing) return;
 
     let color: string = COLORS.fundaUnreviewed;
-    if (listing.reaction === "favourite") {
+    if (listing.state === "liked") {
       color = COLORS.fundaFavourite;
-    } else if (listing.reaction === "discarded") {
+    } else if (listing.state === "discarded") {
       color = COLORS.fundaDiscarded;
     }
 

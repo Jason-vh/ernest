@@ -1,4 +1,4 @@
-export type ReactionType = "favourite" | "discarded";
+export type ListingState = "liked" | "discarded" | "applied" | "viewing";
 
 export interface ListingNote {
   userId: string;
@@ -12,11 +12,6 @@ export interface ListingViewingInfo {
   note: string | null;
   scheduledBy: string;
   updatedAt: string;
-}
-
-export interface ListingApplicationInfo {
-  appliedAt: string;
-  appliedBy: string;
 }
 
 export type ListingCatchSeverity = "low" | "medium" | "high";
@@ -49,21 +44,18 @@ export interface ActivityListing {
   photo: string | null;
   /** When the listing first appeared in our system */
   createdAt: string;
-  /** Most recent of: createdAt, reaction.at, viewing.at — drives feed sort order */
+  /** Most recent of: createdAt, stateAt, viewingUpdatedAt — drives feed sort order */
   lastActivityAt: string;
-  reaction: {
-    type: ReactionType;
-    by: string;
-    at: string;
-    /** The reactor's note for this listing, if they wrote one */
-    note: string | null;
-  } | null;
+  state: ListingState | null;
+  stateBy: string | null;
+  stateAt: string | null;
+  /** The state-setter's note for this listing, if they wrote one */
+  note: string | null;
   viewing: {
     scheduledAt: string;
     by: string;
     at: string;
   } | null;
-  application: { appliedAt: string; by: string } | null;
 }
 
 export const SOURCE_LABELS: Record<string, string> = {
@@ -105,13 +97,13 @@ export interface Listing {
   status: string;
   offeredSince: string | null;
 
-  /** Collaborative reaction (null = unreviewed) */
-  reaction: ReactionType | null;
-  /** Username of who set the reaction */
-  reactionBy: string | null;
+  /** Collaborative state (null = unreviewed) */
+  state: ListingState | null;
+  /** Username of who set the state */
+  stateBy: string | null;
   /** Notes from all users */
   notes: ListingNote[];
-  /** Scheduled viewing (one per listing, null if none) */
+  /** Scheduled viewing details (one per listing, null if none) */
   viewing: ListingViewingInfo | null;
   /** Skeptical AI analysis. null = not analyzed yet. [] = analyzed, no concerns. */
   aiCatch: ListingCatchConcern[] | null;
@@ -121,6 +113,4 @@ export interface Listing {
   aiHasOutsideArea: boolean | null;
   /** All source links for this listing (same property on multiple platforms). */
   sources: { source: string; url: string }[];
-  /** Application submitted for this listing. null = not applied. */
-  application: ListingApplicationInfo | null;
 }

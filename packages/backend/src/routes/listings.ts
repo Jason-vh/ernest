@@ -2,13 +2,8 @@ import { Hono } from "hono";
 import { eq, and, sql } from "drizzle-orm";
 import type { AppEnv } from "@/types";
 import { db } from "@/db";
-import {
-  listings,
-  listingReactions,
-  listingNotes,
-  listingViewings,
-  listingApplications,
-} from "@/db/schema";
+import { listings, listingNotes, listingViewings } from "@/db/schema";
+import type { ListingState } from "@/db/schema";
 import { requireAuth, csrfCheck } from "@/auth/middleware";
 import { invalidateFundaCache } from "@/routes/geodata";
 import { telegramApi } from "@/services/telegram";
@@ -34,17 +29,19 @@ const listingsRouter = new Hono<AppEnv>();
 // All mutation routes require auth + CSRF
 listingsRouter.use("/*", csrfCheck);
 
-listingsRouter.put("/:fundaId/reaction", requireAuth, async (c) => {
+listingsRouter.put("/:fundaId/state", requireAuth, async (c) => {
   const fundaId = c.req.param("fundaId");
-  const body = await c.req.json<{ reaction: string | null }>();
-  const { reaction } = body;
+  const body = await c.req.json<{ state: string | null }>();
+  const { state } = body;
 
-  // Validate reaction value
-  if (reaction !== null && reaction !== "favourite" && reaction !== "discarded") {
-    return c.json({ error: "Invalid reaction. Must be 'favourite', 'discarded', or null" }, 400);
+  const validStates: Array<ListingState | null> = ["liked", "discarded", "applied", null];
+  if (!validStates.includes(state as ListingState | null)) {
+    return c.json(
+      { error: "Invalid state. Must be 'liked', 'discarded', 'applied', or null" },
+      400,
+    );
   }
 
-  // Validate listing exists
   const [existing] = await db
     .select({ fundaId: listings.fundaId, telegramMessageId: listings.telegramMessageId })
     .from(listings)
@@ -56,36 +53,45 @@ listingsRouter.put("/:fundaId/reaction", requireAuth, async (c) => {
 
   const user = c.get("user")!;
 
-  if (reaction === null) {
-    // Remove reaction
-    await db.delete(listingReactions).where(eq(listingReactions.fundaId, fundaId));
-  } else {
-    // Upsert reaction
+  if (state === null) {
     await db
-      .insert(listingReactions)
-      .values({
-        fundaId,
-        reaction,
-        changedBy: user.sub,
-        changedAt: new Date(),
+      .update(listings)
+      .set({ state: null, stateBy: null, stateAt: null, updatedAt: sql`now()` })
+      .where(eq(listings.fundaId, fundaId));
+  } else {
+    // Setting a non-viewing state — also clear any existing viewing
+    await db
+      .update(listings)
+      .set({
+        state: state as ListingState,
+        stateBy: user.sub,
+        stateAt: new Date(),
+        updatedAt: sql`now()`,
       })
-      .onConflictDoUpdate({
-        target: listingReactions.fundaId,
-        set: {
-          reaction,
-          changedBy: user.sub,
-          changedAt: new Date(),
-        },
-      });
+      .where(eq(listings.fundaId, fundaId));
+
+    const [existingViewing] = await db
+      .select({ calendarEventId: listingViewings.calendarEventId })
+      .from(listingViewings)
+      .where(eq(listingViewings.fundaId, fundaId))
+      .limit(1);
+    if (existingViewing) {
+      await db.delete(listingViewings).where(eq(listingViewings.fundaId, fundaId));
+      if (existingViewing.calendarEventId) {
+        deleteCalendarEvent(existingViewing.calendarEventId).catch((err) => {
+          console.warn(`Failed to delete calendar event for ${fundaId}:`, err);
+        });
+      }
+    }
   }
 
-  // Fire-and-forget Telegram reaction update
+  // Fire-and-forget Telegram reaction update for liked/discarded
   if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && existing.telegramMessageId) {
     const emojiMap: Record<string, Array<{ type: string; emoji: string }>> = {
-      favourite: [{ type: "emoji", emoji: "\u2764\uFE0F" }],
-      discarded: [{ type: "emoji", emoji: "\uD83E\uDD71" }],
+      liked: [{ type: "emoji", emoji: "❤️" }],
+      discarded: [{ type: "emoji", emoji: "🥱" }],
     };
-    const telegramReaction = reaction !== null ? (emojiMap[reaction] ?? []) : [];
+    const telegramReaction = state !== null ? (emojiMap[state] ?? []) : [];
 
     telegramApi("setMessageReaction", {
       chat_id: TELEGRAM_CHAT_ID,
@@ -105,7 +111,6 @@ listingsRouter.put("/:fundaId/note", requireAuth, async (c) => {
   const body = await c.req.json<{ text: string }>();
   const text = body.text?.trim() ?? "";
 
-  // Validate listing exists
   const [existing] = await db
     .select({ fundaId: listings.fundaId })
     .from(listings)
@@ -118,12 +123,10 @@ listingsRouter.put("/:fundaId/note", requireAuth, async (c) => {
   const user = c.get("user")!;
 
   if (text === "") {
-    // Delete note
     await db
       .delete(listingNotes)
       .where(and(eq(listingNotes.fundaId, fundaId), eq(listingNotes.userId, user.sub)));
   } else {
-    // Upsert note
     const id = crypto.randomUUID();
     await db
       .insert(listingNotes)
@@ -180,7 +183,6 @@ listingsRouter.put("/:fundaId/viewing", requireAuth, async (c) => {
 
   const user = c.get("user")!;
 
-  // Create or update the calendar event before persisting, so we can store the eventId
   const payload = {
     fundaId,
     address: existing.address,
@@ -197,6 +199,8 @@ listingsRouter.put("/:fundaId/viewing", requireAuth, async (c) => {
     calendarEventId = await createCalendarEvent(payload);
   }
 
+  const now = new Date();
+
   await db
     .insert(listingViewings)
     .values({
@@ -212,11 +216,16 @@ listingsRouter.put("/:fundaId/viewing", requireAuth, async (c) => {
         scheduledAt: scheduledAtDate,
         note: noteValue,
         scheduledBy: user.sub,
-        // Don't overwrite an existing eventId with null if calendar create failed
         ...(calendarEventId !== null ? { calendarEventId } : {}),
-        updatedAt: new Date(),
+        updatedAt: now,
       },
     });
+
+  // Viewing is the active state
+  await db
+    .update(listings)
+    .set({ state: "viewing", stateBy: user.sub, stateAt: now, updatedAt: sql`now()` })
+    .where(eq(listings.fundaId, fundaId));
 
   await invalidateFundaCache();
   return c.json({ ok: true });
@@ -237,37 +246,12 @@ listingsRouter.delete("/:fundaId/viewing", requireAuth, async (c) => {
     await deleteCalendarEvent(existingViewing.calendarEventId);
   }
 
-  await invalidateFundaCache();
-  return c.json({ ok: true });
-});
-
-listingsRouter.put("/:fundaId/application", requireAuth, async (c) => {
-  const fundaId = c.req.param("fundaId");
-
-  const [existing] = await db
-    .select({ fundaId: listings.fundaId })
-    .from(listings)
-    .where(eq(listings.fundaId, fundaId))
-    .limit(1);
-  if (!existing) return c.json({ error: "Listing not found" }, 404);
-
-  const user = c.get("user")!;
-
+  // Clear the viewing state
   await db
-    .insert(listingApplications)
-    .values({ fundaId, appliedBy: user.sub })
-    .onConflictDoUpdate({
-      target: listingApplications.fundaId,
-      set: { appliedBy: user.sub, updatedAt: new Date() },
-    });
+    .update(listings)
+    .set({ state: null, stateBy: null, stateAt: null, updatedAt: sql`now()` })
+    .where(eq(listings.fundaId, fundaId));
 
-  await invalidateFundaCache();
-  return c.json({ ok: true });
-});
-
-listingsRouter.delete("/:fundaId/application", requireAuth, async (c) => {
-  const fundaId = c.req.param("fundaId");
-  await db.delete(listingApplications).where(eq(listingApplications.fundaId, fundaId));
   await invalidateFundaCache();
   return c.json({ ok: true });
 });

@@ -120,6 +120,11 @@ export const listings = pgTable(
     offeredSince: text("offered_since"),
     disappearedAt: timestamp("disappeared_at", { withTimezone: true }),
 
+    // User-assigned state (mutually exclusive with each other; viewing also has a record in listingViewings)
+    state: text("state"), // 'liked' | 'discarded' | 'applied' | 'viewing' | null
+    stateBy: text("state_by").references(() => users.id),
+    stateAt: timestamp("state_at", { withTimezone: true }),
+
     // Notification tracking
     notifiedAt: timestamp("notified_at", { withTimezone: true }),
     telegramMessageId: integer("telegram_message_id"),
@@ -133,6 +138,8 @@ export const listings = pgTable(
 
 export type Listing = InferSelectModel<typeof listings>;
 export type NewListing = InferInsertModel<typeof listings>;
+
+export type ListingState = "liked" | "discarded" | "applied" | "viewing";
 
 export type JobType = "telegram-notify";
 export type JobStatus = "pending" | "running" | "completed" | "failed" | "skipped";
@@ -162,17 +169,6 @@ export const jobs = pgTable(
 export type Job = InferSelectModel<typeof jobs>;
 export type NewJob = InferInsertModel<typeof jobs>;
 
-export const listingReactions = pgTable("listing_reactions", {
-  fundaId: text("funda_id")
-    .primaryKey()
-    .references(() => listings.fundaId, { onDelete: "cascade" }),
-  reaction: text("reaction").notNull(), // 'favourite' | 'discarded'
-  changedBy: text("changed_by")
-    .notNull()
-    .references(() => users.id),
-  changedAt: timestamp("changed_at", { withTimezone: true }).notNull().defaultNow(),
-});
-
 export const listingNotes = pgTable(
   "listing_notes",
   {
@@ -190,8 +186,6 @@ export const listingNotes = pgTable(
   (t) => [uniqueIndex("listing_notes_funda_user_idx").on(t.fundaId, t.userId)],
 );
 
-export type ListingReaction = InferSelectModel<typeof listingReactions>;
-export type NewListingReaction = InferInsertModel<typeof listingReactions>;
 export type ListingNote = InferSelectModel<typeof listingNotes>;
 export type NewListingNote = InferInsertModel<typeof listingNotes>;
 
@@ -212,18 +206,3 @@ export const listingViewings = pgTable("listing_viewings", {
 
 export type ListingViewing = InferSelectModel<typeof listingViewings>;
 export type NewListingViewing = InferInsertModel<typeof listingViewings>;
-
-export const listingApplications = pgTable("listing_applications", {
-  fundaId: text("funda_id")
-    .primaryKey()
-    .references(() => listings.fundaId, { onDelete: "cascade" }),
-  note: text("note"),
-  appliedBy: text("applied_by")
-    .notNull()
-    .references(() => users.id),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
-
-export type ListingApplication = InferSelectModel<typeof listingApplications>;
-export type NewListingApplication = InferInsertModel<typeof listingApplications>;

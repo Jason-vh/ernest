@@ -236,7 +236,7 @@
                   </span>
                   <!-- applied -->
                   <span
-                    v-if="listing.application"
+                    v-if="listing.state === 'applied'"
                     class="chip chip--blue"
                     title="Application submitted"
                   >
@@ -411,9 +411,10 @@
                     <button
                       class="reaction-btn"
                       :class="{
-                        'reaction-btn--active reaction-btn--fav': listing.reaction === 'favourite',
+                        'reaction-btn--active reaction-btn--fav': listing.state === 'liked',
                       }"
-                      @click="toggleReaction('favourite')"
+                      :disabled="stateSaving"
+                      @click="toggleState('liked')"
                     >
                       <svg
                         width="14"
@@ -425,18 +426,18 @@
                       >
                         <path
                           d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                          :fill="listing.reaction === 'favourite' ? 'currentColor' : 'none'"
+                          :fill="listing.state === 'liked' ? 'currentColor' : 'none'"
                         />
                       </svg>
-                      {{ listing.reaction === "favourite" ? "Favourited" : "Favourite" }}
+                      {{ listing.state === "liked" ? "Favourited" : "Favourite" }}
                     </button>
                     <button
                       class="reaction-btn"
                       :class="{
-                        'reaction-btn--active reaction-btn--discard':
-                          listing.reaction === 'discarded',
+                        'reaction-btn--active reaction-btn--discard': listing.state === 'discarded',
                       }"
-                      @click="toggleReaction('discarded')"
+                      :disabled="stateSaving"
+                      @click="toggleState('discarded')"
                     >
                       <svg
                         width="14"
@@ -448,11 +449,13 @@
                       >
                         <path d="M18 6L6 18M6 6l12 12" />
                       </svg>
-                      {{ listing.reaction === "discarded" ? "Discarded" : "Discard" }}
+                      {{ listing.state === "discarded" ? "Discarded" : "Discard" }}
                     </button>
                     <button
                       class="reaction-btn"
-                      :class="{ 'reaction-btn--active reaction-btn--viewing': listing.viewing }"
+                      :class="{
+                        'reaction-btn--active reaction-btn--viewing': listing.state === 'viewing',
+                      }"
                       :disabled="viewingEditorOpen"
                       @click="openViewingEditor"
                     >
@@ -471,9 +474,11 @@
                     </button>
                     <button
                       class="reaction-btn"
-                      :class="{ 'reaction-btn--active reaction-btn--applied': listing.application }"
-                      :disabled="applicationSaving"
-                      @click="listing.application ? removeApplication() : markApplied()"
+                      :class="{
+                        'reaction-btn--active reaction-btn--applied': listing.state === 'applied',
+                      }"
+                      :disabled="stateSaving"
+                      @click="toggleState('applied')"
                     >
                       <svg
                         width="14"
@@ -488,16 +493,14 @@
                         <line x1="22" y1="2" x2="11" y2="13" />
                         <polygon points="22 2 15 22 11 13 2 9 22 2" />
                       </svg>
-                      {{
-                        applicationSaving ? "Saving…" : listing.application ? "Applied" : "Apply"
-                      }}
+                      {{ listing.state === "applied" ? "Applied" : "Apply" }}
                     </button>
                   </div>
                   <span
-                    v-if="listing.reactionBy"
+                    v-if="listing.stateBy"
                     class="mt-1.5 block text-right text-[11px] text-[#bbb]"
                   >
-                    by {{ listing.reactionBy }}
+                    by {{ listing.stateBy }}
                   </span>
 
                   <!-- Inline note editor (shows after reacting or when note exists) -->
@@ -522,13 +525,15 @@
                   </div>
                 </div>
 
-                <!-- Read-only reaction display (logged-out users) -->
+                <!-- Read-only state display (logged-out users) -->
                 <div
-                  v-else-if="listing.reaction && listing.reactionBy"
+                  v-else-if="
+                    (listing.state === 'liked' || listing.state === 'discarded') && listing.stateBy
+                  "
                   class="mt-3 flex items-center gap-1.5 text-[12px] text-[#999]"
                 >
                   <svg
-                    v-if="listing.reaction === 'favourite'"
+                    v-if="listing.state === 'liked'"
                     width="14"
                     height="14"
                     viewBox="0 0 24 24"
@@ -553,8 +558,8 @@
                     <path d="M18 6L6 18M6 6l12 12" />
                   </svg>
                   <span>
-                    {{ listing.reaction === "favourite" ? "Favourited" : "Discarded" }} by
-                    {{ listing.reactionBy }}
+                    {{ listing.state === "liked" ? "Favourited" : "Discarded" }} by
+                    {{ listing.stateBy }}
                   </span>
                 </div>
 
@@ -724,9 +729,14 @@
                 <!-- Location mini map -->
                 <ListingMiniMap :longitude="listing.longitude" :latitude="listing.latitude" />
 
-                <!-- Add note link (shown when logged in, no reaction yet, and editor not open) -->
+                <!-- Add note link (shown when logged in, not liked/discarded yet, and editor not open) -->
                 <div
-                  v-if="user && !listing.reaction && !noteEditorOpen"
+                  v-if="
+                    user &&
+                    listing.state !== 'liked' &&
+                    listing.state !== 'discarded' &&
+                    !noteEditorOpen
+                  "
                   class="mt-4 border-t border-black/6 pt-4"
                 >
                   <button
@@ -798,7 +808,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from "vue";
 import { useRouter } from "vue-router";
-import type { ReactionType } from "@ernest/shared";
+import type { ListingState } from "@ernest/shared";
 import { sourceLabel as getSourceLabel } from "@ernest/shared";
 import { useListingStore } from "@/composables/useListingStore";
 import { useAuth } from "@/composables/useAuth";
@@ -812,12 +822,10 @@ const {
   selectedListing,
   closeModal,
   dismissModal,
-  setReaction,
+  setState,
   saveNote,
   setViewing,
   clearViewing,
-  setApplication,
-  clearApplication,
   clusterListingIds,
   currentClusterIndex,
   navigateCluster,
@@ -842,7 +850,7 @@ const viewingEditorOpen = ref(false);
 const viewingDateInput = ref("");
 const viewingNoteInput = ref("");
 const viewingSaving = ref(false);
-const applicationSaving = ref(false);
+const stateSaving = ref(false);
 const noteSaving = ref(false);
 const noteSaved = ref(false);
 const scrollContainerRef = ref<HTMLDivElement>();
@@ -1104,14 +1112,12 @@ async function saveViewing() {
   } catch {
     return;
   }
-  const { fundaId, reaction, application } = listing.value;
+  const { fundaId } = listing.value;
   const note = viewingNoteInput.value.trim();
   viewingSaving.value = true;
   try {
+    // setViewing optimistically sets state='viewing' and clears old state
     await setViewing(fundaId, iso, note === "" ? null : note, user.value.username);
-    // Viewing is the active state — clear any conflicting state
-    if (reaction) void setReaction(fundaId, null, user.value.username);
-    if (application) void clearApplication(fundaId);
     viewingEditorOpen.value = false;
   } catch {
     // optimistic update already rolled back; keep editor open so the user can retry
@@ -1129,42 +1135,19 @@ async function cancelViewing() {
   }
 }
 
-async function markApplied() {
+async function toggleState(newState: ListingState) {
   if (!listing.value || !user.value) return;
-  const { fundaId, reaction, viewing } = listing.value;
-  applicationSaving.value = true;
+  const { fundaId, state: cur } = listing.value;
+  const next: ListingState | null = cur === newState ? null : newState;
+  stateSaving.value = true;
   try {
-    await setApplication(fundaId, user.value.username);
-    // Applied is the active state — clear any conflicting state
-    if (reaction) void setReaction(fundaId, null, user.value.username);
-    if (viewing) void clearViewing(fundaId);
+    await setState(fundaId, next, user.value.username);
+    if (next === "liked" || next === "discarded") noteEditorOpen.value = true;
   } catch {
     // optimistic update already rolled back
   } finally {
-    applicationSaving.value = false;
+    stateSaving.value = false;
   }
-}
-
-async function removeApplication() {
-  if (!listing.value) return;
-  try {
-    await clearApplication(listing.value.fundaId);
-  } catch {
-    // rollback already happened
-  }
-}
-
-function toggleReaction(reaction: ReactionType) {
-  if (!listing.value || !user.value) return;
-  const { fundaId, reaction: cur, viewing, application } = listing.value;
-  const newReaction = cur === reaction ? null : reaction;
-  if (newReaction) {
-    // Reaction is the active state — clear any conflicting state
-    if (viewing) void clearViewing(fundaId);
-    if (application) void clearApplication(fundaId);
-  }
-  setReaction(fundaId, newReaction, user.value.username);
-  if (newReaction) noteEditorOpen.value = true;
 }
 
 // Auto-save note on text change (debounced 1s)
@@ -1264,8 +1247,8 @@ watch(
     if (v && user.value) {
       const note = v.notes.find((n) => n.userId === user.value!.id);
       ownNoteText.value = note?.text ?? "";
-      // Show note editor if user has a note or already reacted
-      if (note || v.reaction) noteEditorOpen.value = true;
+      // Show note editor if user has a note or has liked/discarded
+      if (note || v.state === "liked" || v.state === "discarded") noteEditorOpen.value = true;
     } else {
       ownNoteText.value = "";
     }

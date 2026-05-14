@@ -76,11 +76,7 @@ export function useMapPopups(deps: PopupDeps) {
       for (const l of listings.value.values()) {
         if (l.longitude !== lng || l.latitude !== lat) continue;
         const cat =
-          l.reaction === "favourite"
-            ? "favourite"
-            : l.reaction === "discarded"
-              ? "discarded"
-              : "unreviewed";
+          l.state === "liked" ? "favourite" : l.state === "discarded" ? "discarded" : "unreviewed";
         if (
           (cat === "favourite" && fundaFavouriteVisible.value) ||
           (cat === "unreviewed" && fundaUnreviewedVisible.value) ||

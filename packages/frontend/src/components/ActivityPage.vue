@@ -111,8 +111,8 @@
                 type="button"
                 class="activity-row flex w-full items-start gap-3 border-0 border-b border-black/5 bg-transparent px-4 py-3 text-left last:border-b-0 transition-colors hover:bg-black/3"
                 :class="{
-                  'activity-row--favourited': item.reaction?.type === 'favourite',
-                  'activity-row--discarded': item.reaction?.type === 'discarded',
+                  'activity-row--favourited': item.state === 'liked',
+                  'activity-row--discarded': item.state === 'discarded',
                 }"
                 @click="selectListing(item.fundaId)"
               >
@@ -139,11 +139,11 @@
                     >
                   </div>
                   <div
-                    v-if="item.reaction || item.viewing || item.application"
+                    v-if="item.state || item.viewing"
                     class="mt-1.5 flex flex-wrap items-center gap-1.5"
                   >
                     <span
-                      v-if="item.reaction?.type === 'favourite'"
+                      v-if="item.state === 'liked'"
                       class="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 text-[11px] font-medium text-rose-700"
                     >
                       <svg
@@ -158,10 +158,10 @@
                           d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
                         />
                       </svg>
-                      {{ item.reaction.by }}
+                      {{ item.stateBy }}
                     </span>
                     <span
-                      v-else-if="item.reaction?.type === 'discarded'"
+                      v-else-if="item.state === 'discarded'"
                       class="inline-flex items-center gap-1 rounded-full bg-black/5 px-2 py-0.5 text-[11px] font-medium text-[#777]"
                     >
                       <svg
@@ -174,7 +174,7 @@
                       >
                         <path d="M18 6L6 18M6 6l12 12" />
                       </svg>
-                      {{ item.reaction.by }}
+                      {{ item.stateBy }}
                     </span>
                     <span
                       v-if="item.viewing"
@@ -194,7 +194,7 @@
                       {{ formatViewing(item.viewing.scheduledAt) }}
                     </span>
                     <span
-                      v-if="item.application && !item.viewing"
+                      v-else-if="item.state === 'applied'"
                       class="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[11px] font-medium text-blue-700"
                     >
                       <svg
@@ -214,10 +214,10 @@
                     </span>
                   </div>
                   <p
-                    v-if="item.reaction?.note"
+                    v-if="item.note"
                     class="m-0 mt-1.5 line-clamp-3 text-[12px] leading-snug whitespace-pre-line text-[#555]"
                   >
-                    {{ item.reaction.note }}
+                    {{ item.note }}
                   </p>
                 </div>
               </button>
@@ -238,7 +238,7 @@ import { useListingStore } from "@/composables/useListingStore";
 
 const { selectListing, listings } = useListingStore();
 
-// Patch activity items in-place when the store mutates (reaction/viewing/application changes).
+// Patch activity items in-place when the store mutates (state/viewing changes).
 // The store replaces its Map ref on every optimistic update, so a shallow watch is sufficient.
 watch(listings, (newListings) => {
   if (items.value.length === 0) return;
@@ -246,14 +246,8 @@ watch(listings, (newListings) => {
     const listing = newListings.get(item.fundaId);
     if (!listing) return item;
 
-    const newReaction: ActivityListing["reaction"] = listing.reaction
-      ? {
-          type: listing.reaction,
-          by: listing.reactionBy ?? "",
-          at: item.reaction?.at ?? new Date().toISOString(),
-          note: item.reaction?.note ?? null,
-        }
-      : null;
+    const newState = listing.state ?? null;
+    const newStateBy = listing.stateBy ?? null;
     const newViewing: ActivityListing["viewing"] = listing.viewing
       ? {
           scheduledAt: listing.viewing.scheduledAt,
@@ -261,19 +255,18 @@ watch(listings, (newListings) => {
           at: item.viewing?.at ?? new Date().toISOString(),
         }
       : null;
-    const newApplication: ActivityListing["application"] = listing.application
-      ? { appliedAt: listing.application.appliedAt, by: listing.application.appliedBy }
-      : null;
 
-    if (
-      item.reaction?.type === newReaction?.type &&
-      item.viewing?.scheduledAt === newViewing?.scheduledAt &&
-      item.application?.appliedAt === newApplication?.appliedAt
-    ) {
+    if (item.state === newState && item.viewing?.scheduledAt === newViewing?.scheduledAt) {
       return item;
     }
 
-    return { ...item, reaction: newReaction, viewing: newViewing, application: newApplication };
+    return {
+      ...item,
+      state: newState,
+      stateBy: newStateBy,
+      stateAt: item.stateAt ?? new Date().toISOString(),
+      viewing: newViewing,
+    };
   });
 });
 

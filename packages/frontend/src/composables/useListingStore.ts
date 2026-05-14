@@ -1,13 +1,11 @@
 import { ref, computed, watch } from "vue";
-import type { Listing, ReactionType, ListingNote, ListingApplicationInfo } from "@ernest/shared";
+import type { Listing, ListingNote, ListingState } from "@ernest/shared";
 import {
   fetchFunda,
-  putReaction,
+  putState,
   putNote,
   putViewing,
   deleteViewing,
-  putApplication,
-  deleteApplication,
   analyzeCatch as apiAnalyzeCatch,
   translateDescription as apiTranslateDescription,
 } from "@/api/client";
@@ -57,7 +55,7 @@ const selectedListing = computed(() => {
 const favouriteIds = computed(() => {
   const ids = new Set<string>();
   for (const [id, listing] of listings.value) {
-    if (listing.reaction === "favourite") ids.add(id);
+    if (listing.state === "liked") ids.add(id);
   }
   return ids;
 });
@@ -65,7 +63,7 @@ const favouriteIds = computed(() => {
 const discardedIds = computed(() => {
   const ids = new Set<string>();
   for (const [id, listing] of listings.value) {
-    if (listing.reaction === "discarded") ids.add(id);
+    if (listing.state === "discarded") ids.add(id);
   }
   return ids;
 });
@@ -205,26 +203,33 @@ function setListings(items: Listing[]) {
   }
 }
 
-async function setReaction(fundaId: string, reaction: ReactionType | null, username: string) {
+async function setState(fundaId: string, state: ListingState | null, username: string) {
   const listing = listings.value.get(fundaId);
   if (!listing) return;
 
-  // Optimistic update: clone listing with new reaction, replace Map ref for reactivity
-  const prev = { reaction: listing.reaction, reactionBy: listing.reactionBy };
-  const updated = {
+  // Optimistic update: clone listing with new state, replace Map ref for reactivity
+  const prev = { state: listing.state, stateBy: listing.stateBy, viewing: listing.viewing };
+  const updated: Listing = {
     ...listing,
-    reaction,
-    reactionBy: reaction ? username : null,
+    state,
+    stateBy: state ? username : null,
+    // Setting a non-viewing non-null state clears any existing viewing
+    viewing: state !== null && state !== "viewing" ? null : listing.viewing,
   };
   const newMap = new Map(listings.value);
   newMap.set(fundaId, updated);
   listings.value = newMap;
 
   try {
-    await putReaction(fundaId, reaction);
+    await putState(fundaId, state);
   } catch {
     // Rollback on failure
-    const rollback = { ...updated, reaction: prev.reaction, reactionBy: prev.reactionBy };
+    const rollback: Listing = {
+      ...updated,
+      state: prev.state,
+      stateBy: prev.stateBy,
+      viewing: prev.viewing,
+    };
     const rollbackMap = new Map(listings.value);
     rollbackMap.set(fundaId, rollback);
     listings.value = rollbackMap;
@@ -284,7 +289,7 @@ async function setViewing(
   const listing = listings.value.get(fundaId);
   if (!listing) return;
 
-  const prev = listing.viewing;
+  const prev = { viewing: listing.viewing, state: listing.state, stateBy: listing.stateBy };
   const optimistic = {
     scheduledAt,
     note,
@@ -293,14 +298,19 @@ async function setViewing(
   };
 
   const newMap = new Map(listings.value);
-  newMap.set(fundaId, { ...listing, viewing: optimistic });
+  newMap.set(fundaId, { ...listing, viewing: optimistic, state: "viewing", stateBy: username });
   listings.value = newMap;
 
   try {
     await putViewing(fundaId, scheduledAt, note);
   } catch {
     const rollbackMap = new Map(listings.value);
-    rollbackMap.set(fundaId, { ...listing, viewing: prev });
+    rollbackMap.set(fundaId, {
+      ...listing,
+      viewing: prev.viewing,
+      state: prev.state,
+      stateBy: prev.stateBy,
+    });
     listings.value = rollbackMap;
     throw new Error("Failed to save viewing");
   }
@@ -389,65 +399,26 @@ async function translateDescription(fundaId: string) {
   }
 }
 
-async function setApplication(fundaId: string, username: string) {
-  const listing = listings.value.get(fundaId);
-  if (!listing) return;
-
-  const prev = listing.application;
-  const optimistic: ListingApplicationInfo = {
-    appliedAt: new Date().toISOString(),
-    appliedBy: username,
-  };
-
-  const newMap = new Map(listings.value);
-  newMap.set(fundaId, { ...listing, application: optimistic });
-  listings.value = newMap;
-
-  try {
-    await putApplication(fundaId);
-  } catch {
-    const rollbackMap = new Map(listings.value);
-    rollbackMap.set(fundaId, { ...listing, application: prev });
-    listings.value = rollbackMap;
-    throw new Error("Failed to save application");
-  }
-}
-
-async function clearApplication(fundaId: string) {
-  const listing = listings.value.get(fundaId);
-  if (!listing) return;
-
-  const prev = listing.application;
-
-  const newMap = new Map(listings.value);
-  newMap.set(fundaId, { ...listing, application: null });
-  listings.value = newMap;
-
-  try {
-    await deleteApplication(fundaId);
-  } catch {
-    const rollbackMap = new Map(listings.value);
-    rollbackMap.set(fundaId, { ...listing, application: prev });
-    listings.value = rollbackMap;
-    throw new Error("Failed to remove application");
-  }
-}
-
 async function clearViewing(fundaId: string) {
   const listing = listings.value.get(fundaId);
   if (!listing) return;
 
-  const prev = listing.viewing;
+  const prev = { viewing: listing.viewing, state: listing.state, stateBy: listing.stateBy };
 
   const newMap = new Map(listings.value);
-  newMap.set(fundaId, { ...listing, viewing: null });
+  newMap.set(fundaId, { ...listing, viewing: null, state: null, stateBy: null });
   listings.value = newMap;
 
   try {
     await deleteViewing(fundaId);
   } catch {
     const rollbackMap = new Map(listings.value);
-    rollbackMap.set(fundaId, { ...listing, viewing: prev });
+    rollbackMap.set(fundaId, {
+      ...listing,
+      viewing: prev.viewing,
+      state: prev.state,
+      stateBy: prev.stateBy,
+    });
     listings.value = rollbackMap;
     throw new Error("Failed to cancel viewing");
   }
@@ -484,12 +455,10 @@ export function useListingStore() {
     setListings,
     loadListings,
     listingsLoading,
-    setReaction,
+    setState,
     saveNote,
     setViewing,
     clearViewing,
-    setApplication,
-    clearApplication,
     findColocatedIds,
     syncFromUrl,
     analyzeCatch,

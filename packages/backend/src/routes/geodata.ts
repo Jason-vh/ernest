@@ -4,20 +4,12 @@ import { timingSafeEqual, createHash } from "node:crypto";
 import path from "path";
 import { REFRESH_SECRET } from "@/config";
 import { db } from "@/db";
-import {
-  listings,
-  listingReactions,
-  listingNotes,
-  listingViewings,
-  listingApplications,
-  users,
-  type NewListing,
-} from "@/db/schema";
+import { listings, listingNotes, listingViewings, users, type NewListing } from "@/db/schema";
 import { isNull, and, or, eq } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { syncListings } from "@/services/listing-sync";
 import { setBuurtenData } from "@/services/buurt-matcher";
-import type { Listing, ListingNote } from "@ernest/shared";
+import type { Listing, ListingNote, ListingState } from "@ernest/shared";
 
 function safeCompare(a: string, b: string): boolean {
   const ha = createHash("sha256").update(a).digest();
@@ -60,10 +52,8 @@ async function ensureFundaCache(): Promise<void> {
 }
 
 async function queryFundaListings(): Promise<Listing[]> {
-  // Aliases so we can join users multiple times
-  const reactionUser = alias(users, "reaction_user");
+  const stateUser = alias(users, "state_user");
   const viewingUser = alias(users, "viewing_user");
-  const applicationUser = alias(users, "application_user");
 
   const rows = await db
     .select({
@@ -97,22 +87,17 @@ async function queryFundaListings(): Promise<Listing[]> {
       aiCatch: listings.aiCatch,
       aiHasBathtub: listings.aiHasBathtub,
       aiHasOutsideArea: listings.aiHasOutsideArea,
-      reaction: listingReactions.reaction,
-      reactionBy: reactionUser.username,
+      listingState: listings.state,
+      stateBy: stateUser.username,
       viewingScheduledAt: listingViewings.scheduledAt,
       viewingNote: listingViewings.note,
       viewingBy: viewingUser.username,
       viewingUpdatedAt: listingViewings.updatedAt,
-      applicationCreatedAt: listingApplications.createdAt,
-      applicationBy: applicationUser.username,
     })
     .from(listings)
-    .leftJoin(listingReactions, eq(listings.fundaId, listingReactions.fundaId))
-    .leftJoin(reactionUser, eq(listingReactions.changedBy, reactionUser.id))
+    .leftJoin(stateUser, eq(listings.stateBy, stateUser.id))
     .leftJoin(listingViewings, eq(listings.fundaId, listingViewings.fundaId))
     .leftJoin(viewingUser, eq(listingViewings.scheduledBy, viewingUser.id))
-    .leftJoin(listingApplications, eq(listings.fundaId, listingApplications.fundaId))
-    .leftJoin(applicationUser, eq(listingApplications.appliedBy, applicationUser.id))
     .where(
       and(
         isNull(listings.disappearedAt),
@@ -147,12 +132,12 @@ async function queryFundaListings(): Promise<Listing[]> {
 
   return rows.map((row) => {
     const {
+      listingState,
+      stateBy,
       viewingScheduledAt,
       viewingNote,
       viewingBy,
       viewingUpdatedAt,
-      applicationCreatedAt,
-      applicationBy,
       ...rest
     } = row;
     const viewing: Listing["viewing"] =
@@ -164,17 +149,12 @@ async function queryFundaListings(): Promise<Listing[]> {
             updatedAt: (viewingUpdatedAt ?? viewingScheduledAt).toISOString(),
           }
         : null;
-    const application: Listing["application"] =
-      applicationCreatedAt && applicationBy
-        ? { appliedAt: applicationCreatedAt.toISOString(), appliedBy: applicationBy }
-        : null;
     return Object.assign(rest, {
       sources: (rest.sources ?? []) as { source: string; url: string }[],
-      reaction: (rest.reaction as Listing["reaction"]) ?? null,
-      reactionBy: rest.reactionBy ?? null,
+      state: (listingState as ListingState | null) ?? null,
+      stateBy: stateBy ?? null,
       notes: notesByFundaId.get(rest.fundaId) ?? [],
       viewing,
-      application,
     });
   });
 }
