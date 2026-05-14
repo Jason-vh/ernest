@@ -22,10 +22,7 @@
       <h1 class="text-[17px] font-semibold text-[#333]">Activity</h1>
     </header>
 
-    <div
-      v-if="!loading && !error && items.length > 0"
-      class="border-b border-black/8 bg-white px-4 py-3"
-    >
+    <div v-if="hasLoaded && !error" class="border-b border-black/8 bg-white px-4 py-3">
       <div class="mx-auto flex w-full max-w-[640px] items-center gap-2">
         <div class="relative flex-1">
           <svg
@@ -93,13 +90,13 @@
 
     <div>
       <div class="mx-auto w-full max-w-[640px] px-4 py-6">
-        <div v-if="loading" class="text-center text-[13px] text-[#888]">Loading...</div>
+        <div v-if="showLoading" class="text-center text-[13px] text-[#888]">Loading...</div>
         <div v-else-if="error" class="text-center text-[13px] text-red-600">{{ error }}</div>
-        <div v-else-if="items.length === 0" class="text-center text-[13px] text-[#888]">
-          No listings yet.
-        </div>
-        <div v-else-if="filteredItems.length === 0" class="text-center text-[13px] text-[#888]">
-          Nothing matches.
+        <div
+          v-else-if="hasLoaded && items.length === 0"
+          class="text-center text-[13px] text-[#888]"
+        >
+          {{ searchQuery || stateFilter !== "all" ? "Nothing matches." : "No listings yet." }}
         </div>
 
         <div v-else class="flex flex-col gap-6">
@@ -245,8 +242,11 @@ const { selectListing } = useListingStore();
 const STATE_STORAGE_KEY = "ernest:activityState";
 
 const items = ref<ActivityListing[]>([]);
-const loading = ref(true);
+const loading = ref(false);
+const showLoading = ref(false);
+const hasLoaded = ref(false);
 const error = ref<string | null>(null);
+let loadingTimer: ReturnType<typeof setTimeout> | null = null;
 
 type StateFilter = ActivityStateFilter;
 
@@ -270,12 +270,14 @@ function readState(): StateFilter {
 const stateFilter = ref<StateFilter>(readState());
 const searchQuery = ref("");
 
-const filteredItems = computed(() => items.value);
-
 let searchDebounce: ReturnType<typeof setTimeout> | null = null;
 
 async function reload(query: string, state: StateFilter) {
   loading.value = true;
+  if (loadingTimer) clearTimeout(loadingTimer);
+  loadingTimer = setTimeout(() => {
+    if (loading.value) showLoading.value = true;
+  }, 200);
   try {
     items.value = await fetchActivity(query, state);
     error.value = null;
@@ -283,6 +285,12 @@ async function reload(query: string, state: StateFilter) {
     error.value = err instanceof Error ? err.message : "Failed to load activity";
   } finally {
     loading.value = false;
+    if (loadingTimer) {
+      clearTimeout(loadingTimer);
+      loadingTimer = null;
+    }
+    showLoading.value = false;
+    hasLoaded.value = true;
   }
 }
 
@@ -299,14 +307,8 @@ watch(stateFilter, (val) => {
   void reload(searchQuery.value, val);
 });
 
-onMounted(async () => {
-  try {
-    items.value = await fetchActivity(searchQuery.value, stateFilter.value);
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : "Failed to load activity";
-  } finally {
-    loading.value = false;
-  }
+onMounted(() => {
+  void reload(searchQuery.value, stateFilter.value);
 });
 
 const timeFormatter = new Intl.DateTimeFormat("en-GB", {
@@ -377,7 +379,7 @@ function dayLabel(iso: string): string {
 
 const groups = computed(() => {
   const map = new Map<string, { label: string; items: ActivityListing[] }>();
-  for (const item of filteredItems.value) {
+  for (const item of items.value) {
     const key = dayKey(item.lastActivityAt);
     let group = map.get(key);
     if (!group) {
