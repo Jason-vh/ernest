@@ -133,7 +133,7 @@ def to_geojson(units) -> dict:
                     "source": "vbt",
                     "price": price,
                     "address": house,
-                    "bedrooms": None,
+                    "bedrooms": max(1, u["rooms"] - 1) if u.get("rooms") else None,
                     "livingArea": int(u["plot"]) if u.get("plot") else None,
                     "energyLabel": None,
                     "objectType": (u.get("attributes") or {}).get("type", {}).get("category") or None,
