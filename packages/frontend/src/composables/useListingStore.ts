@@ -389,14 +389,13 @@ async function translateDescription(fundaId: string) {
   }
 }
 
-async function setApplication(fundaId: string, note: string | null, username: string) {
+async function setApplication(fundaId: string, username: string) {
   const listing = listings.value.get(fundaId);
   if (!listing) return;
 
   const prev = listing.application;
   const optimistic: ListingApplicationInfo = {
     appliedAt: new Date().toISOString(),
-    note,
     appliedBy: username,
   };
 
@@ -405,7 +404,7 @@ async function setApplication(fundaId: string, note: string | null, username: st
   listings.value = newMap;
 
   try {
-    await putApplication(fundaId, note);
+    await putApplication(fundaId);
   } catch {
     const rollbackMap = new Map(listings.value);
     rollbackMap.set(fundaId, { ...listing, application: prev });

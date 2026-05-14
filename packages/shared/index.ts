@@ -16,7 +16,6 @@ export interface ListingViewingInfo {
 
 export interface ListingApplicationInfo {
   appliedAt: string;
-  note: string | null;
   appliedBy: string;
 }
 
@@ -64,10 +63,7 @@ export interface ActivityListing {
     by: string;
     at: string;
   } | null;
-  application: {
-    appliedAt: string;
-    by: string;
-  } | null;
+  application: { appliedAt: string; by: string } | null;
 }
 
 export const SOURCE_LABELS: Record<string, string> = {

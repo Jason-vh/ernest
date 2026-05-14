@@ -104,7 +104,6 @@ async function queryFundaListings(): Promise<Listing[]> {
       viewingBy: viewingUser.username,
       viewingUpdatedAt: listingViewings.updatedAt,
       applicationCreatedAt: listingApplications.createdAt,
-      applicationNote: listingApplications.note,
       applicationBy: applicationUser.username,
     })
     .from(listings)
@@ -153,7 +152,6 @@ async function queryFundaListings(): Promise<Listing[]> {
       viewingBy,
       viewingUpdatedAt,
       applicationCreatedAt,
-      applicationNote,
       applicationBy,
       ...rest
     } = row;
@@ -168,11 +166,7 @@ async function queryFundaListings(): Promise<Listing[]> {
         : null;
     const application: Listing["application"] =
       applicationCreatedAt && applicationBy
-        ? {
-            appliedAt: applicationCreatedAt.toISOString(),
-            note: applicationNote ?? null,
-            appliedBy: applicationBy,
-          }
+        ? { appliedAt: applicationCreatedAt.toISOString(), appliedBy: applicationBy }
         : null;
     return Object.assign(rest, {
       sources: (rest.sources ?? []) as { source: string; url: string }[],

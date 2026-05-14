@@ -243,7 +243,6 @@ listingsRouter.delete("/:fundaId/viewing", requireAuth, async (c) => {
 
 listingsRouter.put("/:fundaId/application", requireAuth, async (c) => {
   const fundaId = c.req.param("fundaId");
-  const body = await c.req.json<{ note?: string | null }>();
 
   const [existing] = await db
     .select({ fundaId: listings.fundaId })
@@ -252,15 +251,14 @@ listingsRouter.put("/:fundaId/application", requireAuth, async (c) => {
     .limit(1);
   if (!existing) return c.json({ error: "Listing not found" }, 404);
 
-  const note = typeof body.note === "string" ? body.note.trim() : "";
   const user = c.get("user")!;
 
   await db
     .insert(listingApplications)
-    .values({ fundaId, note: note || null, appliedBy: user.sub })
+    .values({ fundaId, appliedBy: user.sub })
     .onConflictDoUpdate({
       target: listingApplications.fundaId,
-      set: { note: note || null, appliedBy: user.sub, updatedAt: new Date() },
+      set: { appliedBy: user.sub, updatedAt: new Date() },
     });
 
   await invalidateFundaCache();

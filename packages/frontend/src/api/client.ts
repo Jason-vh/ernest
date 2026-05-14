@@ -85,12 +85,12 @@ export async function deleteViewing(fundaId: string): Promise<void> {
   }
 }
 
-export async function putApplication(fundaId: string, note: string | null): Promise<void> {
+export async function putApplication(fundaId: string): Promise<void> {
   const res = await fetch(`/api/listings/${encodeURIComponent(fundaId)}/application`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ note }),
+    body: "{}",
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
