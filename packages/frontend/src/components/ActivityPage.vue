@@ -131,12 +131,12 @@
                     <span v-if="item.city">{{ item.city }}</span>
                     <span v-if="item.city"> &middot; </span>
                     <span>{{ formatPrice(item.price) }}/mo</span>
+                    <span v-if="item.lastActivityAt !== item.createdAt">
+                      &middot; added {{ formatRelative(item.createdAt) }}</span
+                    >
                     <span v-if="item.source !== 'funda'">
                       &middot; {{ getSourceLabel(item.source) }}</span
                     >
-                    <span v-if="item.lastActivityAt !== item.createdAt">
-                      &middot; added {{ formatRelative(item.createdAt) }}
-                    </span>
                   </div>
                   <div
                     v-if="item.reaction || item.viewing || item.application"
@@ -316,7 +316,6 @@ const timeFormatter = new Intl.DateTimeFormat("en-GB", {
 });
 
 const viewingFormatter = new Intl.DateTimeFormat("en-GB", {
-  weekday: "short",
   day: "numeric",
   month: "short",
   hour: "2-digit",
