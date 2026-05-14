@@ -98,4 +98,8 @@ export interface Listing {
   viewing: ListingViewingInfo | null;
   /** Skeptical AI analysis. null = not analyzed yet. [] = analyzed, no concerns. */
   aiCatch: ListingCatchConcern[] | null;
+  /** Detected from photos by AI. null = not yet analyzed. */
+  aiHasBathtub: boolean | null;
+  /** Detected from photos/data by AI. null = not yet analyzed. */
+  aiHasOutsideArea: boolean | null;
 }

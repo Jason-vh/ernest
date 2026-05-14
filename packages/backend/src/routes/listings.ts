@@ -7,7 +7,11 @@ import { requireAuth, csrfCheck } from "@/auth/middleware";
 import { invalidateFundaCache } from "@/routes/geodata";
 import { telegramApi } from "@/services/telegram";
 import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, ANTHROPIC_API_KEY } from "@/config";
-import { analyzeListingCatch, hashCatchSource } from "@/services/ai-catch-analysis";
+import {
+  analyzeListingCatch,
+  hashCatchSource,
+  type ListingAnalysisResult,
+} from "@/services/ai-catch-analysis";
 import {
   hasMeaningfulDescription,
   hashDescription,
@@ -249,12 +253,17 @@ listingsRouter.post("/:fundaId/catch", requireAuth, async (c) => {
 
   const expectedHash = hashCatchSource(listing);
   if (!force && listing.aiCatch != null && listing.aiCatchSourceHash === expectedHash) {
-    return c.json({ aiCatch: listing.aiCatch, cached: true });
+    return c.json({
+      aiCatch: listing.aiCatch,
+      aiHasBathtub: listing.aiHasBathtub ?? null,
+      aiHasOutsideArea: listing.aiHasOutsideArea ?? null,
+      cached: true,
+    });
   }
 
-  let concerns;
+  let result: ListingAnalysisResult;
   try {
-    concerns = await analyzeListingCatch(listing);
+    result = await analyzeListingCatch(listing);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.warn(`Catch analysis failed for ${fundaId}: ${message}`);
@@ -264,7 +273,9 @@ listingsRouter.post("/:fundaId/catch", requireAuth, async (c) => {
   await db
     .update(listings)
     .set({
-      aiCatch: concerns,
+      aiCatch: result.concerns,
+      aiHasBathtub: result.hasBathtub,
+      aiHasOutsideArea: result.hasOutsideArea,
       aiCatchSourceHash: expectedHash,
       updatedAt: sql`now()`,
     })
@@ -272,7 +283,12 @@ listingsRouter.post("/:fundaId/catch", requireAuth, async (c) => {
 
   await invalidateFundaCache();
 
-  return c.json({ aiCatch: concerns, cached: false });
+  return c.json({
+    aiCatch: result.concerns,
+    aiHasBathtub: result.hasBathtub,
+    aiHasOutsideArea: result.hasOutsideArea,
+    cached: false,
+  });
 });
 
 listingsRouter.post("/:fundaId/translate", requireAuth, async (c) => {

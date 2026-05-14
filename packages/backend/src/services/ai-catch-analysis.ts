@@ -4,6 +4,12 @@ import { ANTHROPIC_API_KEY } from "@/config";
 import type { Listing as DbListing } from "@/db/schema";
 import type { ListingCatchConcern, ListingCatchSeverity } from "@ernest/shared";
 
+export interface ListingAnalysisResult {
+  concerns: ListingCatchConcern[];
+  hasBathtub: boolean;
+  hasOutsideArea: boolean;
+}
+
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_MODEL = "claude-sonnet-4-6";
 
@@ -129,7 +135,13 @@ Flag style:
 - No image numbers, no "the photo shows" preamble. Just the finding.
 
 Good: "Energy label F, expect high winter utility bills."
-Bad: "The energy label of F may suggest higher utility costs which could potentially be a concern."`;
+Bad: "The energy label of F may suggest higher utility costs which could potentially be a concern."
+
+Detection fields (always required, regardless of whether there are concerns):
+
+hasBathtub: true if a bathtub is clearly visible in any photo. false otherwise. Do not infer from text alone.
+
+hasOutsideArea: true if there is private outdoor space — garden, balcony, roof terrace, or patio — confirmed by photos OR by "Garden: yes", "Balcony: yes", or "Roof terrace: yes" in the listing data. false if no outdoor space is evident from either source.`;
 
 const RESPONSE_SCHEMA = {
   type: "object",
@@ -146,8 +158,10 @@ const RESPONSE_SCHEMA = {
         additionalProperties: false,
       },
     },
+    hasBathtub: { type: "boolean" },
+    hasOutsideArea: { type: "boolean" },
   },
-  required: ["concerns"],
+  required: ["concerns", "hasBathtub", "hasOutsideArea"],
   additionalProperties: false,
 } as const;
 
@@ -240,27 +254,31 @@ function isTextBlock(block: unknown): block is AnthropicTextBlock {
   );
 }
 
-function parseConcerns(payload: unknown): ListingCatchConcern[] {
+function parseAnalysisResult(payload: unknown): ListingAnalysisResult {
   if (typeof payload !== "object" || payload === null) {
     throw new Error("Anthropic response is not an object");
   }
-  if (!("concerns" in payload) || !Array.isArray((payload as { concerns: unknown }).concerns)) {
+  const p = payload as Record<string, unknown>;
+  if (!Array.isArray(p.concerns)) {
     throw new Error("Anthropic response missing concerns array");
   }
-  const items = (payload as { concerns: unknown[] }).concerns;
-  const out: ListingCatchConcern[] = [];
-  for (const item of items) {
+  const concerns: ListingCatchConcern[] = [];
+  for (const item of p.concerns) {
     if (typeof item !== "object" || item === null) continue;
     const sev = (item as { severity?: unknown }).severity;
     const flag = (item as { flag?: unknown }).flag;
     if (typeof flag !== "string" || flag.trim() === "") continue;
     if (sev !== "low" && sev !== "medium" && sev !== "high") continue;
-    out.push({ severity: sev as ListingCatchSeverity, flag: flag.trim() });
+    concerns.push({ severity: sev as ListingCatchSeverity, flag: flag.trim() });
   }
-  return out;
+  return {
+    concerns,
+    hasBathtub: p.hasBathtub === true,
+    hasOutsideArea: p.hasOutsideArea === true,
+  };
 }
 
-export async function analyzeListingCatch(listing: DbListing): Promise<ListingCatchConcern[]> {
+export async function analyzeListingCatch(listing: DbListing): Promise<ListingAnalysisResult> {
   if (!ANTHROPIC_API_KEY) {
     throw new Error("ANTHROPIC_API_KEY is not configured");
   }
@@ -337,5 +355,5 @@ export async function analyzeListingCatch(listing: DbListing): Promise<ListingCa
     throw new Error(`Anthropic returned non-JSON text: ${textBlock.text.slice(0, 200)}`);
   }
 
-  return parseConcerns(parsed);
+  return parseAnalysisResult(parsed);
 }

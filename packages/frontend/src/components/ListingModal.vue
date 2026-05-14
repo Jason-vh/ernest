@@ -165,6 +165,74 @@
                   </div>
                 </div>
                 <PhotoGallery :photos="listing.photos" @open-photo="openPhotoViewer" />
+
+                <!-- Bottom-right chips overlay -->
+                <div
+                  class="pointer-events-none absolute bottom-3 right-3 z-10 flex flex-wrap justify-end gap-1"
+                >
+                  <!-- source -->
+                  <span class="chip">{{ sourceLabel }}</span>
+
+                  <!-- age on market -->
+                  <span v-if="listingAgeChip" class="chip">{{ listingAgeChip }}</span>
+
+                  <!-- bathtub (AI-detected) -->
+                  <span
+                    v-if="listing.aiHasBathtub === true"
+                    class="chip chip--green"
+                    title="Bathtub"
+                  >
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M7 10V6a4 4 0 0 1 4-4h0a4 4 0 0 1 4 4v1" />
+                      <path d="M2 10h20v4a6 6 0 0 1-6 6H8a6 6 0 0 1-6-6v-4z" />
+                      <path d="M6 20v2M18 20v2" />
+                    </svg>
+                  </span>
+
+                  <!-- outside area (AI or structured data) -->
+                  <span v-if="chipHasOutsideArea" class="chip chip--green" title="Outside area">
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z" />
+                      <circle cx="12" cy="9" r="2.5" />
+                    </svg>
+                  </span>
+
+                  <!-- scheduled viewing -->
+                  <span v-if="listing.viewing" class="chip chip--blue" title="Viewing scheduled">
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <rect x="3" y="4" width="18" height="18" rx="2" />
+                      <path d="M16 2v4M8 2v4M3 10h18" />
+                    </svg>
+                    Viewing
+                  </span>
+                </div>
               </div>
 
               <!-- Top bar fallback when no photos -->
@@ -759,7 +827,31 @@ const keyFacts = computed(() => {
 const SOURCE_LABELS: Record<string, string> = {
   funda: "Funda",
   vesteda: "Vesteda",
+  vbt: "VB&T",
 };
+
+const listingAgeChip = computed(() => {
+  if (!listing.value?.offeredSince) return null;
+  const offered = new Date(listing.value.offeredSince);
+  if (Number.isNaN(offered.getTime())) return null;
+  const days = Math.floor((Date.now() - offered.getTime()) / (1000 * 60 * 60 * 24));
+  if (days < 0) return null;
+  if (days === 0) return "today";
+  if (days < 14) return `${days}d`;
+  if (days < 60) return `${Math.round(days / 7)}w`;
+  return `${Math.round(days / 30)}mo`;
+});
+
+const chipHasOutsideArea = computed(() => {
+  const l = listing.value;
+  if (!l) return false;
+  return (
+    l.aiHasOutsideArea === true ||
+    l.hasGarden === true ||
+    l.hasBalcony === true ||
+    l.hasRoofTerrace === true
+  );
+});
 
 const sourceLabel = computed(() => {
   if (!listing.value) return "";
@@ -1233,6 +1325,29 @@ function trapFocus(e: KeyboardEvent) {
   background: rgba(220, 38, 38, 0.1);
   color: #b91c1c;
   border-color: rgba(220, 38, 38, 0.2);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(6px);
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.chip--green {
+  color: #4ade80;
+}
+
+.chip--blue {
+  color: #7dd3fc;
 }
 
 .catch-dot {

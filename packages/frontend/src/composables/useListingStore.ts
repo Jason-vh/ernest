@@ -325,11 +325,16 @@ async function analyzeCatch(fundaId: string) {
   }
 
   try {
-    const concerns = await apiAnalyzeCatch(fundaId);
+    const result = await apiAnalyzeCatch(fundaId);
     const current = listings.value.get(fundaId);
     if (current) {
       const newMap = new Map(listings.value);
-      newMap.set(fundaId, { ...current, aiCatch: concerns });
+      newMap.set(fundaId, {
+        ...current,
+        aiCatch: result.concerns,
+        aiHasBathtub: result.hasBathtub,
+        aiHasOutsideArea: result.hasOutsideArea,
+      });
       listings.value = newMap;
     }
   } catch (err) {

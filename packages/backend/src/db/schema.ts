@@ -93,6 +93,8 @@ export const listings = pgTable(
     // Skeptical "what's the catch?" analysis
     aiCatch: jsonb("ai_catch").$type<{ severity: "low" | "medium" | "high"; flag: string }[]>(),
     aiCatchSourceHash: text("ai_catch_source_hash"),
+    aiHasBathtub: boolean("ai_has_bathtub"),
+    aiHasOutsideArea: boolean("ai_has_outside_area"),
 
     // Amenities
     hasGarden: boolean("has_garden"),

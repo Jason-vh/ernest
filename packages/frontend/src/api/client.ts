@@ -101,7 +101,11 @@ export async function fetchActivity(
   return res.json();
 }
 
-export async function analyzeCatch(fundaId: string): Promise<ListingCatchConcern[]> {
+export async function analyzeCatch(fundaId: string): Promise<{
+  concerns: ListingCatchConcern[];
+  hasBathtub: boolean | null;
+  hasOutsideArea: boolean | null;
+}> {
   const res = await fetch(`/api/listings/${encodeURIComponent(fundaId)}/catch`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -111,8 +115,16 @@ export async function analyzeCatch(fundaId: string): Promise<ListingCatchConcern
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error ?? `Failed to analyze listing: ${res.status}`);
   }
-  const json = (await res.json()) as { aiCatch: ListingCatchConcern[] };
-  return json.aiCatch;
+  const json = (await res.json()) as {
+    aiCatch: ListingCatchConcern[];
+    aiHasBathtub: boolean | null;
+    aiHasOutsideArea: boolean | null;
+  };
+  return {
+    concerns: json.aiCatch,
+    hasBathtub: json.aiHasBathtub ?? null,
+    hasOutsideArea: json.aiHasOutsideArea ?? null,
+  };
 }
 
 export async function translateDescription(fundaId: string): Promise<string> {
