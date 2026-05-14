@@ -221,6 +221,7 @@ def to_geojson(listings, coords, details):
                 "geometry": {"type": "Point", "coordinates": [lng, lat]},
                 "properties": {
                     "fundaId": gid,
+                    "source": "funda",
                     "price": listing.get("price"),
                     "address": listing.get("title") or "",
                     "bedrooms": listing.get("bedrooms"),
