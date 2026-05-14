@@ -718,7 +718,7 @@
                     >
                       <div
                         class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg"
-                        :style="{ backgroundColor: s.color, color: '#fff' }"
+                        :style="{ backgroundColor: s.color + '18', color: s.color }"
                       >
                         <!-- eslint-disable-next-line vue/no-v-html -->
                         <svg width="18" height="18" viewBox="0 0 24 24" v-html="s.icon" />
@@ -987,15 +987,16 @@ const STATION_TYPES = [
     type: StopType.Metro,
     label: "Metro",
     color: "#E4003A",
-    // Amsterdam Metro: bold M
-    icon: `<text x="12" y="17" text-anchor="middle" font-size="14" font-weight="800" font-family="Arial,sans-serif" fill="currentColor">M</text>`,
+    // Amsterdam Metro: circle with bold M
+    icon: `<circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1"/>
+           <text x="12" y="17" text-anchor="middle" font-size="13" font-weight="800" font-family="Arial,sans-serif" fill="currentColor">M</text>`,
   },
   {
     type: StopType.Tram,
     label: "Tram",
     color: "#7B2D8E",
     // Tram silhouette with pantograph
-    icon: `<rect x="3" y="9" width="18" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+    icon: `<rect x="3" y="9" width="18" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1"/>
            <line x1="3" y1="13" x2="21" y2="13" stroke="currentColor" stroke-width="1" stroke-opacity=".4"/>
            <rect x="5" y="10.5" width="3.5" height="2.5" rx="0.5" fill="currentColor" fill-opacity=".5"/>
            <rect x="10.25" y="10.5" width="3.5" height="2.5" rx="0.5" fill="currentColor" fill-opacity=".5"/>
