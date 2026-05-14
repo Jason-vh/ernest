@@ -194,7 +194,7 @@
                       {{ formatViewing(item.viewing.scheduledAt) }}
                     </span>
                     <span
-                      v-if="item.application"
+                      v-if="item.application && !item.viewing"
                       class="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[11px] font-medium text-blue-700"
                     >
                       <svg
