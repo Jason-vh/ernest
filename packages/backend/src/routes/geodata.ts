@@ -89,6 +89,7 @@ async function queryFundaListings(): Promise<Listing[]> {
       buurtSafetyRating: listings.buurtSafetyRating,
       buurtCrimesPer1000: listings.buurtCrimesPer1000,
       photos: listings.photos,
+      sources: listings.sources,
       status: listings.status,
       offeredSince: listings.offeredSince,
       aiCatch: listings.aiCatch,
@@ -325,6 +326,11 @@ geodata.post(
         latitude: geom.coordinates[1],
         longitude: geom.coordinates[0],
         photos,
+        sources: Array.isArray(p.sources)
+          ? p.sources
+          : typeof p.sources === "string"
+            ? (JSON.parse(p.sources) as { source: string; url: string }[])
+            : null,
         status: p.status || "Beschikbaar",
         offeredSince: p.offeredSince || null,
       });

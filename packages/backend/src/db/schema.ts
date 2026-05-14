@@ -109,6 +109,9 @@ export const listings = pgTable(
     buurtSafetyRating: real("buurt_safety_rating"),
     buurtCrimesPer1000: real("buurt_crimes_per_1000"),
 
+    // Cross-source links (same property listed on multiple platforms)
+    sources: jsonb("sources").$type<{ source: string; url: string }[]>(),
+
     // Media
     photos: jsonb("photos").$type<string[]>().notNull().default([]),
 

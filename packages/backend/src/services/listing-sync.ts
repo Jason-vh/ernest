@@ -56,6 +56,7 @@ async function upsertListing(listing: NewListing, buurt: BuurtStats | null) {
         latitude: listing.latitude,
         longitude: listing.longitude,
         photos: listing.photos,
+        sources: listing.sources,
         status: listing.status,
         offeredSince: listing.offeredSince,
         disappearedAt: null,

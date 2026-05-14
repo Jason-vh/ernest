@@ -2,6 +2,7 @@
 """Fetch rentals (Funda + Vesteda + VB&T) and POST them to the web service."""
 
 import argparse
+import json
 import os
 import sys
 
@@ -66,31 +67,45 @@ def fetch_known_ids():
 
 
 def merge_and_dedup(funda_geojson, *secondary_geojsons_with_labels):
-    """Combine sources, deduplicating each secondary source against all already-seen addresses."""
+    """Combine sources. Duplicates (same address) are merged: the secondary source's
+    URL is appended to the primary feature's `sources` list rather than dropped."""
     funda_features = funda_geojson.get("features", [])
 
-    seen_addresses = {
-        normalize_address((f.get("properties") or {}).get("address", ""))
-        for f in funda_features
-    }
-    seen_addresses.discard("")
+    # Seed sources for every primary feature
+    for f in funda_features:
+        props = f.setdefault("properties", {})
+        props["sources"] = json.dumps([{"source": props.get("source"), "url": props.get("url")}])
+
+    # address → feature index for merge lookups
+    address_to_feature = {}
+    for f in funda_features:
+        norm = normalize_address((f.get("properties") or {}).get("address", ""))
+        if norm:
+            address_to_feature[norm] = f
 
     result_features = list(funda_features)
 
     for label, geojson in secondary_geojsons_with_labels:
         features = geojson.get("features", [])
-        duplicates = 0
+        merged = 0
         for feature in features:
-            addr = (feature.get("properties") or {}).get("address", "")
+            props = feature.setdefault("properties", {})
+            addr = props.get("address", "")
             norm = normalize_address(addr)
-            if norm and norm in seen_addresses:
-                duplicates += 1
+            if norm and norm in address_to_feature:
+                # Merge: append this source to the primary feature's sources list
+                primary_props = address_to_feature[norm].get("properties") or {}
+                existing = json.loads(primary_props.get("sources", "[]"))
+                existing.append({"source": props.get("source"), "url": props.get("url")})
+                primary_props["sources"] = json.dumps(existing)
+                merged += 1
                 continue
+            props["sources"] = json.dumps([{"source": props.get("source"), "url": props.get("url")}])
             result_features.append(feature)
             if norm:
-                seen_addresses.add(norm)
-        if duplicates:
-            print(f"  Dedup: dropped {duplicates} {label} listing(s) already seen")
+                address_to_feature[norm] = feature
+        if merged:
+            print(f"  Dedup: merged {merged} {label} listing(s) with existing")
 
     return {"type": "FeatureCollection", "features": result_features}
 

@@ -700,22 +700,24 @@
                     Add note
                   </button>
                 </div>
-                <!-- View on source site -->
-                <div class="mt-4 border-t border-black/6 pt-4">
+                <!-- View on source site(s) -->
+                <div class="mt-4 flex flex-col gap-2 border-t border-black/6 pt-4">
                   <a
-                    :href="listing.url"
+                    v-for="s in listingSources"
+                    :key="s.source"
+                    :href="s.url"
                     target="_blank"
                     rel="noopener"
                     class="flex w-full items-center justify-center rounded-lg bg-black/5 py-2.5 no-underline transition-colors hover:bg-black/10"
                   >
                     <img
-                      v-if="listing.source === 'funda'"
+                      v-if="s.source === 'funda'"
                       :src="fundaLogo"
                       alt="View on Funda"
                       class="h-[16px]"
                     />
                     <span v-else class="text-[13px] font-semibold tracking-wide text-[#444]">
-                      View on {{ sourceLabel }}
+                      View on {{ getSourceLabel(s.source) }}
                     </span>
                   </a>
                 </div>
@@ -849,6 +851,11 @@ const chipHasOutsideArea = computed(() => {
 });
 
 const sourceLabel = computed(() => (listing.value ? getSourceLabel(listing.value.source) : ""));
+
+const listingSources = computed(() => {
+  if (!listing.value) return [];
+  return listing.value.sources ?? [{ source: listing.value.source, url: listing.value.url }];
+});
 
 const energyLabelBadge = computed(() => {
   if (!listing.value) return null;

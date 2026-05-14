@@ -169,6 +169,13 @@
       "when": 1779148800000,
       "tag": "0023_listing_ai_amenities",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1779235200000,
+      "tag": "0024_listing_sources",
+      "breakpoints": true
     }
   ]
 }

@@ -113,4 +113,6 @@ export interface Listing {
   aiHasBathtub: boolean | null;
   /** Detected from photos/data by AI. null = not yet analyzed. */
   aiHasOutsideArea: boolean | null;
+  /** All source links for this listing (same property on multiple platforms). null on old rows. */
+  sources: { source: string; url: string }[] | null;
 }
