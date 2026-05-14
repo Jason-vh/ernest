@@ -10,7 +10,9 @@ We request 3+ rooms to match the 2+ bedroom filter used across other sources.
 """
 
 import json
+import re
 import urllib.parse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 
@@ -21,6 +23,8 @@ HTTP_TIMEOUT = 30
 
 PAGE_SIZE = 50
 AVAILABLE_STATUS = 1
+PHOTO_WORKERS = 8
+_PHOTO_RE = re.compile(r"/images/[a-f0-9]+-w\d+-s-[^\"\' ]+")
 
 MIN_LIVING_AREA_M2 = 70
 MAX_RENT_EUR = 3000
@@ -102,7 +106,40 @@ def _full_url(path: str) -> str:
     return f"{DETAIL_HOST}{path}"
 
 
-def to_geojson(units) -> dict:
+def _fetch_photos(unit_id: str, url_path: str, log=print) -> tuple:
+    """Scrape the listing HTML page for all gallery image URLs."""
+    try:
+        url = _full_url(url_path)
+        if not url:
+            return unit_id, []
+        resp = requests.get(url, headers=_headers(), timeout=HTTP_TIMEOUT)
+        resp.raise_for_status()
+        imgs = list(dict.fromkeys(_PHOTO_RE.findall(resp.text)))
+        return unit_id, [f"{DETAIL_HOST}{p}" for p in imgs]
+    except Exception as e:
+        log(f"  Warning: failed to fetch photos for {unit_id}: {e}")
+        return unit_id, []
+
+
+def fetch_all_photos(units, log=print) -> dict:
+    """Return {unit_id: [photo_url, ...]} for all units in parallel."""
+    log(f"  Fetching photos for {len(units)} listings ({PHOTO_WORKERS} workers)...")
+    results = {}
+    with ThreadPoolExecutor(max_workers=PHOTO_WORKERS) as executor:
+        futures = {
+            executor.submit(_fetch_photos, u["id"], u.get("url") or "", log): u["id"]
+            for u in units
+            if u.get("id")
+        }
+        for future in as_completed(futures):
+            unit_id, photos = future.result()
+            results[unit_id] = photos
+    found = sum(1 for p in results.values() if p)
+    log(f"  Got photos for {found}/{len(units)} listings")
+    return results
+
+
+def to_geojson(units, photos: dict | None = None) -> dict:
     features = []
     for u in units:
         addr = u.get("address") or {}
@@ -118,7 +155,8 @@ def to_geojson(units) -> dict:
 
         price = int((u.get("prices") or {}).get("rental", {}).get("price", 0))
         image = _full_url(u.get("image") or "")
-        photos = [image] if image else []
+        fetched = photos.get(unit_id) if photos else None
+        photo_list = fetched if fetched else ([image] if image else [])
 
         # Prefer the canonical external link the site itself exposes
         source_link = (u.get("source") or {}).get("externalLink") or ""
@@ -148,7 +186,7 @@ def to_geojson(units) -> dict:
                     "hasBalcony": None,
                     "hasRoofTerrace": None,
                     "status": "Beschikbaar",
-                    "photos": json.dumps(photos),
+                    "photos": json.dumps(photo_list),
                     "url": url,
                 },
             }
@@ -161,6 +199,7 @@ def fetch_and_build_geojson(log=print, limit=None) -> dict:
     units = filter_units(units, log)
     if limit:
         units = units[:limit]
-    geojson = to_geojson(units)
+    photos = fetch_all_photos(units, log)
+    geojson = to_geojson(units, photos)
     log(f"  VB&T: {len(geojson['features'])} features ready")
     return geojson
