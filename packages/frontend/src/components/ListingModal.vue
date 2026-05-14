@@ -503,7 +503,7 @@
                     by {{ listing.stateBy }}
                   </span>
 
-                  <!-- Inline note editor (shows after reacting or when note exists) -->
+                  <!-- Inline note editor (shows when discarded or when note exists) -->
                   <div v-if="noteEditorOpen" class="note-editor mt-2.5">
                     <div class="flex items-center gap-1.5">
                       <span class="text-[11px] font-medium text-[#999]">
@@ -564,7 +564,11 @@
                 </div>
 
                 <!-- Viewing -->
-                <div v-if="listing.viewing || (user && viewingEditorOpen)" class="mt-3">
+                <div
+                  v-if="listing.viewing || (user && viewingEditorOpen)"
+                  ref="viewingSectionRef"
+                  class="mt-3"
+                >
                   <div
                     v-if="listing.viewing && !viewingEditorOpen"
                     class="viewing-card flex items-start justify-between gap-3"
@@ -729,14 +733,9 @@
                 <!-- Location mini map -->
                 <ListingMiniMap :longitude="listing.longitude" :latitude="listing.latitude" />
 
-                <!-- Add note link (shown when logged in, not liked/discarded yet, and editor not open) -->
+                <!-- Add note link (shown when logged in, not discarded, and editor not open) -->
                 <div
-                  v-if="
-                    user &&
-                    listing.state !== 'liked' &&
-                    listing.state !== 'discarded' &&
-                    !noteEditorOpen
-                  "
+                  v-if="user && listing.state !== 'discarded' && !noteEditorOpen"
                   class="mt-4 border-t border-black/6 pt-4"
                 >
                   <button
@@ -854,6 +853,7 @@ const stateSaving = ref(false);
 const noteSaving = ref(false);
 const noteSaved = ref(false);
 const scrollContainerRef = ref<HTMLDivElement>();
+const viewingSectionRef = ref<HTMLDivElement>();
 const linkCopied = ref(false);
 let linkCopiedTimer: ReturnType<typeof setTimeout> | null = null;
 let saveDebounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -1098,6 +1098,9 @@ function openViewingEditor() {
   viewingDateInput.value = v ? toLocalInputFromIso(v.scheduledAt) : defaultViewingDateInput();
   viewingNoteInput.value = v?.note ?? "";
   viewingEditorOpen.value = true;
+  nextTick(() => {
+    viewingSectionRef.value?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
 }
 
 function closeViewingEditor() {
@@ -1142,7 +1145,7 @@ async function toggleState(newState: ListingState) {
   stateSaving.value = true;
   try {
     await setState(fundaId, next, user.value.username);
-    if (next === "liked" || next === "discarded") noteEditorOpen.value = true;
+    if (next === "discarded") noteEditorOpen.value = true;
   } catch {
     // optimistic update already rolled back
   } finally {
@@ -1247,8 +1250,8 @@ watch(
     if (v && user.value) {
       const note = v.notes.find((n) => n.userId === user.value!.id);
       ownNoteText.value = note?.text ?? "";
-      // Show note editor if user has a note or has liked/discarded
-      if (note || v.state === "liked" || v.state === "discarded") noteEditorOpen.value = true;
+      // Show note editor if user has a note or has discarded
+      if (note || v.state === "discarded") noteEditorOpen.value = true;
     } else {
       ownNoteText.value = "";
     }

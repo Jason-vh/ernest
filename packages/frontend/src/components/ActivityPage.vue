@@ -111,8 +111,10 @@
                 type="button"
                 class="activity-row flex w-full items-start gap-3 border-0 border-b border-black/5 bg-transparent px-4 py-3 text-left last:border-b-0 transition-colors hover:bg-black/3"
                 :class="{
-                  'activity-row--favourited': item.state === 'liked',
+                  'activity-row--liked': item.state === 'liked',
                   'activity-row--discarded': item.state === 'discarded',
+                  'activity-row--viewing': item.state === 'viewing',
+                  'activity-row--applied': item.state === 'applied',
                 }"
                 @click="selectListing(item.fundaId)"
               >
@@ -431,29 +433,39 @@ const groups = computed(() => {
   color: #222;
 }
 
-/* Favourited: warm tint, accent stripe, bolder text */
-.activity-row--favourited {
+/* Liked: burgundy left border + warm tint */
+.activity-row--liked {
   background: linear-gradient(to right, rgba(244, 63, 94, 0.05), transparent 40%);
 }
 
-.activity-row--favourited::before {
+.activity-row--liked::before {
   content: "";
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
   width: 3px;
-  background: #f43f5e;
+  background: #be123c;
 }
 
-.activity-row--favourited .activity-address {
+.activity-row--liked .activity-address {
   color: #111;
   font-weight: 700;
 }
 
-/* Discarded: greyscale photo, muted text */
+/* Discarded: grey left border, greyscale photo, muted text */
 .activity-row--discarded {
   opacity: 0.5;
+}
+
+.activity-row--discarded::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #9ca3af;
 }
 
 .activity-row--discarded .activity-photo {
@@ -468,6 +480,28 @@ const groups = computed(() => {
 
 .activity-row--discarded:hover {
   opacity: 0.75;
+}
+
+/* Viewing: emerald left border + light tint */
+.activity-row--viewing::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #059669;
+}
+
+/* Applied: blue left border + light tint */
+.activity-row--applied::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #2563eb;
 }
 
 .state-select {
