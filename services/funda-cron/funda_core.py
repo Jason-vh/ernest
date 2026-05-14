@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from funda import Funda
 
 MIN_BEDROOMS = 2
-MIN_LIVING_AREA_M2 = 60
+MIN_LIVING_AREA_M2 = 70
 MAX_RENT_EUR = 3000
 # "Energy label > D" means strictly better than D.
 ACCEPTABLE_LABELS = {"A+++", "A++", "A+", "A", "B", "C"}

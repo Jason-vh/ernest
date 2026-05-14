@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fetch rentals (Funda + Vesteda) and POST them to the web service."""
+"""Fetch rentals (Funda + Vesteda + VB&T) and POST them to the web service."""
 
 import argparse
 import os
@@ -9,6 +9,7 @@ import requests
 
 from funda_core import fetch_and_build_geojson as fetch_funda
 from vesteda_core import fetch_and_build_geojson as fetch_vesteda, normalize_address
+from vbt_core import fetch_and_build_geojson as fetch_vbt
 
 
 def push_to_server(geojson):
@@ -64,31 +65,34 @@ def fetch_known_ids():
     return None
 
 
-def merge_and_dedup(funda_geojson, vesteda_geojson):
-    """Combine sources, drop Vesteda entries that share an address with Funda."""
+def merge_and_dedup(funda_geojson, *secondary_geojsons_with_labels):
+    """Combine sources, deduplicating each secondary source against all already-seen addresses."""
     funda_features = funda_geojson.get("features", [])
-    vesteda_features = vesteda_geojson.get("features", [])
 
-    funda_addresses = {
+    seen_addresses = {
         normalize_address((f.get("properties") or {}).get("address", ""))
         for f in funda_features
     }
-    funda_addresses.discard("")
+    seen_addresses.discard("")
 
-    deduped_vesteda = []
-    duplicates = 0
-    for feature in vesteda_features:
-        addr = (feature.get("properties") or {}).get("address", "")
-        if normalize_address(addr) in funda_addresses:
-            duplicates += 1
-            continue
-        deduped_vesteda.append(feature)
+    result_features = list(funda_features)
 
-    if duplicates:
-        print(f"  Dedup: dropped {duplicates} Vesteda listing(s) already on Funda")
+    for label, geojson in secondary_geojsons_with_labels:
+        features = geojson.get("features", [])
+        duplicates = 0
+        for feature in features:
+            addr = (feature.get("properties") or {}).get("address", "")
+            norm = normalize_address(addr)
+            if norm and norm in seen_addresses:
+                duplicates += 1
+                continue
+            result_features.append(feature)
+            if norm:
+                seen_addresses.add(norm)
+        if duplicates:
+            print(f"  Dedup: dropped {duplicates} {label} listing(s) already seen")
 
-    combined = funda_features + deduped_vesteda
-    return {"type": "FeatureCollection", "features": combined}
+    return {"type": "FeatureCollection", "features": result_features}
 
 
 def main():
@@ -96,6 +100,7 @@ def main():
     parser.add_argument("--limit", type=int, help="Limit listings per source")
     parser.add_argument("--skip-vesteda", action="store_true")
     parser.add_argument("--skip-funda", action="store_true")
+    parser.add_argument("--skip-vbt", action="store_true")
     args = parser.parse_args()
 
     known_ids = fetch_known_ids()
@@ -114,7 +119,18 @@ def main():
         except Exception as e:
             print(f"ERROR: Vesteda fetch failed: {e}", file=sys.stderr)
 
-    combined = merge_and_dedup(funda_gj, vesteda_gj)
+    vbt_gj = {"type": "FeatureCollection", "features": []}
+    if not args.skip_vbt:
+        try:
+            vbt_gj = fetch_vbt(limit=args.limit)
+        except Exception as e:
+            print(f"ERROR: VB&T fetch failed: {e}", file=sys.stderr)
+
+    combined = merge_and_dedup(
+        funda_gj,
+        ("Vesteda", vesteda_gj),
+        ("VB&T", vbt_gj),
+    )
     if not combined["features"]:
         print("ERROR: no features to push", file=sys.stderr)
         sys.exit(1)
