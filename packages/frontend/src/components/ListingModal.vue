@@ -702,34 +702,6 @@
                   </button>
                 </div>
 
-                <!-- Neighbourhood stats card -->
-                <div
-                  v-if="hasBuurtStats"
-                  class="mt-4 rounded-xl border border-black/6 bg-[#f0f0ee] px-4 py-3"
-                >
-                  <div class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#888]">
-                    Neighbourhood<template v-if="listing.neighbourhood">
-                      &middot; {{ listing.neighbourhood }}</template
-                    >
-                  </div>
-                  <div class="flex flex-col gap-1.5 text-[13px]">
-                    <div
-                      v-if="listing.buurtSafetyRating != null"
-                      class="flex justify-between text-[#555]"
-                    >
-                      <span class="text-[#999]">Safety rating</span>
-                      <span>{{ listing.buurtSafetyRating }} / 10</span>
-                    </div>
-                    <div
-                      v-if="listing.buurtCrimesPer1000 != null"
-                      class="flex justify-between text-[#555]"
-                    >
-                      <span class="text-[#999]">Crimes per 1,000</span>
-                      <span>{{ listing.buurtCrimesPer1000 }}</span>
-                    </div>
-                  </div>
-                </div>
-
                 <!-- Nearest stations -->
                 <div
                   v-if="nearestStations && nearestStations.length > 0"
@@ -759,6 +731,34 @@
                           >{{ s.distKm.toFixed(1) }} km &middot; {{ s.label }}</span
                         >
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Neighbourhood stats card -->
+                <div
+                  v-if="hasBuurtStats"
+                  class="mt-4 rounded-xl border border-black/6 bg-[#f0f0ee] px-4 py-3"
+                >
+                  <div class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#888]">
+                    Neighbourhood<template v-if="listing.neighbourhood">
+                      &middot; {{ listing.neighbourhood }}</template
+                    >
+                  </div>
+                  <div class="flex flex-col gap-1.5 text-[13px]">
+                    <div
+                      v-if="listing.buurtSafetyRating != null"
+                      class="flex justify-between text-[#555]"
+                    >
+                      <span class="text-[#999]">Safety rating</span>
+                      <span>{{ listing.buurtSafetyRating }} / 10</span>
+                    </div>
+                    <div
+                      v-if="listing.buurtCrimesPer1000 != null"
+                      class="flex justify-between text-[#555]"
+                    >
+                      <span class="text-[#999]">Crimes per 1,000</span>
+                      <span>{{ listing.buurtCrimesPer1000 }}</span>
                     </div>
                   </div>
                 </div>
@@ -980,36 +980,31 @@ const STATION_TYPES = [
     type: StopType.Train,
     label: "Train",
     color: "#003DA5",
-    // train icon (simplified locomotive silhouette)
-    icon: `<rect x="2" y="8" width="20" height="10" rx="2" fill="currentColor" opacity=".15"/>
-           <rect x="2" y="8" width="20" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
-           <rect x="5" y="5" width="10" height="5" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
-           <circle cx="7" cy="19" r="1.5" fill="currentColor"/>
-           <circle cx="17" cy="19" r="1.5" fill="currentColor"/>
-           <line x1="2" y1="13" x2="22" y2="13" stroke="currentColor" stroke-width="1" opacity=".4"/>`,
+    // NS logo: bold italic "NS" lettering
+    icon: `<text x="12" y="17" text-anchor="middle" font-size="13" font-weight="900" font-style="italic" font-family="Arial,sans-serif" fill="currentColor" letter-spacing="-0.5">NS</text>`,
   },
   {
     type: StopType.Metro,
     label: "Metro",
     color: "#E4003A",
-    // metro M icon
-    icon: `<rect x="2" y="4" width="20" height="16" rx="3" fill="currentColor" opacity=".12"/>
-           <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="1.5" fill="none"/>
-           <path d="M7 16V8l5 5 5-5v8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    // Amsterdam Metro: circle with bold M
+    icon: `<circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1"/>
+           <text x="12" y="17" text-anchor="middle" font-size="13" font-weight="800" font-family="Arial,sans-serif" fill="currentColor">M</text>`,
   },
   {
     type: StopType.Tram,
     label: "Tram",
     color: "#7B2D8E",
-    // tram / streetcar icon
-    icon: `<rect x="4" y="7" width="16" height="11" rx="2" fill="currentColor" opacity=".12"/>
-           <rect x="4" y="7" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
-           <line x1="4" y1="11" x2="20" y2="11" stroke="currentColor" stroke-width="1" opacity=".4"/>
-           <circle cx="8" cy="19" r="1.5" fill="currentColor"/>
-           <circle cx="16" cy="19" r="1.5" fill="currentColor"/>
-           <line x1="8" y1="7" x2="8" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-           <line x1="16" y1="7" x2="16" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-           <line x1="8" y1="4" x2="16" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
+    // Tram silhouette with pantograph
+    icon: `<rect x="3" y="9" width="18" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1"/>
+           <line x1="3" y1="13" x2="21" y2="13" stroke="currentColor" stroke-width="1" stroke-opacity=".4"/>
+           <rect x="5" y="10.5" width="3.5" height="2.5" rx="0.5" fill="currentColor" fill-opacity=".5"/>
+           <rect x="10.25" y="10.5" width="3.5" height="2.5" rx="0.5" fill="currentColor" fill-opacity=".5"/>
+           <rect x="15.5" y="10.5" width="3.5" height="2.5" rx="0.5" fill="currentColor" fill-opacity=".5"/>
+           <circle cx="7.5" cy="19" r="1.5" fill="currentColor"/>
+           <circle cx="16.5" cy="19" r="1.5" fill="currentColor"/>
+           <line x1="10" y1="9" x2="8" y2="5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+           <line x1="8" y1="5" x2="16" y2="5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>`,
   },
 ];
 
