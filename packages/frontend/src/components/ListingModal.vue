@@ -738,12 +738,19 @@
                   <div class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#888]">
                     Nearby stations
                   </div>
-                  <div class="flex flex-col gap-2">
+                  <div class="flex flex-col gap-2.5">
                     <div
                       v-for="s in nearestStations"
                       :key="s.label"
-                      class="flex items-center gap-3"
+                      class="flex items-center gap-2.5"
                     >
+                      <div
+                        class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg"
+                        :style="{ backgroundColor: s.color + '18', color: s.color }"
+                      >
+                        <!-- eslint-disable-next-line vue/no-v-html -->
+                        <svg width="18" height="18" viewBox="0 0 24 24" v-html="s.icon" />
+                      </div>
                       <div class="flex min-w-0 flex-col">
                         <span class="truncate text-[13px] font-medium text-[#333]">{{
                           s.name
@@ -969,15 +976,47 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
 }
 
 const STATION_TYPES = [
-  { type: StopType.Train, label: "Train station" },
-  { type: StopType.Metro, label: "Metro station" },
-  { type: StopType.Tram, label: "Tram stop" },
-] as const;
+  {
+    type: StopType.Train,
+    label: "Train",
+    color: "#003DA5",
+    // train icon (simplified locomotive silhouette)
+    icon: `<rect x="2" y="8" width="20" height="10" rx="2" fill="currentColor" opacity=".15"/>
+           <rect x="2" y="8" width="20" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+           <rect x="5" y="5" width="10" height="5" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+           <circle cx="7" cy="19" r="1.5" fill="currentColor"/>
+           <circle cx="17" cy="19" r="1.5" fill="currentColor"/>
+           <line x1="2" y1="13" x2="22" y2="13" stroke="currentColor" stroke-width="1" opacity=".4"/>`,
+  },
+  {
+    type: StopType.Metro,
+    label: "Metro",
+    color: "#E4003A",
+    // metro M icon
+    icon: `<rect x="2" y="4" width="20" height="16" rx="3" fill="currentColor" opacity=".12"/>
+           <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="1.5" fill="none"/>
+           <path d="M7 16V8l5 5 5-5v8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+  },
+  {
+    type: StopType.Tram,
+    label: "Tram",
+    color: "#7B2D8E",
+    // tram / streetcar icon
+    icon: `<rect x="4" y="7" width="16" height="11" rx="2" fill="currentColor" opacity=".12"/>
+           <rect x="4" y="7" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+           <line x1="4" y1="11" x2="20" y2="11" stroke="currentColor" stroke-width="1" opacity=".4"/>
+           <circle cx="8" cy="19" r="1.5" fill="currentColor"/>
+           <circle cx="16" cy="19" r="1.5" fill="currentColor"/>
+           <line x1="8" y1="7" x2="8" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+           <line x1="16" y1="7" x2="16" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+           <line x1="8" y1="4" x2="16" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
+  },
+];
 
 const nearestStations = computed(() => {
   if (!listing.value || stations.value.length === 0) return null;
   const { latitude, longitude } = listing.value;
-  return STATION_TYPES.map(({ type, label }) => {
+  return STATION_TYPES.map(({ type, label, color, icon }) => {
     let nearest: { name: string; distKm: number } | null = null;
     for (const s of stations.value) {
       if (s.type !== type) continue;
@@ -985,7 +1024,7 @@ const nearestStations = computed(() => {
       if (!nearest || d < nearest.distKm) nearest = { name: s.name, distKm: d };
     }
     if (!nearest) return null;
-    return { label, name: nearest.name, distKm: nearest.distKm };
+    return { label, color, icon, name: nearest.name, distKm: nearest.distKm };
   }).filter((s) => s !== null);
 });
 
