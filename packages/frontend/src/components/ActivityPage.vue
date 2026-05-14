@@ -236,7 +236,46 @@ import { fetchActivity, type ActivityStateFilter } from "@/api/client";
 import type { ActivityListing } from "@ernest/shared";
 import { useListingStore } from "@/composables/useListingStore";
 
-const { selectListing } = useListingStore();
+const { selectListing, listings } = useListingStore();
+
+// Patch activity items in-place when the store mutates (reaction/viewing/application changes).
+// The store replaces its Map ref on every optimistic update, so a shallow watch is sufficient.
+watch(listings, (newListings) => {
+  if (items.value.length === 0) return;
+  items.value = items.value.map((item) => {
+    const listing = newListings.get(item.fundaId);
+    if (!listing) return item;
+
+    const newReaction: ActivityListing["reaction"] = listing.reaction
+      ? {
+          type: listing.reaction,
+          by: listing.reactionBy ?? "",
+          at: item.reaction?.at ?? new Date().toISOString(),
+          note: item.reaction?.note ?? null,
+        }
+      : null;
+    const newViewing: ActivityListing["viewing"] = listing.viewing
+      ? {
+          scheduledAt: listing.viewing.scheduledAt,
+          by: listing.viewing.scheduledBy,
+          at: item.viewing?.at ?? new Date().toISOString(),
+        }
+      : null;
+    const newApplication: ActivityListing["application"] = listing.application
+      ? { appliedAt: listing.application.appliedAt, by: listing.application.appliedBy }
+      : null;
+
+    if (
+      item.reaction?.type === newReaction?.type &&
+      item.viewing?.scheduledAt === newViewing?.scheduledAt &&
+      item.application?.appliedAt === newApplication?.appliedAt
+    ) {
+      return item;
+    }
+
+    return { ...item, reaction: newReaction, viewing: newViewing, application: newApplication };
+  });
+});
 
 const STATE_STORAGE_KEY = "ernest:activityState";
 
