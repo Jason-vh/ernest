@@ -9,6 +9,7 @@ import sys
 import requests
 
 from funda_core import fetch_and_build_geojson as fetch_funda
+from pararius_core import fetch_and_build_geojson as fetch_pararius
 from vesteda_core import fetch_and_build_geojson as fetch_vesteda, normalize_address
 from vbt_core import fetch_and_build_geojson as fetch_vbt
 
@@ -116,6 +117,7 @@ def main():
     parser.add_argument("--skip-vesteda", action="store_true")
     parser.add_argument("--skip-funda", action="store_true")
     parser.add_argument("--skip-vbt", action="store_true")
+    parser.add_argument("--skip-pararius", action="store_true")
     args = parser.parse_args()
 
     known_ids = fetch_known_ids()
@@ -141,10 +143,18 @@ def main():
         except Exception as e:
             print(f"ERROR: VB&T fetch failed: {e}", file=sys.stderr)
 
+    pararius_gj = {"type": "FeatureCollection", "features": []}
+    if not args.skip_pararius:
+        try:
+            pararius_gj = fetch_pararius(limit=args.limit)
+        except Exception as e:
+            print(f"ERROR: Pararius fetch failed: {e}", file=sys.stderr)
+
     combined = merge_and_dedup(
         funda_gj,
         ("Vesteda", vesteda_gj),
         ("VB&T", vbt_gj),
+        ("Pararius", pararius_gj),
     )
     if not combined["features"]:
         print("ERROR: no features to push", file=sys.stderr)

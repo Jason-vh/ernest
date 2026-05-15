@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { listings, type NewListing } from "@/db/schema";
-import { isNull, notInArray, and, or, eq, sql } from "drizzle-orm";
+import { isNull, notInArray, and, or, eq, sql, not, like } from "drizzle-orm";
 import { enqueueMany } from "@/services/job-queue";
 import { matchBuurt, type BuurtStats } from "@/services/buurt-matcher";
 
@@ -103,7 +103,9 @@ export async function syncListings(incoming: NewListing[]): Promise<SyncResult> 
   const notifyCandidates = await db
     .select({ fundaId: listings.fundaId })
     .from(listings)
-    .where(and(isActiveListing, isNull(listings.notifiedAt)));
+    .where(
+      and(isActiveListing, isNull(listings.notifiedAt), not(like(listings.fundaId, "pararius-%"))),
+    );
 
   const notifyJobs = notifyCandidates.map((l) => ({
     type: "telegram-notify" as const,
