@@ -35,6 +35,8 @@ _AZURE_PHOTO_RE = re.compile(
 )
 # Description is embedded as JSON string in the server-rendered HTML
 _DESC_RE = re.compile(r'"description":"((?:[^\\"]|\\.)*?)"')
+# Energy label sits in a <dt>Energielabel</dt><dd>X</dd> pair (minified, no closing tags).
+_ENERGY_RE = re.compile(r"Energielabel</a>\s*<dd[^>]*>\s*([A-G][+]{0,3})", re.IGNORECASE)
 
 # Amsterdam Centraal-ish; matches the latlon Vesteda uses in their dropdown.
 AMSTERDAM = {
@@ -135,11 +137,11 @@ def _cover_photo(unit: dict) -> str:
 
 
 def _fetch_detail(unit: dict, log=print) -> tuple:
-    """Scrape the listing detail page for photos and description."""
+    """Scrape the listing detail page for photos, description, energy label."""
     unit_id = unit.get("id") or unit.get("code")
     url_path = unit.get("url") or ""
     if not url_path:
-        return unit_id, [], ""
+        return unit_id, [], "", None
     url = _full_url(url_path)
     try:
         resp = requests.get(
@@ -154,7 +156,7 @@ def _fetch_detail(unit: dict, log=print) -> tuple:
         html = resp.text
     except Exception as e:
         log(f"  Warning: failed to fetch detail for {unit_id}: {e}")
-        return unit_id, [], ""
+        return unit_id, [], "", None
 
     # Extract photos from CDN URLs; skip generic 'content.jpg' placeholder images
     urls = list(dict.fromkeys(_AZURE_PHOTO_RE.findall(html)))
@@ -173,11 +175,17 @@ def _fetch_detail(unit: dict, log=print) -> tuple:
         except (json.JSONDecodeError, ValueError):
             description = m.group(1)
 
-    return unit_id, photos, description
+    # Energy label from <dt>Energielabel</dt><dd>X</dd> pair
+    energy_label = None
+    em = _ENERGY_RE.search(html)
+    if em:
+        energy_label = em.group(1).upper()
+
+    return unit_id, photos, description, energy_label
 
 
 def fetch_all_details(units, log=print) -> dict:
-    """Return {unit_id: {"photos": [...], "description": str}} for all units in parallel."""
+    """Return {unit_id: {"photos": [...], "description": str, "energy_label": str | None}}."""
     log(f"  Fetching details for {len(units)} Vesteda listings ({PHOTO_WORKERS} workers)...")
     results = {}
     with ThreadPoolExecutor(max_workers=PHOTO_WORKERS) as executor:
@@ -186,11 +194,19 @@ def fetch_all_details(units, log=print) -> dict:
             for u in units
         }
         for future in as_completed(futures):
-            unit_id, photos, description = future.result()
-            results[unit_id] = {"photos": photos, "description": description}
+            unit_id, photos, description, energy_label = future.result()
+            results[unit_id] = {
+                "photos": photos,
+                "description": description,
+                "energy_label": energy_label,
+            }
     found_photos = sum(1 for d in results.values() if d["photos"])
     found_desc = sum(1 for d in results.values() if d["description"])
-    log(f"  Got photos for {found_photos}/{len(units)}, descriptions for {found_desc}/{len(units)}")
+    found_energy = sum(1 for d in results.values() if d["energy_label"])
+    log(
+        f"  Got photos for {found_photos}/{len(units)}, descriptions for {found_desc}/{len(units)}, "
+        f"energy labels for {found_energy}/{len(units)}"
+    )
     return results
 
 
@@ -224,7 +240,7 @@ def to_geojson(units, details=None):
                     "address": address,
                     "bedrooms": u.get("numberOfBedRooms"),
                     "livingArea": int(u["size"]),
-                    "energyLabel": None,
+                    "energyLabel": det.get("energy_label"),
                     "objectType": None,
                     "houseType": None,
                     "constructionYear": None,
