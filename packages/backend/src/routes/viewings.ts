@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq, isNull, and, or, gte, asc, sql } from "drizzle-orm";
+import { eq, gte, asc, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { listings, listingViewings, users } from "@/db/schema";
 import type { UpcomingViewing } from "@ernest/shared";
@@ -22,13 +22,7 @@ viewings.get("/upcoming", async (c) => {
     .from(listingViewings)
     .innerJoin(listings, eq(listingViewings.fundaId, listings.fundaId))
     .innerJoin(users, eq(listingViewings.scheduledBy, users.id))
-    .where(
-      and(
-        gte(listingViewings.scheduledAt, sql`now()`),
-        isNull(listings.disappearedAt),
-        or(eq(listings.status, "Beschikbaar"), eq(listings.status, "")),
-      ),
-    )
+    .where(gte(listingViewings.scheduledAt, sql`now()`))
     .orderBy(asc(listingViewings.scheduledAt));
 
   const items: UpcomingViewing[] = rows.map((r) => ({
