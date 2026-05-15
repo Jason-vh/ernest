@@ -62,6 +62,7 @@ export const SOURCE_LABELS: Record<string, string> = {
   funda: "Funda",
   vesteda: "Vesteda",
   vbt: "VB&T",
+  pararius: "Pararius",
 };
 
 export function sourceLabel(source: string): string {

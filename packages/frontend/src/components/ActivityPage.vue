@@ -123,11 +123,17 @@
                   :style="item.photo ? { backgroundImage: `url(${item.photo})` } : null"
                 ></div>
                 <div class="min-w-0 flex-1">
-                  <div class="flex items-baseline justify-between gap-2 text-[13px] leading-snug">
+                  <div class="flex items-start justify-between gap-2 text-[13px] leading-snug">
                     <span class="activity-address truncate font-semibold">{{ item.address }}</span>
-                    <span class="flex-shrink-0 text-[11px] text-[#999]">{{
-                      formatTime(item.lastActivityAt)
-                    }}</span>
+                    <div class="flex flex-shrink-0 flex-col items-end gap-1">
+                      <span class="text-[11px] text-[#999]">{{
+                        formatTime(item.lastActivityAt)
+                      }}</span>
+                      <span
+                        class="rounded-full bg-black/6 px-1.5 py-0.5 text-[10px] font-medium text-[#777]"
+                        >{{ getSourceLabel(item.source) }}</span
+                      >
+                    </div>
                   </div>
                   <div class="mt-0.5 truncate text-[12px] text-[#888]">
                     <span v-if="item.city">{{ item.city }}</span>
@@ -135,9 +141,6 @@
                     <span>{{ formatPrice(item.price) }}/mo</span>
                     <span v-if="item.lastActivityAt !== item.createdAt">
                       &middot; added {{ formatRelative(item.createdAt) }}</span
-                    >
-                    <span v-if="item.source !== 'funda'">
-                      &middot; {{ getSourceLabel(item.source) }}</span
                     >
                   </div>
                   <div
