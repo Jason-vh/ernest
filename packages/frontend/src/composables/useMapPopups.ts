@@ -28,6 +28,8 @@ interface PopupDeps {
   fundaFavouriteVisible: { value: boolean };
   fundaUnreviewedVisible: { value: boolean };
   fundaDiscardedVisible: { value: boolean };
+  fundaViewingVisible: { value: boolean };
+  fundaAppliedVisible: { value: boolean };
 }
 
 export function useMapPopups(deps: PopupDeps) {
@@ -38,6 +40,8 @@ export function useMapPopups(deps: PopupDeps) {
     fundaFavouriteVisible,
     fundaUnreviewedVisible,
     fundaDiscardedVisible,
+    fundaViewingVisible,
+    fundaAppliedVisible,
   } = deps;
 
   let fundaPopup: maplibregl.Popup | null = null;
@@ -73,17 +77,19 @@ export function useMapPopups(deps: PopupDeps) {
     let visibleColocated = 0;
     if (listing) {
       const { longitude: lng, latitude: lat } = listing;
+      const isStateVisible: Record<string, boolean> = {
+        liked: fundaFavouriteVisible.value,
+        discarded: fundaDiscardedVisible.value,
+        viewing: fundaViewingVisible.value,
+        applied: fundaAppliedVisible.value,
+      };
       for (const l of listings.value.values()) {
         if (l.longitude !== lng || l.latitude !== lat) continue;
-        const cat =
-          l.state === "liked" ? "favourite" : l.state === "discarded" ? "discarded" : "unreviewed";
-        if (
-          (cat === "favourite" && fundaFavouriteVisible.value) ||
-          (cat === "unreviewed" && fundaUnreviewedVisible.value) ||
-          (cat === "discarded" && fundaDiscardedVisible.value)
-        ) {
-          visibleColocated++;
-        }
+        const visible =
+          l.state && l.state in isStateVisible
+            ? isStateVisible[l.state]
+            : fundaUnreviewedVisible.value;
+        if (visible) visibleColocated++;
       }
     }
 

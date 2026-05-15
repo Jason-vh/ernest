@@ -14,6 +14,8 @@ interface LegendState {
   fundaFav: boolean;
   fundaUnreviewed: boolean;
   fundaDiscarded: boolean;
+  fundaViewing: boolean;
+  fundaApplied: boolean;
 }
 
 function allTrue<T extends string>(keys: readonly T[]): Record<T, boolean> {
@@ -27,6 +29,8 @@ function readFromStorage(): LegendState {
     fundaFav: true,
     fundaUnreviewed: true,
     fundaDiscarded: false,
+    fundaViewing: true,
+    fundaApplied: true,
   };
 
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -50,6 +54,10 @@ function readFromStorage(): LegendState {
         typeof parsed.fundaDiscarded === "boolean"
           ? parsed.fundaDiscarded
           : defaults.fundaDiscarded,
+      fundaViewing:
+        typeof parsed.fundaViewing === "boolean" ? parsed.fundaViewing : defaults.fundaViewing,
+      fundaApplied:
+        typeof parsed.fundaApplied === "boolean" ? parsed.fundaApplied : defaults.fundaApplied,
     };
   } catch {
     return defaults;
@@ -67,6 +75,8 @@ const transitVisibility = ref(saved.transit);
 const fundaFavouriteVisible = ref(saved.fundaFav);
 const fundaUnreviewedVisible = ref(saved.fundaUnreviewed);
 const fundaDiscardedVisible = ref(saved.fundaDiscarded);
+const fundaViewingVisible = ref(saved.fundaViewing);
+const fundaAppliedVisible = ref(saved.fundaApplied);
 
 const hoveredZone = ref<string | null>(null);
 const hoveredTransit = ref<TransitKey | null>(null);
@@ -74,6 +84,8 @@ const hoveredTransit = ref<TransitKey | null>(null);
 const fundaFavouriteCount = ref(0);
 const fundaUnreviewedCount = ref(0);
 const fundaDiscardedCount = ref(0);
+const fundaViewingCount = ref(0);
+const fundaAppliedCount = ref(0);
 
 watch(
   [
@@ -82,6 +94,8 @@ watch(
     fundaFavouriteVisible,
     fundaUnreviewedVisible,
     fundaDiscardedVisible,
+    fundaViewingVisible,
+    fundaAppliedVisible,
   ],
   () =>
     writeToStorage({
@@ -90,6 +104,8 @@ watch(
       fundaFav: fundaFavouriteVisible.value,
       fundaUnreviewed: fundaUnreviewedVisible.value,
       fundaDiscarded: fundaDiscardedVisible.value,
+      fundaViewing: fundaViewingVisible.value,
+      fundaApplied: fundaAppliedVisible.value,
     }),
   { deep: true },
 );
@@ -121,21 +137,35 @@ export function useZoneState() {
     fundaDiscardedVisible.value = !fundaDiscardedVisible.value;
   }
 
+  function toggleFundaViewing() {
+    fundaViewingVisible.value = !fundaViewingVisible.value;
+  }
+
+  function toggleFundaApplied() {
+    fundaAppliedVisible.value = !fundaAppliedVisible.value;
+  }
+
   return {
     zoneVisibility,
     transitVisibility,
     fundaFavouriteVisible,
     fundaUnreviewedVisible,
     fundaDiscardedVisible,
+    fundaViewingVisible,
+    fundaAppliedVisible,
     hoveredZone,
     hoveredTransit,
     fundaFavouriteCount,
     fundaUnreviewedCount,
     fundaDiscardedCount,
+    fundaViewingCount,
+    fundaAppliedCount,
     toggleZone,
     toggleTransit,
     toggleFundaFavourite,
     toggleFundaUnreviewed,
     toggleFundaDiscarded,
+    toggleFundaViewing,
+    toggleFundaApplied,
   };
 }

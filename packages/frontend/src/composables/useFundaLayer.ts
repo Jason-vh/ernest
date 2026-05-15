@@ -12,9 +12,13 @@ interface FundaState {
   fundaFavouriteVisible: Ref<boolean>;
   fundaUnreviewedVisible: Ref<boolean>;
   fundaDiscardedVisible: Ref<boolean>;
+  fundaViewingVisible: Ref<boolean>;
+  fundaAppliedVisible: Ref<boolean>;
   fundaFavouriteCount: Ref<number>;
   fundaUnreviewedCount: Ref<number>;
   fundaDiscardedCount: Ref<number>;
+  fundaViewingCount: Ref<number>;
+  fundaAppliedCount: Ref<number>;
 }
 
 const emptyFC: GeoJSON.FeatureCollection = {
@@ -22,7 +26,15 @@ const emptyFC: GeoJSON.FeatureCollection = {
   features: [],
 };
 
-type Category = "favourite" | "discarded" | "unreviewed";
+type Category = "favourite" | "discarded" | "unreviewed" | "viewing" | "applied";
+
+function categorize(state: string | null | undefined): Category {
+  if (state === "liked") return "favourite";
+  if (state === "discarded") return "discarded";
+  if (state === "viewing") return "viewing";
+  if (state === "applied") return "applied";
+  return "unreviewed";
+}
 
 function createPulseElement(color: string): HTMLDivElement {
   const el = document.createElement("div");
@@ -41,23 +53,26 @@ function createPulseElement(color: string): HTMLDivElement {
   return el;
 }
 
+type Counts = Record<Category, number>;
+const emptyCounts = (): Counts => ({
+  favourite: 0,
+  unreviewed: 0,
+  discarded: 0,
+  viewing: 0,
+  applied: 0,
+});
+
 export function listingsToGeoJSON(listings: Map<string, Listing>): GeoJSON.FeatureCollection {
   // Count co-located listings per coordinate, split by category
-  const coordCats = new Map<string, { favourite: number; unreviewed: number; discarded: number }>();
+  const coordCats = new Map<string, Counts>();
   for (const listing of listings.values()) {
     const key = `${listing.longitude},${listing.latitude}`;
     let counts = coordCats.get(key);
     if (!counts) {
-      counts = { favourite: 0, unreviewed: 0, discarded: 0 };
+      counts = emptyCounts();
       coordCats.set(key, counts);
     }
-    const cat: Category =
-      listing.state === "liked"
-        ? "favourite"
-        : listing.state === "discarded"
-          ? "discarded"
-          : "unreviewed";
-    counts[cat]++;
+    counts[categorize(listing.state)]++;
   }
 
   // Track which coordinate keys have already had a primary feature assigned
@@ -65,17 +80,9 @@ export function listingsToGeoJSON(listings: Map<string, Listing>): GeoJSON.Featu
 
   const features: GeoJSON.Feature[] = [];
   for (const listing of listings.values()) {
-    const category: Category =
-      listing.state === "liked"
-        ? "favourite"
-        : listing.state === "discarded"
-          ? "discarded"
-          : "unreviewed";
+    const category = categorize(listing.state);
     const key = `${listing.longitude},${listing.latitude}`;
-    const counts = coordCats.get(key);
-    const favourite = counts ? counts.favourite : 0;
-    const unreviewed = counts ? counts.unreviewed : 0;
-    const discarded = counts ? counts.discarded : 0;
+    const counts = coordCats.get(key) ?? emptyCounts();
 
     // Only one feature per coordinate should render the count label
     const isPrimary = !primaryAssigned.has(key);
@@ -96,9 +103,11 @@ export function listingsToGeoJSON(listings: Map<string, Listing>): GeoJSON.Featu
         livingArea: listing.livingArea,
         photo: listing.photos.length > 0 ? listing.photos[0] : "",
         category,
-        colocatedFavourite: favourite,
-        colocatedUnreviewed: unreviewed,
-        colocatedDiscarded: discarded,
+        colocatedFavourite: counts.favourite,
+        colocatedUnreviewed: counts.unreviewed,
+        colocatedDiscarded: counts.discarded,
+        colocatedViewing: counts.viewing,
+        colocatedApplied: counts.applied,
         colocatedPrimary: isPrimary,
       },
     });
@@ -117,10 +126,30 @@ export function useFundaLayer(
     fundaFavouriteVisible,
     fundaUnreviewedVisible,
     fundaDiscardedVisible,
+    fundaViewingVisible,
+    fundaAppliedVisible,
     fundaFavouriteCount,
     fundaUnreviewedCount,
     fundaDiscardedCount,
+    fundaViewingCount,
+    fundaAppliedCount,
   } = state;
+
+  function tallyCounts(): Counts {
+    const counts = emptyCounts();
+    for (const listing of listings.value.values()) {
+      counts[categorize(listing.state)]++;
+    }
+    return counts;
+  }
+
+  function applyCounts(counts: Counts) {
+    fundaFavouriteCount.value = counts.favourite;
+    fundaUnreviewedCount.value = counts.unreviewed;
+    fundaDiscardedCount.value = counts.discarded;
+    fundaViewingCount.value = counts.viewing;
+    fundaAppliedCount.value = counts.applied;
+  }
 
   function refreshFundaSource() {
     const src = getGeoJSONSource(map, "funda");
@@ -130,33 +159,11 @@ export function useFundaLayer(
 
     // Re-apply paint properties so data-driven expressions (colocatedCount) evaluate
     updateFundaLayer();
-
-    // Update counts for currently visible/filtered listings
-    let favouriteCount = 0;
-    let discardedCount = 0;
-    let unreviewedCount = 0;
-    for (const listing of listings.value.values()) {
-      if (listing.state === "liked") favouriteCount++;
-      else if (listing.state === "discarded") discardedCount++;
-      else unreviewedCount++;
-    }
-    fundaFavouriteCount.value = favouriteCount;
-    fundaDiscardedCount.value = discardedCount;
-    fundaUnreviewedCount.value = unreviewedCount;
+    applyCounts(tallyCounts());
   }
 
   const initialGeoJSON = listingsToGeoJSON(listings.value);
-  let initialFavouriteCount = 0;
-  let initialDiscardedCount = 0;
-  let initialUnreviewedCount = 0;
-  for (const listing of listings.value.values()) {
-    if (listing.state === "liked") initialFavouriteCount++;
-    else if (listing.state === "discarded") initialDiscardedCount++;
-    else initialUnreviewedCount++;
-  }
-  fundaFavouriteCount.value = initialFavouriteCount;
-  fundaDiscardedCount.value = initialDiscardedCount;
-  fundaUnreviewedCount.value = initialUnreviewedCount;
+  applyCounts(tallyCounts());
 
   map.addSource("funda", { type: "geojson", data: initialGeoJSON });
 
@@ -164,20 +171,26 @@ export function useFundaLayer(
 
   // --- Funda building highlights (below dots) ---
   map.addSource("funda-buildings", { type: "geojson", data: emptyFC });
+  const categoryColor: maplibregl.ExpressionSpecification = [
+    "match",
+    ["get", "category"],
+    "favourite",
+    COLORS.fundaFavourite,
+    "discarded",
+    COLORS.fundaDiscarded,
+    "viewing",
+    COLORS.fundaViewing,
+    "applied",
+    COLORS.fundaApplied,
+    COLORS.fundaUnreviewed,
+  ];
+
   map.addLayer({
     id: "funda-building-fill",
     type: "fill",
     source: "funda-buildings",
     paint: {
-      "fill-color": [
-        "match",
-        ["get", "category"],
-        "favourite",
-        COLORS.fundaFavourite,
-        "discarded",
-        COLORS.fundaDiscarded,
-        COLORS.fundaUnreviewed,
-      ],
+      "fill-color": categoryColor,
       "fill-opacity": ["match", ["get", "category"], "discarded", 0.25, 0.4],
       "fill-opacity-transition": { duration: 200, delay: 0 },
     },
@@ -187,15 +200,7 @@ export function useFundaLayer(
     type: "line",
     source: "funda-buildings",
     paint: {
-      "line-color": [
-        "match",
-        ["get", "category"],
-        "favourite",
-        COLORS.fundaFavourite,
-        "discarded",
-        COLORS.fundaDiscarded,
-        COLORS.fundaUnreviewed,
-      ],
+      "line-color": categoryColor,
       "line-opacity": ["match", ["get", "category"], "discarded", 0.4, 0.7],
       "line-opacity-transition": { duration: 200, delay: 0 },
       "line-width": 1.5,
@@ -215,6 +220,8 @@ export function useFundaLayer(
     ["get", "colocatedFavourite"],
     ["get", "colocatedUnreviewed"],
     ["get", "colocatedDiscarded"],
+    ["get", "colocatedViewing"],
+    ["get", "colocatedApplied"],
   ];
 
   map.addLayer({
@@ -224,20 +231,7 @@ export function useFundaLayer(
     paint: {
       "circle-radius": ["step", totalColocated, 5, 2, 7.5],
       "circle-radius-transition": { duration: 200, delay: 0 },
-      "circle-color": [
-        "case",
-        isMixed,
-        COLORS.fundaUnreviewed,
-        [
-          "match",
-          ["get", "category"],
-          "favourite",
-          COLORS.fundaFavourite,
-          "discarded",
-          COLORS.fundaDiscarded,
-          COLORS.fundaUnreviewed,
-        ],
-      ],
+      "circle-color": ["case", isMixed, COLORS.fundaUnreviewed, categoryColor],
       "circle-opacity": ["match", ["get", "category"], "discarded", 0.5, 0.85],
       "circle-opacity-transition": { duration: 200, delay: 0 },
       "circle-stroke-width": 1,
@@ -281,38 +275,33 @@ export function useFundaLayer(
     },
   });
 
-  // --- Funda visibility (3 independent toggles) ---
+  // --- Funda visibility (5 independent toggles) ---
   function buildVisibleColocated(): maplibregl.ExpressionSpecification {
-    const showFav = fundaFavouriteVisible.value;
-    const showUnreviewed = fundaUnreviewedVisible.value;
-    const showDiscarded = fundaDiscardedVisible.value;
-    const expr: maplibregl.ExpressionSpecification = [
+    return [
       "+",
-      showFav ? ["get", "colocatedFavourite"] : 0,
-      showUnreviewed ? ["get", "colocatedUnreviewed"] : 0,
-      showDiscarded ? ["get", "colocatedDiscarded"] : 0,
+      fundaFavouriteVisible.value ? ["get", "colocatedFavourite"] : 0,
+      fundaUnreviewedVisible.value ? ["get", "colocatedUnreviewed"] : 0,
+      fundaDiscardedVisible.value ? ["get", "colocatedDiscarded"] : 0,
+      fundaViewingVisible.value ? ["get", "colocatedViewing"] : 0,
+      fundaAppliedVisible.value ? ["get", "colocatedApplied"] : 0,
     ];
-    return expr;
   }
 
   function updateFundaLayer() {
     if (!map.getLayer("funda-circles")) return;
-    const showFav = fundaFavouriteVisible.value;
-    const showUnreviewed = fundaUnreviewedVisible.value;
-    const showDiscarded = fundaDiscardedVisible.value;
 
-    // Hitarea: filter instantly (for click handling only)
-    const visibleCategories: string[] = [];
-    if (showFav) visibleCategories.push("favourite");
-    if (showUnreviewed) visibleCategories.push("unreviewed");
-    if (showDiscarded) visibleCategories.push("discarded");
+    const visibleCategories: Category[] = [];
+    if (fundaFavouriteVisible.value) visibleCategories.push("favourite");
+    if (fundaUnreviewedVisible.value) visibleCategories.push("unreviewed");
+    if (fundaDiscardedVisible.value) visibleCategories.push("discarded");
+    if (fundaViewingVisible.value) visibleCategories.push("viewing");
+    if (fundaAppliedVisible.value) visibleCategories.push("applied");
 
-    const allVisible = showFav && showUnreviewed && showDiscarded;
+    const allVisible = visibleCategories.length === 5;
     const categoryFilter: maplibregl.FilterSpecification | null = allVisible
       ? null
       : ["in", ["get", "category"], ["literal", visibleCategories]];
 
-    // Apply same category filter to all funda layers
     if (visibleCategories.length === 0) {
       map.setLayoutProperty("funda-circles-hitarea", "visibility", "none");
       map.setLayoutProperty("funda-circles", "visibility", "none");
@@ -327,10 +316,7 @@ export function useFundaLayer(
     map.setFilter("funda-building-fill", categoryFilter);
     map.setFilter("funda-building-outline", categoryFilter);
 
-    // Update count label text and filter based on visible co-located count
     const visibleColocated = buildVisibleColocated();
-
-    // Update count label text and filter to only show for visible clusters of 2+
     map.setFilter("funda-count", [
       "all",
       [">", visibleColocated, 1],
@@ -340,7 +326,16 @@ export function useFundaLayer(
   }
 
   updateFundaLayer();
-  watch([fundaFavouriteVisible, fundaUnreviewedVisible, fundaDiscardedVisible], updateFundaLayer);
+  watch(
+    [
+      fundaFavouriteVisible,
+      fundaUnreviewedVisible,
+      fundaDiscardedVisible,
+      fundaViewingVisible,
+      fundaAppliedVisible,
+    ],
+    updateFundaLayer,
+  );
 
   // Update pulse marker when last-viewed listing changes
   function clearPulseMarker() {
@@ -362,12 +357,14 @@ export function useFundaLayer(
     const listing = listings.value.get(id);
     if (!listing) return;
 
-    let color: string = COLORS.fundaUnreviewed;
-    if (listing.state === "liked") {
-      color = COLORS.fundaFavourite;
-    } else if (listing.state === "discarded") {
-      color = COLORS.fundaDiscarded;
-    }
+    const pulseColors: Record<Category, string> = {
+      favourite: COLORS.fundaFavourite,
+      discarded: COLORS.fundaDiscarded,
+      viewing: COLORS.fundaViewing,
+      applied: COLORS.fundaApplied,
+      unreviewed: COLORS.fundaUnreviewed,
+    };
+    const color = pulseColors[categorize(listing.state)];
 
     pulseMarker = new maplibregl.Marker({
       element: createPulseElement(color),

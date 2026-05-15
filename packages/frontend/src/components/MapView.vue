@@ -50,11 +50,15 @@ const {
   fundaFavouriteVisible,
   fundaUnreviewedVisible,
   fundaDiscardedVisible,
+  fundaViewingVisible,
+  fundaAppliedVisible,
   hoveredZone,
   hoveredTransit,
   fundaFavouriteCount,
   fundaUnreviewedCount,
   fundaDiscardedCount,
+  fundaViewingCount,
+  fundaAppliedCount,
 } = useZoneState();
 
 const {
@@ -109,9 +113,13 @@ onMounted(async () => {
       fundaFavouriteVisible,
       fundaUnreviewedVisible,
       fundaDiscardedVisible,
+      fundaViewingVisible,
+      fundaAppliedVisible,
       fundaFavouriteCount,
       fundaUnreviewedCount,
       fundaDiscardedCount,
+      fundaViewingCount,
+      fundaAppliedCount,
     });
 
     const { updateBuildingHighlights, resetBuildingViewKey } = useBuildingHighlightLayer(
@@ -127,6 +135,8 @@ onMounted(async () => {
       fundaFavouriteVisible,
       fundaUnreviewedVisible,
       fundaDiscardedVisible,
+      fundaViewingVisible,
+      fundaAppliedVisible,
     });
 
     // Re-derive GeoJSON when reaction state changes

@@ -93,13 +93,19 @@ const {
   fundaFavouriteVisible,
   fundaUnreviewedVisible,
   fundaDiscardedVisible,
+  fundaViewingVisible,
+  fundaAppliedVisible,
   fundaFavouriteCount,
   fundaUnreviewedCount,
   fundaDiscardedCount,
+  fundaViewingCount,
+  fundaAppliedCount,
   toggleTransit,
   toggleFundaFavourite,
   toggleFundaUnreviewed,
   toggleFundaDiscarded,
+  toggleFundaViewing,
+  toggleFundaApplied,
 } = useZoneState();
 
 const transit: { key: TransitKey; label: string; color: string }[] = [
@@ -117,6 +123,22 @@ const fundaItems = computed(() => [
     visible: fundaFavouriteVisible.value,
     count: fundaFavouriteCount.value,
     toggle: toggleFundaFavourite,
+  },
+  {
+    key: "viewing",
+    label: "scheduled viewings",
+    color: COLORS.fundaViewing,
+    visible: fundaViewingVisible.value,
+    count: fundaViewingCount.value,
+    toggle: toggleFundaViewing,
+  },
+  {
+    key: "applied",
+    label: "applied",
+    color: COLORS.fundaApplied,
+    visible: fundaAppliedVisible.value,
+    count: fundaAppliedCount.value,
+    toggle: toggleFundaApplied,
   },
   {
     key: "unreviewed",
