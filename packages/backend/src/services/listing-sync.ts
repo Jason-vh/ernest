@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { listings, type NewListing } from "@/db/schema";
-import { isNull, notInArray, and, or, eq, sql, not, like } from "drizzle-orm";
+import { isNull, notInArray, inArray, and, or, eq, sql, not, like } from "drizzle-orm";
 import { enqueueMany } from "@/services/job-queue";
 import { matchBuurt, type BuurtStats } from "@/services/buurt-matcher";
 
@@ -84,10 +84,21 @@ export async function syncListings(incoming: NewListing[]): Promise<SyncResult> 
     const MIN_RATIO = 0.5;
     if (activeCount === 0 || incoming.length >= activeCount * MIN_RATIO) {
       const incomingIds = incoming.map((l) => l.fundaId);
+      // Only mark disappeared within the sources present in this batch — listings
+      // from sources that weren't fetched this run are left untouched.
+      const incomingSources = [
+        ...new Set(incoming.map((l) => l.source).filter((s): s is string => typeof s === "string")),
+      ];
       const result = await db
         .update(listings)
         .set({ disappearedAt: sql`now()`, updatedAt: sql`now()` })
-        .where(and(isNull(listings.disappearedAt), notInArray(listings.fundaId, incomingIds)))
+        .where(
+          and(
+            isNull(listings.disappearedAt),
+            notInArray(listings.fundaId, incomingIds),
+            inArray(listings.source, incomingSources),
+          ),
+        )
         .returning({ fundaId: listings.fundaId });
       disappeared = result.length;
     } else {
