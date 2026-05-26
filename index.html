@@ -24,17 +24,21 @@
         align-items: center;
         justify-content: center;
         min-height: 100vh;
+        /* viewport-aware sizing — keeps aspect ratio, leaves breathing room */
+        --window-w: min(380px, calc(100vw - 48px), calc((100vh - 48px) * 380 / 520));
+        --window-h: calc(var(--window-w) * 520 / 380);
+        --arch-r: calc(var(--window-w) / 2);
       }
       .window {
         position: relative;
-        width: 380px;
-        height: 520px;
+        width: var(--window-w);
+        height: var(--window-h);
         background: conic-gradient(
           from 0deg at 50% 50%,
           #6b2d8e 0deg, #c0392b 60deg, #E8950F 120deg,
           #d4a017 180deg, #003DA5 240deg, #6b2d8e 300deg, #6b2d8e 360deg
         );
-        border-radius: 190px 190px 12px 12px;
+        border-radius: var(--arch-r) var(--arch-r) 12px 12px;
         padding: 12px;
         box-shadow:
           0 0 60px rgba(232, 149, 15, 0.3),
@@ -46,7 +50,7 @@
         width: 100%;
         height: 100%;
         background: #080414;
-        border-radius: 178px 178px 4px 4px;
+        border-radius: calc(var(--arch-r) - 12px) calc(var(--arch-r) - 12px) 4px 4px;
         z-index: 1;
       }
       /* dusk horizon glow */
@@ -149,6 +153,12 @@
 
       @media (prefers-reduced-motion: reduce) {
         .leaf { animation: none; opacity: 0; }
+      }
+
+      @media (max-width: 420px) {
+        .content { padding: 30px; }
+        .content h1 { font-size: 38px; letter-spacing: 3px; margin-bottom: 24px; }
+        .content .dates { font-size: 12px; letter-spacing: 4px; }
       }
     </style>
   </head>
