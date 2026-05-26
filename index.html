@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ernest · 2025 — 2026</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23E8950F' d='M16 2 C9 2 4 7 4 14 c0 9 12 16 12 16 s12-7 12-16 C28 7 23 2 16 2 z'/%3E%3Ccircle cx='16' cy='14' r='5' fill='%23fff'/%3E%3C/svg%3E" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      body {
+        background: radial-gradient(ellipse at center, #1a1230 0%, #0a0518 100%);
+        font-family: system-ui, sans-serif;
+        color: #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .window {
+        position: relative;
+        width: 380px;
+        height: 520px;
+        background: conic-gradient(
+          from 0deg at 50% 50%,
+          #6b2d8e 0deg, #c0392b 60deg, #E8950F 120deg,
+          #d4a017 180deg, #003DA5 240deg, #6b2d8e 300deg, #6b2d8e 360deg
+        );
+        border-radius: 190px 190px 12px 12px;
+        padding: 12px;
+        box-shadow:
+          0 0 60px rgba(232, 149, 15, 0.3),
+          inset 0 0 80px rgba(0, 0, 0, 0.4);
+      }
+      .window .inner {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        background: #080414;
+        border-radius: 178px 178px 4px 4px;
+        z-index: 1;
+      }
+      /* dusk horizon glow */
+      .window .inner::before {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 55%;
+        background:
+          radial-gradient(ellipse 80% 100% at 50% 100%, rgba(232, 149, 15, 0.15) 0%, transparent 65%),
+          linear-gradient(to top, rgba(192, 57, 43, 0.1) 0%, transparent 80%);
+        pointer-events: none;
+        z-index: 1;
+      }
+      /* diamond lead-line pattern (bars out — only on inner panel) */
+      .window .inner::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          repeating-linear-gradient(60deg,  transparent 0px, transparent 40px, rgba(255, 255, 255, 0.08) 40px, rgba(255, 255, 255, 0.08) 42px),
+          repeating-linear-gradient(-60deg, transparent 0px, transparent 40px, rgba(255, 255, 255, 0.08) 40px, rgba(255, 255, 255, 0.08) 42px);
+        pointer-events: none;
+        z-index: 2;
+      }
+      .content {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 40px;
+      }
+      .content h1 {
+        font-family: "Cinzel", serif;
+        font-weight: 500;
+        font-size: 44px;
+        color: #E8950F;
+        text-shadow: 0 0 20px rgba(232, 149, 15, 0.6), 0 0 4px #080414;
+        line-height: 1;
+        margin-bottom: 30px;
+        letter-spacing: 4px;
+      }
+      .content .dates {
+        font-family: "Cinzel", serif;
+        font-size: 13px;
+        color: #c9a87a;
+        letter-spacing: 6px;
+        text-shadow: 0 0 4px #080414;
+      }
+
+      /* drifting leaves */
+      .leaves {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+      }
+      .leaf {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50% 0 50% 0;
+        opacity: 0.75;
+        animation: drift linear infinite;
+        will-change: transform, opacity;
+      }
+      @keyframes drift {
+        0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+        8%   { opacity: 0.85; }
+        92%  { opacity: 0.85; }
+        100% { transform: translate(-30px, 600px) rotate(540deg); opacity: 0; }
+      }
+      @keyframes drift-soft {
+        0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+        8%   { opacity: 0.7; }
+        92%  { opacity: 0.7; }
+        100% { transform: translate(20px, 600px) rotate(-540deg); opacity: 0; }
+      }
+      .leaf:nth-child(1)  { top: -10px; left: 8%;  animation-duration: 7s;  animation-delay: 0s;    background: #E8950F; }
+      .leaf:nth-child(2)  { top: -10px; left: 15%; animation-duration: 9s;  animation-delay: -2s;   background: #c0392b; animation-name: drift-soft; }
+      .leaf:nth-child(3)  { top: -10px; left: 24%; animation-duration: 8s;  animation-delay: -4s;   background: #d4a017; }
+      .leaf:nth-child(4)  { top: -10px; left: 32%; animation-duration: 10s; animation-delay: -1s;   background: #E8950F; animation-name: drift-soft; }
+      .leaf:nth-child(5)  { top: -10px; left: 40%; animation-duration: 7s;  animation-delay: -5s;   background: #c0392b; }
+      .leaf:nth-child(6)  { top: -10px; left: 48%; animation-duration: 11s; animation-delay: -3s;   background: #d4a017; animation-name: drift-soft; }
+      .leaf:nth-child(7)  { top: -10px; left: 56%; animation-duration: 8s;  animation-delay: -6s;   background: #E8950F; }
+      .leaf:nth-child(8)  { top: -10px; left: 64%; animation-duration: 9s;  animation-delay: -2.5s; background: #c0392b; animation-name: drift-soft; }
+      .leaf:nth-child(9)  { top: -10px; left: 72%; animation-duration: 10s; animation-delay: -4.5s; background: #d4a017; }
+      .leaf:nth-child(10) { top: -10px; left: 80%; animation-duration: 7s;  animation-delay: -1.5s; background: #E8950F; animation-name: drift-soft; }
+      .leaf:nth-child(11) { top: -10px; left: 88%; animation-duration: 9s;  animation-delay: -5.5s; background: #c0392b; }
+      .leaf:nth-child(12) { top: -10px; left: 18%; animation-duration: 12s; animation-delay: -7s;   background: #d4a017; animation-name: drift-soft; }
+      .leaf:nth-child(13) { top: -10px; left: 44%; animation-duration: 8s;  animation-delay: -3.5s; background: #E8950F; }
+      .leaf:nth-child(14) { top: -10px; left: 68%; animation-duration: 11s; animation-delay: -6.5s; background: #c0392b; animation-name: drift-soft; }
+      .leaf:nth-child(15) { top: -10px; left: 92%; animation-duration: 7s;  animation-delay: -2s;   background: #d4a017; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .leaf { animation: none; opacity: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="window" role="img" aria-label="Memorial window for Ernest, 2025 to 2026">
+      <div class="inner">
+        <div class="leaves" aria-hidden="true">
+          <div class="leaf"></div><div class="leaf"></div><div class="leaf"></div>
+          <div class="leaf"></div><div class="leaf"></div><div class="leaf"></div>
+          <div class="leaf"></div><div class="leaf"></div><div class="leaf"></div>
+          <div class="leaf"></div><div class="leaf"></div><div class="leaf"></div>
+          <div class="leaf"></div><div class="leaf"></div><div class="leaf"></div>
+        </div>
+        <div class="content">
+          <h1>ERNEST</h1>
+          <div class="dates">2025 — 2026</div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

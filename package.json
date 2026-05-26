@@ -1,27 +1,8 @@
 {
   "name": "ernest",
-  "devDependencies": {
-    "lefthook": "^2.1.1",
-    "oxfmt": "^0.35.0",
-    "oxlint": "^1.50.0"
-  },
   "private": true,
   "scripts": {
-    "dev:backend": "bun run --env-file=../../.env --cwd packages/backend src/index.ts",
-    "dev:frontend": "bun run --cwd packages/frontend dev",
-    "build": "bun run --cwd packages/frontend build",
-    "start": "bun run --cwd packages/backend src/index.ts",
-    "db:generate": "bun run --cwd packages/backend bunx drizzle-kit generate",
-    "db:push": "bun run --cwd packages/backend bunx drizzle-kit push",
-    "db:studio": "bun run --cwd packages/backend bunx drizzle-kit studio",
-    "check": "oxfmt --check packages/backend/src packages/frontend/src && oxlint packages/backend/src packages/frontend/src",
-    "fmt": "oxfmt --write packages/backend/src packages/frontend/src",
-    "lint": "oxlint packages/backend/src packages/frontend/src",
-    "typecheck": "bunx --cwd packages/backend tsc --noEmit && bunx --cwd packages/frontend vue-tsc --noEmit",
-    "fetch-data": "bun scripts/fetch-data.ts",
-    "fetch-transit": "bun scripts/fetch-transit.ts",
-    "fetch-funda": "python3.13 scripts/fetch_funda.py",
-    "fetch-ferries": "bun scripts/fetch-ferries.ts"
-  },
-  "workspaces": ["packages/*", "scripts"]
+    "start": "bun run server.ts",
+    "dev": "bun run --hot server.ts"
+  }
 }

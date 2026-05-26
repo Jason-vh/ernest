@@ -1,2 +1,0 @@
-[deploy]
-startCommand = "python fetch_and_push.py"

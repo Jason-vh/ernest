@@ -1,5 +1,0 @@
-pyfunda==2.5.0
-requests>=2.31,<3
-beautifulsoup4>=4.12,<5
-lxml>=5.0,<6
-curl_cffi>=0.7,<1
