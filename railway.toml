@@ -1,7 +1,0 @@
-[build]
-buildCommand = "bun install"
-
-[deploy]
-startCommand = "bun run start"
-healthcheckPath = "/api/health"
-healthcheckTimeout = 10
